@@ -1,22 +1,25 @@
 package com.github.woooking.cosyn.cfg
 
-import com.github.woooking.cosyn.ir.{IRExpression, IRUndef, IRVariable}
+import com.github.javaparser.JavaParser
+import com.github.woooking.cosyn.ir._
 import com.github.woooking.cosyn.ir.statements.IRAbstractStatement
+import com.github.woooking.cosyn.util.Printable
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class CFG {
+class CFG extends Printable {
     var num = 0
     var temp = 0
     var phi = 0
-    val entry: Entry.type = Entry
-    val exit: Exit.type = Exit
+    val entry = new Statements
+    val exit = Exit
+    val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer(entry, exit)
     val defs: mutable.Map[String, mutable.Map[CFGBlock, IRExpression]] = mutable.Map()
     val incompletePhis: mutable.Map[CFGBlock, mutable.Map[String, IRPhi]] = mutable.Map()
     val sealedBlocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
 
-    case class IRPhi(block: CFGBlock) extends IRVariable {
+    class IRPhi(val block: CFGBlock) extends IRVariable {
         val id: Int = phi
         phi += 1
 
@@ -27,7 +30,12 @@ class CFG {
 
     }
 
-    abstract class CFGBlock {
+    class IRTemp extends IRVariable {
+        val id: Int = temp
+        temp += 1
+    }
+
+    abstract class CFGBlock extends Printable {
         val id: Int = num
         num += 1
 
@@ -47,6 +55,12 @@ class CFG {
         }
 
         def addStatement(statement: IRAbstractStatement): Unit = statements += statement
+
+        override def print(): Unit = {
+            println(s"[Block ${id}: Statements] -> ${next}")
+            statements.foreach(println)
+            println()
+        }
     }
 
     class Branch(condition: IRVariable, thenBlock: CFGBlock, elseBlock: CFGBlock) extends CFGBlock {
@@ -54,24 +68,29 @@ class CFG {
         elseBlock.preds += this
 
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of branch")
+
+        override def print(): Unit = ???
     }
 
-    private object Entry extends CFGBlock {
-        var next: Option[CFGBlock] = None
-
-        override def setNext(next: CFGBlock): Unit = {
-            this.next = Some(next)
-            next.preds += this
-        }
-    }
-
-    private object Exit extends CFGBlock {
+    object Exit extends CFGBlock {
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of exit")
+
+        override def print(): Unit = {
+            println(s"[Block ${id}: Exit]")
+        }
     }
 
     class Switch extends CFGBlock {
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of switch")
+
+        override def print(): Unit = ???
     }
+
+    override def print(): Unit = {
+        blocks.foreach(_.print())
+    }
+
+    def createTempVar() = new IRTemp
 
     def writeVar(name: String, block: CFGBlock, value: IRExpression): Unit = {
         defs.getOrElseUpdate(name, mutable.Map())(block) = value
@@ -82,16 +101,15 @@ class CFG {
         case Some(v) => v.getOrElse(block, readVarRec(name, block))
     }
 
-
     def readVarRec(name: String, block: CFGBlock): IRExpression = {
         val v = if (!sealedBlocks.contains(block)) {
-            val phi = IRPhi(block)
+            val phi = new IRPhi(block)
             incompletePhis.getOrElseUpdate(block, mutable.Map())(name) = phi
             phi
         } else if (block.preds.length == 1) {
             readVar(name, block.preds(0))
         } else {
-            val phi = IRPhi(block)
+            val phi = new IRPhi(block)
             writeVar(name, block, phi)
             addPhiOperands(name, phi)
         }
@@ -120,5 +138,14 @@ class CFG {
             addPhiOperands(name, p)
         }
         sealedBlocks += block
+    }
+}
+
+object CFG {
+    def create(method: String): CFG = {
+        val cu = JavaParser.parse(method)
+        val cfg = new CFG()
+        cu.accept(new IRBuiltVisitor(cfg), NodeArg(cfg.entry))
+        cfg
     }
 }
