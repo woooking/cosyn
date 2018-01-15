@@ -1,5 +1,5 @@
 package com.github.woooking.cosyn.util
 
 trait Printable {
-    def print()
+    def print(): Unit
 }

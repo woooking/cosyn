@@ -1,8 +1,7 @@
 package com.github.woooking.cosyn.cfg
 
-import com.github.javaparser.JavaParser
 import com.github.woooking.cosyn.ir._
-import com.github.woooking.cosyn.ir.statements.IRAbstractStatement
+import com.github.woooking.cosyn.ir.statements.{IRAbstractStatement, IRAssignment}
 import com.github.woooking.cosyn.util.Printable
 
 import scala.collection.mutable
@@ -13,35 +12,71 @@ class CFG extends Printable {
     var temp = 0
     var phi = 0
     val entry = new Statements
-    val exit = Exit
+    val exit: Exit.type = Exit
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer(entry, exit)
-    val defs: mutable.Map[String, mutable.Map[CFGBlock, IRExpression]] = mutable.Map()
-    val incompletePhis: mutable.Map[CFGBlock, mutable.Map[String, IRPhi]] = mutable.Map()
-    val sealedBlocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
+    val defs: mutable.Map[String, mutable.Map[CFGBlock, IRVariable]] = mutable.Map()
 
-    class IRPhi(val block: CFGBlock) extends IRVariable {
+    trait Context {
+        val block: Statements
+        val break: Option[CFGBlock]
+        val continue: Option[CFGBlock]
+    }
+
+    def createContext(b: Statements): Context = createContext(b, None, None)
+
+    def createContext(b: Statements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = new Context {
+        override val block: Statements = b
+        override val break: Option[CFGBlock] = br
+        override val continue: Option[CFGBlock] = c
+    }
+
+    class IRPhi(val block: CFGBlock) extends IRAbstractStatement {
         val id: Int = phi
         phi += 1
 
-        val operands: ArrayBuffer[IRExpression] = ArrayBuffer()
+        block.phis += this
+
+        val target: IRTemp = createTempVar()
+
+        val operands: mutable.Set[IRVariable] = mutable.Set()
         val users: ArrayBuffer[IRExpression] = ArrayBuffer()
 
-        def appendOperand(ope: IRExpression): Unit = operands += ope
+        def appendOperand(ope: IRVariable): Unit = operands += ope
 
+        def replaceBy(variable: IRVariable): Unit = {
+            val index = block.phis.indexOf(this)
+            block.phis(index) = IRAssignment(target, variable)
+        }
+
+        override def toString: String = s"$target=phi(${operands.mkString(", ")})"
     }
 
     class IRTemp extends IRVariable {
         val id: Int = temp
         temp += 1
+
+        override def toString: String = s"#$id"
     }
 
     abstract class CFGBlock extends Printable {
         val id: Int = num
         num += 1
 
-        val preds: ArrayBuffer[CFGBlock] = ArrayBuffer[CFGBlock]()
+        var isSealed = false
 
-        def setNext(next: CFGBlock)
+        val phis: ArrayBuffer[IRAbstractStatement] = ArrayBuffer()
+        val incompletePhis: mutable.Map[String, IRPhi] = mutable.Map()
+
+        val preds: ArrayBuffer[CFGBlock] = ArrayBuffer()
+
+        def seal(): Unit = {
+            incompletePhis.foreach { case (name, p) =>
+                addPhiOperands(name, p)
+            }
+            isSealed = true
+        }
+
+        def setNext(next: CFGBlock): Unit
     }
 
     class Statements extends CFGBlock {
@@ -57,27 +92,39 @@ class CFG extends Printable {
         def addStatement(statement: IRAbstractStatement): Unit = statements += statement
 
         override def print(): Unit = {
-            println(s"[Block ${id}: Statements] -> ${next}")
+            println(s"$this${next.map(" -> " + _).mkString}")
+            phis.foreach(println)
             statements.foreach(println)
             println()
         }
+
+        override def toString: String = s"[Block $id: Statements]"
     }
 
-    class Branch(condition: IRVariable, thenBlock: CFGBlock, elseBlock: CFGBlock) extends CFGBlock {
+    class Branch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock) extends CFGBlock {
         thenBlock.preds += this
         elseBlock.preds += this
 
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of branch")
 
-        override def print(): Unit = ???
+        override def print(): Unit = {
+            println(this)
+            println(condition)
+            println(s"true -> $thenBlock")
+            println(s"false -> $elseBlock")
+        }
+
+        override def toString: String = s"[Block $id: Branch]"
     }
 
     object Exit extends CFGBlock {
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of exit")
 
         override def print(): Unit = {
-            println(s"[Block ${id}: Exit]")
+            println(s"$this")
         }
+
+        override def toString: String = s"[Block $id: Exit]"
     }
 
     class Switch extends CFGBlock {
@@ -90,62 +137,57 @@ class CFG extends Printable {
         blocks.foreach(_.print())
     }
 
-    def createTempVar() = new IRTemp
+    def createTempVar(): IRTemp = new IRTemp
 
-    def writeVar(name: String, block: CFGBlock, value: IRExpression): Unit = {
+    def createStatements(): Statements = {
+        val block = new Statements
+        blocks += block
+        block
+    }
+
+    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = {
+        val block = new Branch(condition, thenBlock, elseBlock)
+        blocks += block
+        block
+    }
+
+    def writeVar(name: String, block: CFGBlock, value: IRVariable): Unit = {
         defs.getOrElseUpdate(name, mutable.Map())(block) = value
     }
 
-    def readVar(name: String, block: CFGBlock): IRExpression = defs.get(name) match {
+    def readVar(name: String, block: CFGBlock): IRVariable = defs.get(name) match {
         case None => readVarRec(name, block)
         case Some(v) => v.getOrElse(block, readVarRec(name, block))
     }
 
-    def readVarRec(name: String, block: CFGBlock): IRExpression = {
-        val v = if (!sealedBlocks.contains(block)) {
+    def readVarRec(name: String, block: CFGBlock): IRVariable = {
+        val v = if (!block.isSealed) {
             val phi = new IRPhi(block)
-            incompletePhis.getOrElseUpdate(block, mutable.Map())(name) = phi
-            phi
+            block.incompletePhis(name) = phi
+            phi.target
         } else if (block.preds.length == 1) {
             readVar(name, block.preds(0))
         } else {
             val phi = new IRPhi(block)
-            writeVar(name, block, phi)
+            writeVar(name, block, phi.target)
             addPhiOperands(name, phi)
         }
         writeVar(name, block, v)
         v
     }
 
-    def addPhiOperands(name: String, phi: IRPhi): IRExpression = {
+    def addPhiOperands(name: String, phi: IRPhi): IRVariable = {
         phi.block.preds.foreach(pred => phi.appendOperand(readVar(name, pred)))
         tryRemoveTrivialPhi(phi)
     }
 
-    def tryRemoveTrivialPhi(phi: IRPhi): IRExpression = {
-        phi.operands.distinct match {
-            case opes if opes.length >= 2 => phi
-            case opes =>
-                val same = if (opes.isEmpty) IRUndef else opes(0)
-                val users = phi.users - phi
-                users.filter(_.isInstanceOf[IRPhi]).map(p => tryRemoveTrivialPhi(p.asInstanceOf[IRPhi]))
-                same
+    def tryRemoveTrivialPhi(phi: IRPhi): IRVariable = {
+        if (phi.operands.size >= 2) phi.target
+        else {
+            val same = if (phi.operands.isEmpty) IRUndef else phi.operands.last
+            phi.replaceBy(same)
+            same
         }
     }
 
-    def sealBlock(block: CFGBlock): Unit = {
-        incompletePhis(block).foreach { case (name, p) =>
-            addPhiOperands(name, p)
-        }
-        sealedBlocks += block
-    }
-}
-
-object CFG {
-    def create(method: String): CFG = {
-        val cu = JavaParser.parse(method)
-        val cfg = new CFG()
-        cu.accept(new IRBuiltVisitor(cfg), NodeArg(cfg.entry))
-        cfg
-    }
 }
