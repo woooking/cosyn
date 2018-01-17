@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.javaparser.expr.Expression
 
 class ForeachStmt(override val delegate: JPForeachStmt) extends Statement {
     val variable: VariableDeclarationExpr = delegate.getVariable
-    val iterable: Expression = Expression(delegate.getIterable)
+    val iterable: Expression[_] = Expression(delegate.getIterable)
     val body: Statement = Statement(delegate.getBody)
 }
 
@@ -15,7 +15,7 @@ object ForeachStmt {
 
     def unapply(arg: ForeachStmt): Option[(
         VariableDeclarationExpr,
-            Expression,
+            Expression[_],
             Statement
         )] = Some((
         arg.variable,

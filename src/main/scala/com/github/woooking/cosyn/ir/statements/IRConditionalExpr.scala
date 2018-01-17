@@ -7,5 +7,7 @@ case class IRConditionalExpr(target: IRVariable,
                              condition: IRExpression,
                              thenExpr: IRExpression,
                              elseExpr: IRExpression) extends IRAbstractStatement {
-
+    addUse(condition)
+    addUse(thenExpr)
+    addUse(elseExpr)
 }

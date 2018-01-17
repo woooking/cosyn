@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.javaparser.body.VariableDeclarator
 
 import scala.collection.JavaConverters._
 
-class VariableDeclarationExpr(override val delegate: JPVariableDeclarationExpr) extends Expression {
+class VariableDeclarationExpr(override val delegate: JPVariableDeclarationExpr) extends Expression[JPVariableDeclarationExpr] {
     val variables: List[VariableDeclarator] = delegate.getVariables.asScala.map(VariableDeclarator.apply).toList
 }
 

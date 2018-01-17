@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.javaparser.expr.Expression
 import com.github.woooking.cosyn.util.OptionConverters._
 
 class IfStmt(override val delegate: JPIfStmt) extends Statement {
-    val condition: Expression = Expression(delegate.getCondition)
+    val condition: Expression[_] = Expression(delegate.getCondition)
 
     val thenStmt: Statement = Statement(delegate.getThenStmt)
 
@@ -16,7 +16,7 @@ object IfStmt {
     def apply(delegate: JPIfStmt): IfStmt = new IfStmt(delegate)
 
     def unapply(arg: IfStmt): Option[(
-        Expression,
+        Expression[_],
             Statement,
             Option[Statement]
         )] = Some((

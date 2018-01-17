@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.cfg.CFG
 import com.github.woooking.cosyn.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
-import com.github.woooking.cosyn.javaparser.expr.{AssignExpr, Expression}
+import com.github.woooking.cosyn.javaparser.expr._
 import com.github.woooking.cosyn.javaparser.stmt._
 
 import scala.annotation.tailrec
@@ -18,7 +18,7 @@ class Visitor(parser: ProjectParser) {
 
     @tailrec
     private def generateCFGs(bodyDecls: List[BodyDeclaration[_]], methods: CFGMap): CFGMap = bodyDecls match {
-        case Nil => Map()
+        case Nil => methods
         case body :: rest => generateCFGs(rest, generateCFGs(body))
     }
 
@@ -36,6 +36,7 @@ class Visitor(parser: ProjectParser) {
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
+        cfg.optimize()
         cfg
     }
 
@@ -73,14 +74,14 @@ class Visitor(parser: ProjectParser) {
     //            println(node.getClass)
     //            ???
     //    }
-    //
-    //    def visitVariableDeclarator(cfg: CFG)(block: cfg.Statements, node: Node): IRExpression = node match {
-    //        case VariableDeclarator(name, _, initializer) =>
-    //            val temp = cfg.createTempVar()
-    //            cfg.writeVar(name.getIdentifier, block, temp)
-    //            initializer.map((node: Expression) => visitExpression(cfg)(block, node)).foreach(i => block.addStatement(IRAssignment(temp, i)))
-    //            temp
-    //    }
+
+    def visitVariableDeclarator(cfg: CFG)(block: cfg.Statements, node: VariableDeclarator): IRExpression = node match {
+        case VariableDeclarator(name, _, initializer) =>
+            val temp = cfg.createTempVar()
+            cfg.writeVar(name, block, temp)
+            initializer.map((node: Expression[_]) => visitExpression(cfg)(block, node)).foreach(i => block.addStatement(IRAssignment(temp, i)))
+            temp
+    }
 
     def visitCatchClause(cfg: CFG)(block: cfg.Context, node: CatchClause): cfg.Context = ???
 
@@ -170,19 +171,17 @@ class Visitor(parser: ProjectParser) {
             entryBlock.seal()
             cfg.createContext(elseBlock)
             context
-        case TryStmt(_, t, cs, f) =>
+        case TryStmt(r, t, _, f) =>
             // TODO
+            r.foreach(visitExpression(cfg)(context.block, _))
             var newContext = visitStatement(cfg)(context, t)
-            newContext = (newContext /: cs) ((c, n) => visitCatchClause(cfg)(c, n))
+//            newContext = (newContext /: cs) ((c, n) => visitCatchClause(cfg)(c, n))
             newContext = (newContext /: f) ((c, n) => visitStatement(cfg)(c, n))
             newContext
-        case _ =>
-            println(node.getClass)
-            ???
     }
 
 
-    def visitExpression(cfg: CFG)(block: cfg.Statements, node: Expression): IRExpression = node match {
+    def visitExpression(cfg: CFG)(block: cfg.Statements, node: Expression[_]): IRExpression = node match {
         case AssignExpr(t, ope, s) =>
             // TODO: left hand side
             val target = visitExpression(cfg)(block, t)
@@ -195,41 +194,41 @@ class Visitor(parser: ProjectParser) {
                     block.addStatement(IRBinaryOperation(temp, BinaryOperator.fromAssignExprOperator(ope), target, source))
             }
             target
-        //        case BinaryExpr(l, r, ope) =>
-        //            val lhs = visitExpression(cfg)(block, l)
-        //            val rhs = visitExpression(cfg)(block, r)
-        //            val temp = cfg.createTempVar()
-        //            block.addStatement(IRBinaryOperation(temp, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs))
-        //            temp
-        //        case CastExpr(_, e) =>
-        //            visitExpression(cfg)(block, e)
-        //        case FieldAccessExpr(scope, name, _) =>
-        //            val receiver = visitExpression(cfg)(block, scope)
-        //            val temp = cfg.createTempVar()
-        //            block.addStatement(IRFieldAccess(temp, receiver, name.getIdentifier))
-        //            temp
-        //        case n: StringLiteralExpr => IRString(n.asString())
-        //        case n: CharLiteralExpr => IRChar(n.asChar())
-        //        case n: IntegerLiteralExpr => IRInteger(n.asInt())
-        //        case n: BooleanLiteralExpr if n.getValue => IRExpression.True
-        //        case n: BooleanLiteralExpr if !n.getValue => IRExpression.False
+        case BinaryExpr(l, ope, r) =>
+            val lhs = visitExpression(cfg)(block, l)
+            val rhs = visitExpression(cfg)(block, r)
+            val temp = cfg.createTempVar()
+            block.addStatement(IRBinaryOperation(temp, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs))
+            temp
+        case CastExpr(_, e) =>
+            visitExpression(cfg)(block, e)
+        case FieldAccessExpr(scope, name, _) =>
+            val receiver = visitExpression(cfg)(block, scope)
+            val temp = cfg.createTempVar()
+            block.addStatement(IRFieldAccess(temp, receiver, name))
+            temp
+        case StringLiteralExpr(n) => IRString(n)
+        case CharLiteralExpr(n) => IRChar(n)
+        case IntegerLiteralExpr(n) => IRInteger(n)
+        case BooleanLiteralExpr(true) => IRExpression.True
+        case BooleanLiteralExpr(false) => IRExpression.False
         //        case _: NullLiteralExpr => IRNull
-        //        case n @ MethodCallExpr(_, scope, _, arguments) =>
-        //            val receiver = scope.map((node: Expression) => visitExpression(cfg)(block, node))
-        //            val args = arguments.asScala.map((node: Expression) => visitExpression(cfg)(block, node))
-        //            val temp = cfg.createTempVar()
-        //            block.addStatement(IRMethodInvocation(temp, n.getName.getIdentifier, receiver, args))
-        //            temp
-        //        case NameExpr(name) =>
-        //            cfg.readVar(name.getIdentifier, block) match {
-        //                case IRUndef => IRUndef
-        //                case e => e
-        //            }
-        //        case ObjectCreationExpr(_, ty, _, arguments, _) =>
-        //            val args = arguments.asScala.map((node: Expression) => visitExpression(cfg)(block, node))
-        //            val temp = cfg.createTempVar()
-        //            block.addStatement(IRMethodInvocation(temp, "<init>", Some(IRTypeObject(ty)), args))
-        //            temp
+        case n @ MethodCallExpr(_, scope, _, arguments) =>
+            val receiver = scope.map(node => visitExpression(cfg)(block, node))
+            val args = arguments.map(node => visitExpression(cfg)(block, node))
+            val temp = cfg.createTempVar()
+            block.addStatement(IRMethodInvocation(temp, n.delegate.getName.getIdentifier, receiver, args))
+            temp
+        case NameExpr(name) =>
+            cfg.readVar(name, block) match {
+                case IRUndef => IRExtern(name)
+                case e => e
+            }
+        case ObjectCreationExpr(_, ty, _, arguments, _) =>
+            val args = arguments.map(node => visitExpression(cfg)(block, node))
+            val temp = cfg.createTempVar()
+            block.addStatement(IRMethodInvocation(temp, "<init>", Some(IRTypeObject(ty)), args))
+            temp
         //        case ThisExpr(_) =>
         //            // TODO: more specific
         //            IRThis
@@ -239,17 +238,14 @@ class Visitor(parser: ProjectParser) {
         //            val temp = cfg.createTempVar()
         //            block.addStatement(IRFieldAccess(temp, receiver, "super"))
         //            temp
-        //        case UnaryExpr(s, ope) =>
-        //            val temp = cfg.createTempVar()
-        //            val source = visitExpression(cfg)(block, s)
-        //            block.addStatement(IRUnaryOperation(temp, UnaryOperator.fromAssignExprOperator(ope), source))
-        //            temp
-        //        case VariableDeclarationExpr(declarators) =>
-        //            declarators.asScala.map(visitVariableDeclarator(cfg)(block, _))
-        //            null // TODO
-        case _ =>
-            println(node.getClass)
-            ???
+        case UnaryExpr(ope, e) =>
+            val temp = cfg.createTempVar()
+            val source = visitExpression(cfg)(block, e)
+            block.addStatement(IRUnaryOperation(temp, UnaryOperator.fromAssignExprOperator(ope), source))
+            temp
+        case VariableDeclarationExpr(declarators) =>
+            declarators.map(visitVariableDeclarator(cfg)(block, _))
+            null // TODO
     }
 
 }

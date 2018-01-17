@@ -2,19 +2,19 @@ package com.github.woooking.cosyn.javaparser.expr
 
 import com.github.javaparser.ast.expr.{AssignExpr => JPAssignExpr}
 
-class AssignExpr(override val delegate: JPAssignExpr) extends Expression {
-    val target: Expression = Expression(delegate.getTarget)
+class AssignExpr(override val delegate: JPAssignExpr) extends Expression[JPAssignExpr] {
+    val target: Expression[_] = Expression(delegate.getTarget)
     val ope: AssignExpr.Operator.Operator = AssignExpr.Operator(delegate.getOperator)
-    val value: Expression = Expression(delegate.getValue)
+    val value: Expression[_] = Expression(delegate.getValue)
 }
 
 object AssignExpr {
     def apply(delegate: JPAssignExpr): AssignExpr = new AssignExpr(delegate)
 
     def unapply(arg: AssignExpr): Option[(
-        Expression,
+        Expression[_],
             AssignExpr.Operator.Operator,
-            Expression
+            Expression[_]
         )] = Some((
         arg.target,
         arg.ope,
@@ -52,4 +52,5 @@ object AssignExpr {
             case JPAssignExpr.Operator.UNSIGNED_RIGHT_SHIFT => AssignExpr.Operator.UnsignedRightShift
         }
     }
+
 }

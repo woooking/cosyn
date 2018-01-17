@@ -6,6 +6,7 @@ import com.github.woooking.cosyn.util.Printable
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 class CFG extends Printable {
     var num = 0
@@ -14,7 +15,6 @@ class CFG extends Printable {
     val entry = new Statements
     val exit: Exit.type = Exit
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer(entry, exit)
-    val defs: mutable.Map[String, mutable.Map[CFGBlock, IRVariable]] = mutable.Map()
 
     trait Context {
         val block: Statements
@@ -39,26 +39,45 @@ class CFG extends Printable {
         val target: IRTemp = createTempVar()
 
         val operands: mutable.Set[IRVariable] = mutable.Set()
-        val users: ArrayBuffer[IRExpression] = ArrayBuffer()
 
-        def appendOperand(ope: IRVariable): Unit = operands += ope
+        def appendOperand(ope: IRVariable): Unit = {
+            operands += ope
+            addUse(ope)
+        }
 
         def replaceBy(variable: IRVariable): Unit = {
-            val index = block.phis.indexOf(this)
-            block.phis(index) = IRAssignment(target, variable)
+            block.phis -= this
+            operands.foreach(_.uses -= this)
+            target.replaced = Some(variable)
         }
 
         override def toString: String = s"$target=phi(${operands.mkString(", ")})"
     }
 
     class IRTemp extends IRVariable {
-        val id: Int = temp
+        private val _id: Int = temp
+        var replaced: Option[IRVariable] = None
         temp += 1
 
-        override def toString: String = s"#$id"
+        def id: Int = replaced match {
+            case None => _id
+            case Some(t: IRTemp) => t.id
+            case _ =>
+                throw new RuntimeException("could not get id of a replaced temp")
+        }
+
+        override def toString: String = replaced match {
+            case None => s"#${_id}"
+            case Some(r) => r.toString
+        }
+    }
+
+    object IRTemp {
+        def unapply(arg: IRTemp): Option[Int] = Try { arg.id }.toOption
     }
 
     abstract class CFGBlock extends Printable {
+        val defs: mutable.Map[String, IRVariable] = mutable.Map()
         val id: Int = num
         num += 1
 
@@ -90,6 +109,15 @@ class CFG extends Printable {
         }
 
         def addStatement(statement: IRAbstractStatement): Unit = statements += statement
+
+        def optimize(): Unit = {
+            statements.foreach {
+                case s @ IRAssignment(target @ IRTemp(_), source @ IRTemp(_)) =>
+                    target.replaced = Some(source)
+                    statements -= s
+                case _ =>
+            }
+        }
 
         override def print(): Unit = {
             println(s"$this${next.map(" -> " + _).mkString}")
@@ -152,13 +180,10 @@ class CFG extends Printable {
     }
 
     def writeVar(name: String, block: CFGBlock, value: IRVariable): Unit = {
-        defs.getOrElseUpdate(name, mutable.Map())(block) = value
+        block.defs(name) = value
     }
 
-    def readVar(name: String, block: CFGBlock): IRVariable = defs.get(name) match {
-        case None => readVarRec(name, block)
-        case Some(v) => v.getOrElse(block, readVarRec(name, block))
-    }
+    def readVar(name: String, block: CFGBlock): IRVariable = block.defs.getOrElse(name, readVarRec(name, block))
 
     def readVarRec(name: String, block: CFGBlock): IRVariable = {
         val v = if (!block.isSealed) {
@@ -178,16 +203,30 @@ class CFG extends Printable {
 
     def addPhiOperands(name: String, phi: IRPhi): IRVariable = {
         phi.block.preds.foreach(pred => phi.appendOperand(readVar(name, pred)))
-        tryRemoveTrivialPhi(phi)
+        tryRemoveTrivialPhi(name, phi)
     }
 
-    def tryRemoveTrivialPhi(phi: IRPhi): IRVariable = {
-        if (phi.operands.size >= 2) phi.target
+    def tryRemoveTrivialPhi(name: String, phi: IRPhi): IRVariable = {
+        val others = phi.operands.filter {
+            case IRTemp(id) if id == phi.target.id => false
+            case _ => true
+        }
+        if (others.size >= 2) phi.target
         else {
-            val same = if (phi.operands.isEmpty) IRUndef else phi.operands.last
+            val same = if (others.isEmpty) IRExtern(name) else others.last
             phi.replaceBy(same)
+            (phi.target.uses - phi).foreach {
+                case p: IRPhi => tryRemoveTrivialPhi(name, p)
+                case _ =>
+            }
             same
         }
     }
 
+    def optimize(): Unit = {
+        blocks.foreach {
+            case statements: Statements => statements.optimize()
+            case _ =>
+        }
+    }
 }

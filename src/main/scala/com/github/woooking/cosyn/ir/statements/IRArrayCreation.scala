@@ -7,5 +7,6 @@ case class IRArrayCreation(target: IRVariable,
                            ty: Type,
                            size: Seq[IRExpression],
                            initializers: Seq[IRExpression]) extends IRAbstractStatement {
-
+    size.foreach(addUse)
+    initializers.foreach(addUse)
 }

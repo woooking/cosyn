@@ -9,7 +9,7 @@ import com.github.woooking.cosyn.util.OptionConverters._
 class VariableDeclarator(override val delegate: JPVariableDeclarator) extends NodeDelegate[JPVariableDeclarator] {
     val name: String = delegate.getName.asString()
     val ty: Type = delegate.getType
-    val initializer: Option[Expression] = delegate.getInitializer.asScala.map(e => Expression(e))
+    val initializer: Option[Expression[_]] = delegate.getInitializer.asScala.map(e => Expression(e))
 }
 
 object VariableDeclarator {
@@ -18,7 +18,7 @@ object VariableDeclarator {
     def unapply(arg: VariableDeclarator): Option[(
         String,
             Type,
-            Option[Expression]
+            Option[Expression[_]]
         )] = Some((
         arg.name,
         arg.ty,

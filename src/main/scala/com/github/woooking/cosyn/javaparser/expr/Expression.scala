@@ -4,16 +4,36 @@ import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.javaparser.ast.expr.{
     Expression => JPExpression,
     AssignExpr => JPAssignExpr,
+    BinaryExpr => JPBinaryExpr,
+    BooleanLiteralExpr => JPBooleanLiteralExpr,
+    CastExpr => JPCastExpr,
+    CharLiteralExpr => JPCharLiteralExpr,
+    FieldAccessExpr => JPFieldAccessExpr,
+    IntegerLiteralExpr => JPIntegerLiteralExpr,
     MethodCallExpr => JPMethodCallExpr,
+    NameExpr => JPNameExpr,
+    ObjectCreationExpr => JPObjectCreationExpr,
+    StringLiteralExpr => JPStringLiteralExpr,
+    UnaryExpr => JPUnaryExpr,
     VariableDeclarationExpr => JPVariableDeclarationExpr,
 }
 
-trait Expression extends NodeDelegate[JPExpression]
+trait Expression[T] extends NodeDelegate[T]
 
 object Expression {
-    def apply(expression: JPExpression): Expression = expression match {
+    def apply(expression: JPExpression): Expression[_] = expression match {
         case e: JPAssignExpr => AssignExpr(e)
-        case e: JPVariableDeclarationExpr => VariableDeclarationExpr(e)
+        case e: JPBinaryExpr => BinaryExpr(e)
+        case e: JPBooleanLiteralExpr => BooleanLiteralExpr(e)
+        case e: JPCastExpr => CastExpr(e)
+        case e: JPCharLiteralExpr => CharLiteralExpr(e)
+        case e: JPFieldAccessExpr => FieldAccessExpr(e)
+        case e: JPIntegerLiteralExpr => IntegerLiteralExpr(e)
         case e: JPMethodCallExpr => MethodCallExpr(e)
+        case e: JPNameExpr => NameExpr(e)
+        case e: JPObjectCreationExpr => ObjectCreationExpr(e)
+        case e: JPStringLiteralExpr => StringLiteralExpr(e)
+        case e: JPUnaryExpr => UnaryExpr(e)
+        case e: JPVariableDeclarationExpr => VariableDeclarationExpr(e)
     }
 }
