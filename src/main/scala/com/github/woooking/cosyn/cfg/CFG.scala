@@ -11,7 +11,6 @@ import scala.util.Try
 class CFG extends Printable {
     var num = 0
     var temp = 0
-    var phi = 0
     val entry = new Statements
     val exit: Exit.type = Exit
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer(entry, exit)
@@ -31,9 +30,6 @@ class CFG extends Printable {
     }
 
     class IRPhi(val block: CFGBlock) extends IRAbstractStatement {
-        val id: Int = phi
-        phi += 1
-
         block.phis += this
 
         val target: IRTemp = createTempVar()
