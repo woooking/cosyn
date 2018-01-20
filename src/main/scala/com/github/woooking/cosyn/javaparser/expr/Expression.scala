@@ -12,6 +12,7 @@ import com.github.javaparser.ast.expr.{
     IntegerLiteralExpr => JPIntegerLiteralExpr,
     MethodCallExpr => JPMethodCallExpr,
     NameExpr => JPNameExpr,
+    NullLiteralExpr => JPNullLiteralExpr,
     ObjectCreationExpr => JPObjectCreationExpr,
     StringLiteralExpr => JPStringLiteralExpr,
     UnaryExpr => JPUnaryExpr,
@@ -31,6 +32,7 @@ object Expression {
         case e: JPIntegerLiteralExpr => IntegerLiteralExpr(e)
         case e: JPMethodCallExpr => MethodCallExpr(e)
         case e: JPNameExpr => NameExpr(e)
+        case e: JPNullLiteralExpr => NullLiteralExpr(e)
         case e: JPObjectCreationExpr => ObjectCreationExpr(e)
         case e: JPStringLiteralExpr => StringLiteralExpr(e)
         case e: JPUnaryExpr => UnaryExpr(e)

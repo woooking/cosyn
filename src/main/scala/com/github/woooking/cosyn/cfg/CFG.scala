@@ -1,7 +1,9 @@
 package com.github.woooking.cosyn.cfg
 
+import java.io.PrintStream
+
 import com.github.woooking.cosyn.ir._
-import com.github.woooking.cosyn.ir.statements.{IRAbstractStatement, IRAssignment}
+import com.github.woooking.cosyn.ir.statements.{IRStatement, IRAssignment}
 import com.github.woooking.cosyn.util.Printable
 
 import scala.collection.mutable
@@ -9,11 +11,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 class CFG extends Printable {
-    var num = 0
     var temp = 0
+    val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
     val entry = new Statements
     val exit: Exit.type = Exit
-    val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer(entry, exit)
 
     trait Context {
         val block: Statements
@@ -29,7 +30,7 @@ class CFG extends Printable {
         override val continue: Option[CFGBlock] = c
     }
 
-    class IRPhi(val block: CFGBlock) extends IRAbstractStatement {
+    class IRPhi(val block: CFGBlock) extends IRStatement {
         block.phis += this
 
         val target: IRTemp = createTempVar()
@@ -74,12 +75,12 @@ class CFG extends Printable {
 
     abstract class CFGBlock extends Printable {
         val defs: mutable.Map[String, IRVariable] = mutable.Map()
-        val id: Int = num
-        num += 1
+        val id: Int = blocks.length
+        blocks += this
 
         var isSealed = false
 
-        val phis: ArrayBuffer[IRAbstractStatement] = ArrayBuffer()
+        val phis: ArrayBuffer[IRPhi] = ArrayBuffer()
         val incompletePhis: mutable.Map[String, IRPhi] = mutable.Map()
 
         val preds: ArrayBuffer[CFGBlock] = ArrayBuffer()
@@ -97,14 +98,14 @@ class CFG extends Printable {
     class Statements extends CFGBlock {
         var next: Option[CFGBlock] = None
 
-        val statements: ArrayBuffer[IRAbstractStatement] = ArrayBuffer[IRAbstractStatement]()
+        val statements: ArrayBuffer[IRStatement] = ArrayBuffer[IRStatement]()
 
         override def setNext(next: CFGBlock): Unit = {
             this.next = Some(next)
             next.preds += this
         }
 
-        def addStatement(statement: IRAbstractStatement): Unit = statements += statement
+        def addStatement(statement: IRStatement): Unit = statements += statement
 
         def optimize(): Unit = {
             statements.foreach {
@@ -115,27 +116,27 @@ class CFG extends Printable {
             }
         }
 
-        override def print(): Unit = {
-            println(s"$this${next.map(" -> " + _).mkString}")
-            phis.foreach(println)
-            statements.foreach(println)
-            println()
+        override def print(ps: PrintStream = System.out): Unit = {
+            ps.println(s"$this${next.map(" -> " + _).mkString}")
+            phis.foreach(ps.println)
+            statements.foreach(ps.println)
+            ps.println()
         }
 
         override def toString: String = s"[Block $id: Statements]"
     }
 
-    class Branch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock) extends CFGBlock {
+    class Branch(condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock {
         thenBlock.preds += this
         elseBlock.preds += this
 
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of branch")
 
-        override def print(): Unit = {
-            println(this)
-            println(condition)
-            println(s"true -> $thenBlock")
-            println(s"false -> $elseBlock")
+        override def print(ps: PrintStream = System.out): Unit = {
+            ps.println(this)
+            ps.println(condition)
+            ps.println(s"true -> $thenBlock")
+            ps.println(s"false -> $elseBlock")
         }
 
         override def toString: String = s"[Block $id: Branch]"
@@ -144,8 +145,8 @@ class CFG extends Printable {
     object Exit extends CFGBlock {
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of exit")
 
-        override def print(): Unit = {
-            println(s"$this")
+        override def print(ps: PrintStream = System.out): Unit = {
+            ps.println(s"$this")
         }
 
         override def toString: String = s"[Block $id: Exit]"
@@ -154,30 +155,20 @@ class CFG extends Printable {
     class Switch extends CFGBlock {
         override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of switch")
 
-        override def print(): Unit = ???
+        override def print(ps: PrintStream = System.out): Unit = ???
     }
 
-    override def print(): Unit = {
-        blocks.foreach(_.print())
+    override def print(ps: PrintStream = System.out): Unit = {
+        blocks.foreach(_.print(ps))
     }
 
     def createTempVar(): IRTemp = new IRTemp
 
-    def createStatements(): Statements = {
-        val block = new Statements
-        blocks += block
-        block
-    }
+    def createStatements(): Statements = new Statements
 
-    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = {
-        val block = new Branch(condition, thenBlock, elseBlock)
-        blocks += block
-        block
-    }
+    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = new Branch(condition, thenBlock, elseBlock)
 
-    def writeVar(name: String, block: CFGBlock, value: IRVariable): Unit = {
-        block.defs(name) = value
-    }
+    def writeVar(name: String, block: CFGBlock, value: IRVariable): Unit = block.defs(name) = value
 
     def readVar(name: String, block: CFGBlock): IRVariable = block.defs.getOrElse(name, readVarRec(name, block))
 

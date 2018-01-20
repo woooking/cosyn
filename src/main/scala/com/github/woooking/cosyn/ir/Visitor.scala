@@ -19,12 +19,16 @@ class Visitor(parser: ProjectParser) {
     @tailrec
     private def generateCFGs(bodyDecls: List[BodyDeclaration[_]], methods: CFGMap): CFGMap = bodyDecls match {
         case Nil => methods
-        case body :: rest => generateCFGs(rest, generateCFGs(body))
+        case body :: rest => generateCFGs(rest, methods ++ generateCFGs(body))
     }
 
     private def generateCFGs(bodyDecl: BodyDeclaration[_]): CFGMap = bodyDecl match {
         case ClassOrInterfaceDeclaration(_, _, _, _, typeDecls) => generateCFGs(typeDecls, Map.empty)
         case FieldDeclaration(_) => Map.empty
+        case InitializerDeclaration(_, _) => Map.empty
+        case d @ MethodDeclaration(_, _, _, _, _, _, Some(_)) =>
+            val cfg = generateCFG(d)
+            Map(d.signature -> cfg)
         case d @ ConstructorDeclaration(_, _, _, _, _, _) =>
             val cfg = generateCFG(d)
             Map(d.signature -> cfg)
@@ -34,6 +38,16 @@ class Visitor(parser: ProjectParser) {
         val cfg = new CFG
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
+        pair.block.seal()
+        pair.block.setNext(cfg.exit)
+        cfg.optimize()
+        cfg
+    }
+
+    def generateCFG(decl: MethodDeclaration): CFG = {
+        val cfg = new CFG
+        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
+        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
         cfg.optimize()
@@ -148,6 +162,27 @@ class Visitor(parser: ProjectParser) {
         case ContinueStmt(None) =>
             context
         // TODO: change control flow
+        case ForStmt(init, Some(compare), update, body) =>
+            context.block.seal()
+            val entryBlock = cfg.createStatements()
+            init.foreach(visitExpression(cfg)(entryBlock, _))
+            context.block.setNext(entryBlock)
+            entryBlock.seal()
+            val compareBlock = cfg.createStatements()
+            entryBlock.setNext(compareBlock)
+            val compareResult = visitExpression(cfg)(compareBlock, compare)
+            val thenBlock = cfg.createStatements()
+            val elseBlock = cfg.createStatements()
+            val updateBlock = cfg.createStatements()
+            val branch = cfg.createBranch(compareResult, thenBlock, elseBlock)
+            val newContext = visitStatement(cfg)(cfg.createContext(thenBlock, Some(elseBlock), Some(updateBlock)), body)
+            newContext.block.seal()
+            newContext.block.setNext(updateBlock)
+            update.foreach(visitExpression(cfg)(updateBlock, _))
+            updateBlock.seal()
+            updateBlock.setNext(compareBlock)
+            compareBlock.seal()
+            cfg.createContext(elseBlock)
         case ForeachStmt(_, ite, b) =>
             context.block.seal()
             val entryBlock = cfg.createStatements()
@@ -170,12 +205,11 @@ class Visitor(parser: ProjectParser) {
             newContext.block.setNext(entryBlock)
             entryBlock.seal()
             cfg.createContext(elseBlock)
-            context
         case TryStmt(r, t, _, f) =>
             // TODO
             r.foreach(visitExpression(cfg)(context.block, _))
             var newContext = visitStatement(cfg)(context, t)
-//            newContext = (newContext /: cs) ((c, n) => visitCatchClause(cfg)(c, n))
+            //            newContext = (newContext /: cs) ((c, n) => visitCatchClause(cfg)(c, n))
             newContext = (newContext /: f) ((c, n) => visitStatement(cfg)(c, n))
             newContext
     }
@@ -212,7 +246,7 @@ class Visitor(parser: ProjectParser) {
         case IntegerLiteralExpr(n) => IRInteger(n)
         case BooleanLiteralExpr(true) => IRExpression.True
         case BooleanLiteralExpr(false) => IRExpression.False
-        //        case _: NullLiteralExpr => IRNull
+        case NullLiteralExpr() => IRNull
         case n @ MethodCallExpr(_, scope, _, arguments) =>
             val receiver = scope.map(node => visitExpression(cfg)(block, node))
             val args = arguments.map(node => visitExpression(cfg)(block, node))

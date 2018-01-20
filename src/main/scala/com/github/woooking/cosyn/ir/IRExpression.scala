@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.ir
 
 import com.github.javaparser.ast.`type`.Type
-import com.github.woooking.cosyn.ir.statements.IRAbstractStatement
+import com.github.woooking.cosyn.ir.statements.IRStatement
 
 import scala.collection.mutable
 
@@ -14,7 +14,7 @@ object IRExpression {
 }
 
 trait IRVariable extends IRExpression {
-    val uses: mutable.Set[IRAbstractStatement] = mutable.Set()
+    val uses: mutable.Set[IRStatement] = mutable.Set()
 }
 
 case object IRUndef extends IRVariable

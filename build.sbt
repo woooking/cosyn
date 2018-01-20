@@ -8,7 +8,7 @@ libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.5.5"
 libraryDependencies += "com.github.javaparser" % "java-symbol-solver-core" % "0.6.3"
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.0.1"
-
+libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.144-R12"
 
 scalacOptions ++= Seq(
     "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
