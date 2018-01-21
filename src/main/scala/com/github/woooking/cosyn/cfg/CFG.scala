@@ -11,24 +11,16 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 class CFG extends Printable {
-    var temp = 0
+    private[this] var temp = 0
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
     val entry = new Statements
     val exit: Exit.type = Exit
 
-    trait Context {
-        val block: Statements
-        val break: Option[CFGBlock]
-        val continue: Option[CFGBlock]
-    }
+    case class Context(block: Statements, break: Option[CFGBlock], continue: Option[CFGBlock])
 
     def createContext(b: Statements): Context = createContext(b, None, None)
 
-    def createContext(b: Statements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = new Context {
-        override val block: Statements = b
-        override val break: Option[CFGBlock] = br
-        override val continue: Option[CFGBlock] = c
-    }
+    def createContext(b: Statements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = Context(b, br, c)
 
     class IRPhi(val block: CFGBlock) extends IRStatement {
         block.phis += this
@@ -172,7 +164,7 @@ class CFG extends Printable {
 
     def readVar(name: String, block: CFGBlock): IRVariable = block.defs.getOrElse(name, readVarRec(name, block))
 
-    def readVarRec(name: String, block: CFGBlock): IRVariable = {
+    private def readVarRec(name: String, block: CFGBlock): IRVariable = {
         val v = if (!block.isSealed) {
             val phi = new IRPhi(block)
             block.incompletePhis(name) = phi
