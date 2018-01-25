@@ -7,6 +7,7 @@ case class IRArrayCreation(target: IRVariable,
                            ty: Type,
                            size: Seq[IRExpression],
                            initializers: Seq[IRExpression]) extends IRStatement {
-    size.foreach(addUse)
-    initializers.foreach(addUse)
+    override def uses: Seq[IRExpression] = size ++ initializers
+
+    init()
 }

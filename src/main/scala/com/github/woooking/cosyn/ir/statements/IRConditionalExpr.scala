@@ -7,7 +7,8 @@ case class IRConditionalExpr(target: IRVariable,
                              condition: IRExpression,
                              thenExpr: IRExpression,
                              elseExpr: IRExpression) extends IRStatement {
-    addUse(condition)
-    addUse(thenExpr)
-    addUse(elseExpr)
+
+    override def uses: Seq[IRExpression] = Seq(condition, thenExpr, elseExpr)
+
+    init()
 }

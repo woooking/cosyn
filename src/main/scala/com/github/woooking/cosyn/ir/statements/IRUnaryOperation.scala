@@ -5,5 +5,8 @@ import com.github.woooking.cosyn.ir.{IRVariable, IRExpression}
 
 case class IRUnaryOperation(target: IRVariable, ope: UnaryOperator, source: IRExpression) extends IRStatement {
     override def toString: String = s"$target=$ope $source"
-    addUse(source)
+
+    override def uses: Seq[IRExpression] = Seq(source)
+
+    init()
 }

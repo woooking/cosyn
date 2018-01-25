@@ -31,8 +31,14 @@ class CFG extends Printable {
 
         def appendOperand(ope: IRVariable): Unit = {
             operands += ope
-            addUse(ope)
+
+            ope match {
+                case v: IRVariable => v.uses += this
+                case _ =>
+            }
         }
+
+        override def uses: Seq[IRExpression] = operands.toSeq
 
         def replaceBy(variable: IRVariable): Unit = {
             block.phis -= this
@@ -41,11 +47,14 @@ class CFG extends Printable {
         }
 
         override def toString: String = s"$target=phi(${operands.mkString(", ")})"
+
+        init()
     }
 
     class IRTemp extends IRVariable {
         private val _id: Int = temp
         var replaced: Option[IRVariable] = None
+        var defStatement: IRStatement = _
         temp += 1
 
         def id: Int = replaced match {

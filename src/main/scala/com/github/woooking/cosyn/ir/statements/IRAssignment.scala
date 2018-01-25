@@ -4,5 +4,8 @@ import com.github.woooking.cosyn.ir.IRExpression
 
 case class IRAssignment(target: IRExpression, source: IRExpression) extends IRStatement {
     override def toString: String = s"$target=$source"
-    addUse(source)
+
+    override def uses: Seq[IRExpression] = Seq(source)
+
+    init()
 }
