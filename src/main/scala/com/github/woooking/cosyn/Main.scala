@@ -12,13 +12,13 @@ object Main {
         val cu = parser.parseFile(file)
         val visitor = new Visitor(parser)
         val methods = visitor.generateCFGs(cu)
-//        new CFGViewer(file.contentAsString, methods).main(args)
-        methods.foreach {
-            case (name, cfg) =>
-                println("========")
-                println(name)
-                DFG(cfg)
-        }
+        new CFGViewer(file.contentAsString, methods).main(args)
+//        methods.foreach {
+//            case (name, cfg) =>
+//                println("========")
+//                println(name)
+//                DFG(cfg)
+//        }
         ()
     }
 }

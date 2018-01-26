@@ -3,18 +3,16 @@ package com.github.woooking.cosyn.cfg
 import java.io.PrintStream
 
 import com.github.woooking.cosyn.ir._
-import com.github.woooking.cosyn.ir.statements.{IRStatement, IRAssignment}
-import com.github.woooking.cosyn.util.Printable
+import com.github.woooking.cosyn.ir.statements.IRPhi
+import com.github.woooking.cosyn.util.{IDGenerator, Printable}
 
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.util.Try
 
 class CFG extends Printable {
-    private[this] var temp = 0
+    private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
-    val entry = new Statements
-    val exit: Exit.type = Exit
+    val entry = new Statements(this)
+    val exit: Exit = new Exit(this)
 
     case class Context(block: Statements, break: Option[CFGBlock], continue: Option[CFGBlock])
 
@@ -22,152 +20,15 @@ class CFG extends Printable {
 
     def createContext(b: Statements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = Context(b, br, c)
 
-    class IRPhi(val block: CFGBlock) extends IRStatement {
-        block.phis += this
-
-        val target: IRTemp = createTempVar()
-
-        val operands: mutable.Set[IRVariable] = mutable.Set()
-
-        def appendOperand(ope: IRVariable): Unit = {
-            operands += ope
-
-            ope match {
-                case v: IRVariable => v.uses += this
-                case _ =>
-            }
-        }
-
-        override def uses: Seq[IRExpression] = operands.toSeq
-
-        def replaceBy(variable: IRVariable): Unit = {
-            block.phis -= this
-            operands.foreach(_.uses -= this)
-            target.replaced = Some(variable)
-        }
-
-        override def toString: String = s"$target=phi(${operands.mkString(", ")})"
-
-        init()
-    }
-
-    class IRTemp extends IRVariable {
-        private val _id: Int = temp
-        var replaced: Option[IRVariable] = None
-        var defStatement: IRStatement = _
-        temp += 1
-
-        def id: Int = replaced match {
-            case None => _id
-            case Some(t: IRTemp) => t.id
-            case _ =>
-                throw new RuntimeException("could not get id of a replaced temp")
-        }
-
-        override def toString: String = replaced match {
-            case None => s"#${_id}"
-            case Some(r) => r.toString
-        }
-    }
-
-    object IRTemp {
-        def unapply(arg: IRTemp): Option[Int] = Try { arg.id }.toOption
-    }
-
-    abstract class CFGBlock extends Printable {
-        val defs: mutable.Map[String, IRVariable] = mutable.Map()
-        val id: Int = blocks.length
-        blocks += this
-
-        var isSealed = false
-
-        val phis: ArrayBuffer[IRPhi] = ArrayBuffer()
-        val incompletePhis: mutable.Map[String, IRPhi] = mutable.Map()
-
-        val preds: ArrayBuffer[CFGBlock] = ArrayBuffer()
-
-        def seal(): Unit = {
-            incompletePhis.foreach { case (name, p) =>
-                addPhiOperands(name, p)
-            }
-            isSealed = true
-        }
-
-        def setNext(next: CFGBlock): Unit
-    }
-
-    class Statements extends CFGBlock {
-        var next: Option[CFGBlock] = None
-
-        val statements: ArrayBuffer[IRStatement] = ArrayBuffer[IRStatement]()
-
-        override def setNext(next: CFGBlock): Unit = {
-            this.next = Some(next)
-            next.preds += this
-        }
-
-        def addStatement(statement: IRStatement): Unit = statements += statement
-
-        def optimize(): Unit = {
-            statements.foreach {
-                case s @ IRAssignment(target @ IRTemp(_), source @ IRTemp(_)) =>
-                    target.replaced = Some(source)
-                    statements -= s
-                case _ =>
-            }
-        }
-
-        override def print(ps: PrintStream = System.out): Unit = {
-            ps.println(s"$this${next.map(" -> " + _).mkString}")
-            phis.foreach(ps.println)
-            statements.foreach(ps.println)
-            ps.println()
-        }
-
-        override def toString: String = s"[Block $id: Statements]"
-    }
-
-    class Branch(condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock {
-        thenBlock.preds += this
-        elseBlock.preds += this
-
-        override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of branch")
-
-        override def print(ps: PrintStream = System.out): Unit = {
-            ps.println(this)
-            ps.println(condition)
-            ps.println(s"true -> $thenBlock")
-            ps.println(s"false -> $elseBlock")
-        }
-
-        override def toString: String = s"[Block $id: Branch]"
-    }
-
-    object Exit extends CFGBlock {
-        override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of exit")
-
-        override def print(ps: PrintStream = System.out): Unit = {
-            ps.println(s"$this")
-        }
-
-        override def toString: String = s"[Block $id: Exit]"
-    }
-
-    class Switch extends CFGBlock {
-        override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of switch")
-
-        override def print(ps: PrintStream = System.out): Unit = ???
-    }
-
     override def print(ps: PrintStream = System.out): Unit = {
         blocks.foreach(_.print(ps))
     }
 
-    def createTempVar(): IRTemp = new IRTemp
+    def createTempVar(): IRTemp = new IRTemp(tempID.next())
 
-    def createStatements(): Statements = new Statements
+    def createStatements(): Statements = new Statements(this)
 
-    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = new Branch(condition, thenBlock, elseBlock)
+    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = new Branch(this, condition, thenBlock, elseBlock)
 
     def writeVar(name: String, block: CFGBlock, value: IRVariable): Unit = block.defs(name) = value
 

@@ -13,7 +13,7 @@ object DFGNode {
         case s: IRFieldAccess => DFGOperationNode(OpType.FieldAccess, s.field)
         case s: IRMethodInvocation => DFGOperationNode(OpType.MethodInvocation, s.name)
         case _: IRConditionalExpr => DFGOperationNode.ConditionExpr
-        case _: CFG#IRPhi => DFGOperationNode.Phi
+        case _: IRPhi => DFGOperationNode.Phi
         case _: IRArrayCreation => DFGOperationNode.ArrayCreation
         case _: IRReturn => DFGOperationNode.ConditionExpr
         case _: IRArrayAccess => DFGOperationNode.ArrayAccess

@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.ir
 
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.woooking.cosyn.ProjectParser
-import com.github.woooking.cosyn.cfg.CFG
+import com.github.woooking.cosyn.cfg.{CFG, Statements}
 import com.github.woooking.cosyn.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
@@ -89,7 +89,7 @@ class Visitor(parser: ProjectParser) {
     //            ???
     //    }
 
-    def visitVariableDeclarator(cfg: CFG)(block: cfg.Statements, node: VariableDeclarator): IRExpression = node match {
+    def visitVariableDeclarator(cfg: CFG)(block: Statements, node: VariableDeclarator): IRExpression = node match {
         case VariableDeclarator(name, _, initializer) =>
             val temp = cfg.createTempVar()
             cfg.writeVar(name, block, temp)
@@ -215,7 +215,7 @@ class Visitor(parser: ProjectParser) {
     }
 
 
-    def visitExpression(cfg: CFG)(block: cfg.Statements, node: Expression[_]): IRExpression = node match {
+    def visitExpression(cfg: CFG)(block: Statements, node: Expression[_]): IRExpression = node match {
         case AssignExpr(t, ope, s) =>
             // TODO: left hand side
             val target = visitExpression(cfg)(block, t)
