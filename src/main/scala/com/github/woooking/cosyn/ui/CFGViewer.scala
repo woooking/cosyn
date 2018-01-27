@@ -33,7 +33,7 @@ class CFGViewer(code: String, methods: Map[String, CFG]) extends JFXApp {
                 layoutY = y.toDouble
             })
             block match {
-                case b: Statements =>
+                case b: CFGStatements =>
                     b.next match {
                         case None =>
                             visited

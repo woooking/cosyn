@@ -2,12 +2,11 @@ package com.github.woooking.cosyn.cfg
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.ir.IRTemp
-import com.github.woooking.cosyn.ir.statements.{IRAssignment, IRStatement}
+import com.github.woooking.cosyn.ir.statements.{IRStatement}
 
 import scala.collection.mutable.ArrayBuffer
 
-class Statements(cfg: CFG) extends CFGBlock(cfg) {
+class CFGStatements(cfg: CFG) extends CFGBlock(cfg) {
     var next: Option[CFGBlock] = None
 
     val statements: ArrayBuffer[IRStatement] = ArrayBuffer[IRStatement]()
@@ -17,13 +16,13 @@ class Statements(cfg: CFG) extends CFGBlock(cfg) {
         next.preds += this
     }
 
-    def addStatement(statement: IRStatement): Unit = statements += statement
+    def addStatement(statement: IRStatement): statement.type = {
+        statements += statement
+        statement
+    }
 
     def optimize(): Unit = {
         statements.foreach {
-            case s @ IRAssignment(target @ IRTemp(_), source @ IRTemp(_)) =>
-                target.replaced = Some(source)
-                statements -= s
             case _ =>
         }
     }

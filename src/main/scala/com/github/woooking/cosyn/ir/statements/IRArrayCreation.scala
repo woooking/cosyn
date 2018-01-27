@@ -1,12 +1,10 @@
 package com.github.woooking.cosyn.ir.statements
 
 import com.github.javaparser.ast.`type`.Type
-import com.github.woooking.cosyn.ir.{IRVariable, IRExpression}
+import com.github.woooking.cosyn.cfg.CFG
+import com.github.woooking.cosyn.ir.IRExpression
 
-case class IRArrayCreation(target: IRVariable,
-                           ty: Type,
-                           size: Seq[IRExpression],
-                           initializers: Seq[IRExpression]) extends IRStatement {
+class IRArrayCreation(cfg: CFG, ty: Type, size: Seq[IRExpression], initializers: Seq[IRExpression]) extends IRDefStatement(cfg) {
     override def uses: Seq[IRExpression] = size ++ initializers
 
     init()

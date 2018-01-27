@@ -1,13 +1,10 @@
 package com.github.woooking.cosyn.ir
 
 import com.github.javaparser.ast.`type`.Type
-import com.github.woooking.cosyn.cfg.{CFG, CFGBlock}
 import com.github.woooking.cosyn.ir.statements.IRStatement
 
 import scala.collection.mutable
 import scala.util.Try
-
-sealed trait IRExpression extends NodeResult
 
 object IRExpression {
     val True = IRBoolean(true)
@@ -15,12 +12,12 @@ object IRExpression {
     val False = IRBoolean(false)
 }
 
-trait IRVariable extends IRExpression {
+trait IRExpression {
     val uses: mutable.Set[IRStatement] = mutable.Set()
 }
 
-class IRTemp(initID: Int) extends IRVariable {
-    var replaced: Option[IRVariable] = None
+class IRTemp(initID: Int) extends IRExpression {
+    var replaced: Option[IRExpression] = None
     var defStatement: IRStatement = _
 
     def id: Int = replaced match {
@@ -40,13 +37,13 @@ object IRTemp {
     def unapply(arg: IRTemp): Option[Int] = Try { arg.id }.toOption
 }
 
-case object IRUndef extends IRVariable
+case object IRUndef extends IRExpression
 
-case class IRExtern(name: String) extends IRVariable {
+case class IRExtern(name: String) extends IRExpression {
     override def toString: String = name
 }
 
-case class IRArg(name: String, ty: Type) extends IRVariable {
+case class IRArg(name: String, ty: Type) extends IRExpression {
     override def toString: String = name
 }
 
@@ -64,13 +61,13 @@ case class IRInteger(value: Int) extends IRExpression {
     override def toString: String = s"$value"
 }
 
-case object IRNull extends IRVariable {
+case object IRNull extends IRExpression {
     override def toString: String = "null"
 }
 
-case object IRThis extends IRVariable
+case object IRThis extends IRExpression
 
-case class IRTypeObject(ty: Type) extends IRVariable {
+case class IRTypeObject(ty: Type) extends IRExpression {
     override def toString: String = ty.asString()
 }
 

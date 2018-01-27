@@ -1,29 +1,27 @@
 package com.github.woooking.cosyn.ir.statements
 
 import com.github.woooking.cosyn.cfg.CFGBlock
-import com.github.woooking.cosyn.ir.{IRExpression, IRTemp, IRVariable}
+import com.github.woooking.cosyn.ir.{IRTemp, IRExpression}
 
 import scala.collection.mutable
 
-class IRPhi(val block: CFGBlock) extends IRStatement {
+class IRPhi(val block: CFGBlock) extends IRDefStatement(block.cfg) {
     block.phis += this
 
-    val target: IRTemp = block.cfg.createTempVar()
+    val operands: mutable.Set[IRExpression] = mutable.Set()
 
-    val operands: mutable.Set[IRVariable] = mutable.Set()
-
-    def appendOperand(ope: IRVariable): Unit = {
+    def appendOperand(ope: IRExpression): Unit = {
         operands += ope
 
         ope match {
-            case v: IRVariable => v.uses += this
+            case v: IRExpression => v.uses += this
             case _ =>
         }
     }
 
     override def uses: Seq[IRExpression] = operands.toSeq
 
-    def replaceBy(variable: IRVariable): Unit = {
+    def replaceBy(variable: IRExpression): Unit = {
         block.phis -= this
         operands.foreach(_.uses -= this)
         target.replaced = Some(variable)

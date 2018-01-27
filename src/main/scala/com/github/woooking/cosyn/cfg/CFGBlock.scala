@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.cfg
 
-import com.github.woooking.cosyn.ir.IRVariable
+import com.github.woooking.cosyn.ir.IRExpression
 import com.github.woooking.cosyn.ir.statements.IRPhi
 import com.github.woooking.cosyn.util.Printable
 
@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 abstract class CFGBlock(val cfg: CFG) extends Printable {
-    val defs: mutable.Map[String, IRVariable] = mutable.Map()
+    val defs: mutable.Map[String, IRExpression] = mutable.Map()
     val id: Int = cfg.blocks.length
     cfg.blocks += this
 

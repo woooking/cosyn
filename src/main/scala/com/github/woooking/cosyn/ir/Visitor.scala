@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.ir
 
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.woooking.cosyn.ProjectParser
-import com.github.woooking.cosyn.cfg.{CFG, Statements}
+import com.github.woooking.cosyn.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
@@ -89,12 +89,11 @@ class Visitor(parser: ProjectParser) {
     //            ???
     //    }
 
-    def visitVariableDeclarator(cfg: CFG)(block: Statements, node: VariableDeclarator): IRExpression = node match {
+    def visitVariableDeclarator(cfg: CFG)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {
         case VariableDeclarator(name, _, initializer) =>
-            val temp = cfg.createTempVar()
-            cfg.writeVar(name, block, temp)
-            initializer.map((node: Expression[_]) => visitExpression(cfg)(block, node)).foreach(i => block.addStatement(IRAssignment(temp, i)))
-            temp
+            val initValue = initializer.map(node => visitExpression(cfg)(block, node)).getOrElse(IRNull)
+            cfg.writeVar(name, block, initValue)
+            initValue
     }
 
     def visitCatchClause(cfg: CFG)(block: cfg.Context, node: CatchClause): cfg.Context = ???
@@ -188,18 +187,17 @@ class Visitor(parser: ProjectParser) {
             val entryBlock = cfg.createStatements()
             context.block.setNext(entryBlock)
             val iteExpr = visitExpression(cfg)(entryBlock, ite)
-            val tempIte = cfg.createTempVar()
-            entryBlock.addStatement(IRMethodInvocation(tempIte, "iterator", Some(iteExpr), Seq()))
+            val tempIte = entryBlock.addStatement(new IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq())).target
             val conditionBlock = cfg.createStatements()
             entryBlock.setNext(conditionBlock)
-            val condition = cfg.createTempVar()
-            conditionBlock.addStatement(IRMethodInvocation(condition, "hasNext", Some(iteExpr), Seq()))
+            val condition = conditionBlock.addStatement(new IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq())).target
             val thenBlock = cfg.createStatements()
             val elseBlock = cfg.createStatements()
             val branch = cfg.createBranch(condition, thenBlock, elseBlock)
             conditionBlock.seal()
             branch.seal()
             conditionBlock.setNext(branch)
+            // TODO next
             val newContext = visitStatement(cfg)(cfg.createContext(thenBlock, Some(elseBlock), Some(entryBlock)), b)
             newContext.block.seal()
             newContext.block.setNext(entryBlock)
@@ -215,32 +213,29 @@ class Visitor(parser: ProjectParser) {
     }
 
 
-    def visitExpression(cfg: CFG)(block: Statements, node: Expression[_]): IRExpression = node match {
-        case AssignExpr(t, ope, s) =>
+    def visitExpression(cfg: CFG)(block: CFGStatements, node: Expression[_]): IRExpression = node match {
+        case AssignExpr(NameExpr(name), ope, s) =>
             // TODO: left hand side
-            val target = visitExpression(cfg)(block, t)
             val source = visitExpression(cfg)(block, s)
             ope match {
                 case AssignExpr.Operator.Assign =>
-                    block.addStatement(IRAssignment(target, source))
+                    cfg.writeVar(name, block, source)
+                    source
                 case _ =>
-                    val temp = cfg.createTempVar()
-                    block.addStatement(IRBinaryOperation(temp, BinaryOperator.fromAssignExprOperator(ope), target, source))
+                    val value = cfg.readVar(name, block)
+                    val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromAssignExprOperator(ope), value, source)).target
+                    cfg.writeVar(name, block, target)
+                    target
             }
-            target
         case BinaryExpr(l, ope, r) =>
             val lhs = visitExpression(cfg)(block, l)
             val rhs = visitExpression(cfg)(block, r)
-            val temp = cfg.createTempVar()
-            block.addStatement(IRBinaryOperation(temp, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs))
-            temp
+            block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs)).target
         case CastExpr(_, e) =>
             visitExpression(cfg)(block, e)
         case FieldAccessExpr(scope, name, _) =>
             val receiver = visitExpression(cfg)(block, scope)
-            val temp = cfg.createTempVar()
-            block.addStatement(IRFieldAccess(temp, receiver, name))
-            temp
+            block.addStatement(new IRFieldAccess(cfg, receiver, name)).target
         case StringLiteralExpr(n) => IRString(n)
         case CharLiteralExpr(n) => IRChar(n)
         case IntegerLiteralExpr(n) => IRInteger(n)
@@ -250,9 +245,7 @@ class Visitor(parser: ProjectParser) {
         case n @ MethodCallExpr(_, scope, _, arguments) =>
             val receiver = scope.map(node => visitExpression(cfg)(block, node))
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            val temp = cfg.createTempVar()
-            block.addStatement(IRMethodInvocation(temp, n.delegate.getName.getIdentifier, receiver, args))
-            temp
+            block.addStatement(new IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args)).target
         case NameExpr(name) =>
             cfg.readVar(name, block) match {
                 case IRUndef => IRExtern(name)
@@ -260,9 +253,7 @@ class Visitor(parser: ProjectParser) {
             }
         case ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            val temp = cfg.createTempVar()
-            block.addStatement(IRMethodInvocation(temp, "<init>", Some(IRTypeObject(ty)), args))
-            temp
+            block.addStatement(new IRMethodInvocation(cfg, "<init>", Some(IRTypeObject(ty)), args)).target
         //        case ThisExpr(_) =>
         //            // TODO: more specific
         //            IRThis
@@ -273,10 +264,8 @@ class Visitor(parser: ProjectParser) {
         //            block.addStatement(IRFieldAccess(temp, receiver, "super"))
         //            temp
         case UnaryExpr(ope, e) =>
-            val temp = cfg.createTempVar()
             val source = visitExpression(cfg)(block, e)
-            block.addStatement(IRUnaryOperation(temp, UnaryOperator.fromAssignExprOperator(ope), source))
-            temp
+            block.addStatement(new IRUnaryOperation(cfg, UnaryOperator.fromAssignExprOperator(ope), source)).target
         case VariableDeclarationExpr(declarators) =>
             declarators.map(visitVariableDeclarator(cfg)(block, _))
             null // TODO
