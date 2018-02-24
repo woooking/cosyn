@@ -1,9 +1,13 @@
 package com.github.woooking.cosyn.ir.statements
 
+import com.github.woooking.cosyn.cfg.CFG
 import com.github.woooking.cosyn.ir.statements.UnaryOperator.UnaryOperator
-import com.github.woooking.cosyn.ir.{IRVariable, IRExpression}
+import com.github.woooking.cosyn.ir.IRExpression
 
-case class IRUnaryOperation(target: IRVariable, ope: UnaryOperator, source: IRExpression) extends IRStatement {
+class IRUnaryOperation(cfg: CFG, val ope: UnaryOperator, val source: IRExpression) extends IRDefStatement(cfg) {
     override def toString: String = s"$target=$ope $source"
-    addUse(source)
+
+    override def uses: Seq[IRExpression] = Seq(source)
+
+    init()
 }

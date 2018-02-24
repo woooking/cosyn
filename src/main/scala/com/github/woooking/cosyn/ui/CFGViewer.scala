@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.ui
 
 import java.io.{ByteArrayOutputStream, PrintStream}
 
-import com.github.woooking.cosyn.cfg.CFG
+import com.github.woooking.cosyn.cfg._
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
@@ -16,7 +16,7 @@ import scalafx.scene.layout.{HBox, Pane, VBox}
 class CFGViewer(code: String, methods: Map[String, CFG]) extends JFXApp {
     val statements = new Label("")
 
-    class BlockID(block: CFG#CFGBlock) extends Label(block.id.toString) {
+    class BlockID(block: CFGBlock) extends Label(block.id.toString) {
         onMouseClicked = () => {
             val bos = new ByteArrayOutputStream()
             val ps = new PrintStream(bos)
@@ -26,24 +26,24 @@ class CFGViewer(code: String, methods: Map[String, CFG]) extends JFXApp {
     }
 
     def generateView(cfg: CFG) = {
-        def fromBlock(pane: Pane, block: cfg.CFGBlock, x: Int, y: Int, visited: Set[cfg.CFGBlock]): Set[cfg.CFGBlock] = {
+        def fromBlock(pane: Pane, block: CFGBlock, x: Int, y: Int, visited: Set[CFGBlock]): Set[CFGBlock] = {
             if (visited contains block) return visited
             pane.children.add(new BlockID(block) {
                 layoutX = x.toDouble
                 layoutY = y.toDouble
             })
             block match {
-                case b: cfg.Statements =>
+                case b: CFGStatements =>
                     b.next match {
                         case None =>
                             visited
                         case Some(n) =>
                             fromBlock(pane, n, x, y + 40, visited + block)
                     }
-                case b: cfg.Branch =>
+                case b: Branch =>
                     val v = fromBlock(pane, b.thenBlock, x - 20, y + 40, visited + block)
                     fromBlock(pane, b.elseBlock, x + 20, y + 40, v + block)
-                case _: cfg.Exit.type =>
+                case _: Exit =>
                     visited
             }
         }

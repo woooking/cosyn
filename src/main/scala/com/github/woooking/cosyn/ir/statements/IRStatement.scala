@@ -1,16 +1,11 @@
 package com.github.woooking.cosyn.ir.statements
 
-import com.github.woooking.cosyn.cfg.CFG
-import com.github.woooking.cosyn.ir.{IRExpression, IRVariable}
+import com.github.woooking.cosyn.ir.IRExpression
 
 trait IRStatement {
-    def addUse(exp: IRExpression): Unit = exp match {
-        case v: IRVariable => v.uses += this
-        case _ =>
+    def uses: Seq[IRExpression]
+
+    def init(): Unit = {
+        uses.foreach(_.uses += this)
     }
 }
-
-abstract class IRDefStatement(cfg: CFG) extends IRStatement {
-    val target: IRVariable
-}
-

@@ -1,13 +1,14 @@
 package com.github.woooking.cosyn.ir.statements
 
-import com.github.woooking.cosyn.ir.statements.UnaryOperator.UnaryOperator
-import com.github.woooking.cosyn.ir.{IRVariable, IRExpression}
+import com.github.woooking.cosyn.cfg.CFG
+import com.github.woooking.cosyn.ir.IRExpression
 
-case class IRConditionalExpr(target: IRVariable,
+case class IRConditionalExpr(cfg: CFG,
                              condition: IRExpression,
                              thenExpr: IRExpression,
-                             elseExpr: IRExpression) extends IRStatement {
-    addUse(condition)
-    addUse(thenExpr)
-    addUse(elseExpr)
+                             elseExpr: IRExpression) extends IRDefStatement(cfg) {
+
+    override def uses: Seq[IRExpression] = Seq(condition, thenExpr, elseExpr)
+
+    init()
 }

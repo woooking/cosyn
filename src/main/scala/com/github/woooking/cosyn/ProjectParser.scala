@@ -14,6 +14,8 @@ class ProjectParser(dir: File) {
 
     val cus: mutable.Map[String, CompilationUnit] = mutable.Map()
 
+    def parseAll() = files.map(parseFile)
+
     def parseFile(file: File): CompilationUnit = {
         if (!files.contains(file)) throw new Exception(s"$file is not a file in $dir")
         cus.getOrElseUpdate(file.pathAsString, CompilationUnit(JavaParser.parse(file.toJava)))
