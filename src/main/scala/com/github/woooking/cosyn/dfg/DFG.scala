@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.dfg
 
 import com.github.woooking.cosyn.cfg.{CFG, CFGStatements}
-import com.github.woooking.cosyn.ir.IRExpression
+import com.github.woooking.cosyn.ir.IRTemp
 import com.github.woooking.cosyn.ir.statements.IRStatement
 import de.parsemis.graph.{Edge, ListGraph, Node}
 
@@ -19,12 +19,12 @@ object DFG {
             case block: CFGStatements => block.statements
         }
         val map: Map[IRStatement, Node[DFGNode, DFGEdge]] = statements.map(s => s -> dfg.graph.addNode(DFGNode.statement2node(s))).toMap
-        statements.flatMap(s => s.uses.map(use => s -> use)).foreach {
-            case (from, to: IRExpression) =>
-//                dfg.graph.addEdge(map(from), map(to), new DFGEdge {}, Edge.OUTGOING)
+        statements.flatMap(s => s.uses.map(use => use -> s)).foreach {
+            case (from: IRTemp, to) =>
+                dfg.graph.addEdge(map(from.definition.get), map(to), new DFGEdge {}, Edge.OUTGOING)
             case (from, to) =>
+                dfg.graph.addEdge(dfg.graph.addNode(new DFGDataNode(from.toString)), map(to), new DFGEdge {}, Edge.OUTGOING)
         }
-        println(map)
         dfg
     }
 }

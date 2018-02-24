@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.cfg
 import java.io.PrintStream
 
 import com.github.woooking.cosyn.ir._
-import com.github.woooking.cosyn.ir.statements.IRPhi
+import com.github.woooking.cosyn.ir.statements.{IRPhi, IRStatement}
 import com.github.woooking.cosyn.util.{IDGenerator, Printable}
 
 import scala.collection.mutable.ArrayBuffer
@@ -24,7 +24,7 @@ class CFG extends Printable {
         blocks.foreach(_.print(ps))
     }
 
-    def createTempVar(): IRTemp = new IRTemp(tempID.next())
+    def createTempVar(definition: IRStatement): IRTemp = new IRTemp(tempID.next(), definition)
 
     def createStatements(): CFGStatements = new CFGStatements(this)
 
