@@ -7,7 +7,7 @@ import com.github.woooking.cosyn.util.OptionConverters._
 
 import collection.JavaConverters._
 
-class CompilationUnit(override val delegate: JPCompilationUnit) extends NodeDelegate[JPCompilationUnit] {
+class CompilationUnit(override val delegate: JPCompilationUnit, val file: String) extends NodeDelegate[JPCompilationUnit] {
     val packageDeclaration: Option[PackageDeclaration] = delegate.getPackageDeclaration.asScala.map(PackageDeclaration.apply)
 
     val imports: List[ImportDeclaration] = delegate.getImports.asScala.map(ImportDeclaration.apply).toList
@@ -18,7 +18,7 @@ class CompilationUnit(override val delegate: JPCompilationUnit) extends NodeDele
 }
 
 object CompilationUnit {
-    def apply(delegate: JPCompilationUnit): CompilationUnit = new CompilationUnit(delegate)
+    def apply(delegate: JPCompilationUnit, file: String): CompilationUnit = new CompilationUnit(delegate, file)
 
     def unapply(arg: CompilationUnit): Option[(
         Option[PackageDeclaration],

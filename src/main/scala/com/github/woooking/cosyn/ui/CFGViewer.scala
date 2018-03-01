@@ -40,10 +40,10 @@ class CFGViewer(code: String, methods: Map[String, CFG]) extends JFXApp {
                         case Some(n) =>
                             fromBlock(pane, n, x, y + 40, visited + block)
                     }
-                case b: Branch =>
+                case b: CFGBranch =>
                     val v = fromBlock(pane, b.thenBlock, x - 20, y + 40, visited + block)
                     fromBlock(pane, b.elseBlock, x + 20, y + 40, v + block)
-                case _: Exit =>
+                case _: CFGExit =>
                     visited
             }
         }

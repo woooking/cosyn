@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.javaparser.body
 
 import com.github.javaparser.ast.body.{
     BodyDeclaration => JPBodyDeclaration,
+    AnnotationMemberDeclaration => JPAnnotationMemberDeclaration,
     ConstructorDeclaration => JPConstructorDeclaration,
     FieldDeclaration => JPFieldDeclaration,
     InitializerDeclaration => JPInitializerDeclaration,
@@ -14,6 +15,7 @@ trait BodyDeclaration[T <: JPBodyDeclaration[_]] extends NodeDelegate[JPBodyDecl
 
 object BodyDeclaration {
     def apply[T <: JPBodyDeclaration[_]](typeDecl: JPBodyDeclaration[T]): BodyDeclaration[_] = typeDecl match {
+        case t: JPAnnotationMemberDeclaration => AnnotationMemberDeclaration(t)
         case t: JPConstructorDeclaration => ConstructorDeclaration(t)
         case t: JPFieldDeclaration => FieldDeclaration(t)
         case t: JPInitializerDeclaration => InitializerDeclaration(t)

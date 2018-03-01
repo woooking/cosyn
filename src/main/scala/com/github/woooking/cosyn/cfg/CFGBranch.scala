@@ -4,7 +4,7 @@ import java.io.PrintStream
 
 import com.github.woooking.cosyn.ir.IRExpression
 
-class Branch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
+class CFGBranch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
     thenBlock.preds += this
     elseBlock.preds += this
 

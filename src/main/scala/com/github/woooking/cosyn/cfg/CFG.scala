@@ -8,11 +8,11 @@ import com.github.woooking.cosyn.util.{IDGenerator, Printable}
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFG extends Printable {
+class CFG(val file: String, val name: String) extends Printable {
     private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
     val entry = new CFGStatements(this)
-    val exit: Exit = new Exit(this)
+    val exit: CFGExit = new CFGExit(this)
 
     case class Context(block: CFGStatements, break: Option[CFGBlock], continue: Option[CFGBlock])
 
@@ -28,7 +28,9 @@ class CFG extends Printable {
 
     def createStatements(): CFGStatements = new CFGStatements(this)
 
-    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): Branch = new Branch(this, condition, thenBlock, elseBlock)
+    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): CFGBranch = new CFGBranch(this, condition, thenBlock, elseBlock)
+
+    def createSwitch(selector: IRExpression): CFGSwitch = new CFGSwitch(this, selector)
 
     def writeVar(name: String, block: CFGBlock, value: IRExpression): Unit = block.defs(name) = value
 
