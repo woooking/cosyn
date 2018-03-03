@@ -5,6 +5,7 @@ import com.github.woooking.cosyn.dfg.DFG
 import com.github.woooking.cosyn.ir.Visitor
 import com.github.woooking.cosyn.middleware.{CompilationUnitFilter, FileFilter}
 import com.github.woooking.cosyn.mine.{Miner, Setting}
+import com.github.woooking.cosyn.util.GraphUtil
 
 import scala.collection.mutable
 import scala.util.Try
@@ -41,6 +42,8 @@ class Cosyn(dir: File) {
         println(s"总控制流图数：${cfgs.length}")
         val dfgs = cfgs.map(DFG.apply)
         println(s"总数据流图数：${dfgs.length}")
-        Miner.mine(dfgs)
+        val result = Miner.mine(dfgs)
+        println(s"结果数：${result.length}")
+        result.foreach(r => GraphUtil.printGraph(r.toGraph))
     }
 }
