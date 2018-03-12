@@ -8,7 +8,7 @@ import com.github.woooking.cosyn.util.{IDGenerator, Printable}
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFG(val file: String, val name: String) extends Printable {
+class CFG(val file: String, val name: String, val body: String) extends Printable {
     private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
     val entry = new CFGStatements(this)
@@ -58,26 +58,34 @@ class CFG(val file: String, val name: String) extends Printable {
     }
 
     def tryRemoveTrivialPhi(name: String, phi: IRPhi): IRExpression = {
-        val others = phi.operands.filter {
-            case IRTemp(id) if id == phi.target.id => false
-            case _ => true
-        }
-        if (others.size >= 2) phi.target
-        else {
-            val same = if (others.isEmpty) IRExtern(name) else others.last
-            phi.replaceBy(same)
-            (phi.target.uses - phi).foreach {
-                case p: IRPhi => tryRemoveTrivialPhi(name, p)
-                case _ =>
+        var same: IRExpression = null
+        for (op <- phi.operands) {
+            if (!exprEquals(op, same) && !exprEquals(op, phi.target)) {
+                if (same != null) return phi.target
+                same = op
             }
-            same
         }
+        val result = if (same == null) IRExtern(name) else same
+        phi.replaceBy(result)
+        (phi.target.uses - phi).foreach {
+            case p: IRPhi => tryRemoveTrivialPhi(name, p)
+            case _ =>
+        }
+        result
     }
 
     def optimize(): Unit = {
         blocks.foreach {
             case statements: CFGStatements => statements.optimize()
             case _ =>
+        }
+    }
+
+    private def exprEquals(a: IRExpression, b: IRExpression): Boolean = {
+        (a, b) match {
+            case (t: IRTemp, _) if t.replaced.isDefined => exprEquals(t.replaced.get, b)
+            case (_, t: IRTemp) if t.replaced.isDefined => exprEquals(a, t.replaced.get)
+            case _ => a.equals(b)
         }
     }
 }

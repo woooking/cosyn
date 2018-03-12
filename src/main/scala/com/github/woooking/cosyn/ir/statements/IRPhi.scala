@@ -8,7 +8,7 @@ import scala.collection.mutable
 class IRPhi(val block: CFGBlock) extends IRDefStatement(block.cfg) {
     block.phis += this
 
-    val operands: mutable.Set[IRExpression] = mutable.Set()
+    val operands: mutable.ArrayBuffer[IRExpression] = mutable.ArrayBuffer()
 
     def appendOperand(ope: IRExpression): Unit = {
         operands += ope
@@ -19,7 +19,7 @@ class IRPhi(val block: CFGBlock) extends IRDefStatement(block.cfg) {
         }
     }
 
-    override def uses: Seq[IRExpression] = operands.toSeq
+    override def uses: Seq[IRExpression] = operands
 
     def replaceBy(variable: IRExpression): Unit = {
         block.phis -= this

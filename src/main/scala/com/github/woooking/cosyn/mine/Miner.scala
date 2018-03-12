@@ -8,6 +8,6 @@ import de.parsemis.miner.environment.Settings
 
 object Miner {
     def mine(dfgs: Seq[DFG])(implicit setting: Settings[DFGNode, DFGEdge]) = {
-        de.parsemis.Miner.mine[DFGNode, DFGEdge](dfgs.map(_.graph.asInstanceOf[Graph[DFGNode, DFGEdge]]).asJavaCollection, setting).asScala.toSeq
+        de.parsemis.Miner.mine[DFGNode, DFGEdge](dfgs.map(_.asInstanceOf[Graph[DFGNode, DFGEdge]]).asJavaCollection, setting).asScala.toSeq
     }
 }

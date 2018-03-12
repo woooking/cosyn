@@ -37,6 +37,7 @@ class IRTemp(initID: Int, defi: IRStatement) extends IRExpression {
         case None => s"#$initID"
         case Some(r) => r.toString
     }
+
 }
 
 object IRTemp {
@@ -87,6 +88,8 @@ case object IRThis extends IRExpression
 case object IRSuper extends IRExpression
 
 case object IRLambda extends IRExpression
+
+case object IRMethodReference extends IRExpression
 
 case class IRTypeObject(ty: Type) extends IRExpression {
     override def toString: String = ty.asString()

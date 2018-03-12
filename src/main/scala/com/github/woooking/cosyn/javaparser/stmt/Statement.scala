@@ -15,6 +15,7 @@ import com.github.javaparser.ast.stmt.{
     ForeachStmt => JPForeachStmt,
     IfStmt => JPIfStmt,
     LabeledStmt => JPLabeledStmt,
+    LocalClassDeclarationStmt => JPLocalClassDeclarationStmt,
     ReturnStmt => JPReturnStmt,
     SwitchStmt => JPSwitchStmt,
     SynchronizedStmt => JPSynchronizedStmt,
@@ -39,6 +40,7 @@ object Statement {
         case s: JPForeachStmt => ForeachStmt(s)
         case s: JPIfStmt => IfStmt(s)
         case s: JPLabeledStmt => LabeledStmt(s)
+        case s: JPLocalClassDeclarationStmt => LocalClassDeclarationStmt(s)
         case s: JPReturnStmt => ReturnStmt(s)
         case s: JPSwitchStmt => SwitchStmt(s)
         case s: JPSynchronizedStmt => SynchronizedStmt(s)

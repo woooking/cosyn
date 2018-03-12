@@ -7,7 +7,6 @@ import de.parsemis.graph.{Edge, Graph}
 
 object GraphUtil {
     def printGraph(g: Graph[DFGNode, DFGEdge], ps: PrintStream = System.out): Unit = {
-        ps.println("-----")
         val nodeIte = g.nodeIterator
         while ( {nodeIte.hasNext}) {
             val node = nodeIte.next

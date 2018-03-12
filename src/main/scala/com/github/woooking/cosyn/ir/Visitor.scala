@@ -40,7 +40,7 @@ object Visitor {
     }
 
     def generateCFG(file: String, decl: ConstructorDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name)
+        val cfg = new CFG(file, decl.name, decl.delegate.toString)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
@@ -50,7 +50,7 @@ object Visitor {
     }
 
     def generateCFG(file: String, decl: MethodDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name)
+        val cfg = new CFG(file, decl.name, decl.delegate.toString)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
@@ -108,7 +108,9 @@ object Visitor {
         case ExplicitConstructorInvocationStmt(_, None, _, _) =>
             // TODO: explicit constructor
             context
-        // TODO: change control flow
+        case ExplicitConstructorInvocationStmt(_, Some(_), _, _) =>
+            // TODO: explicit constructor
+            context
         case ForStmt(init, None, update, body) =>
             context.block.seal()
             val entryBlock = cfg.createStatements()
@@ -152,7 +154,7 @@ object Visitor {
             updateBlock.setNext(compareBlock)
             compareBlock.seal()
             cfg.createContext(elseBlock)
-        case ForeachStmt(_, ite, b) =>
+        case ForeachStmt(v, ite, b) =>
             context.block.seal()
             val entryBlock = cfg.createStatements()
             context.block.setNext(entryBlock)
@@ -160,18 +162,20 @@ object Visitor {
             val tempIte = entryBlock.addStatement(new IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq())).target
             val conditionBlock = cfg.createStatements()
             entryBlock.setNext(conditionBlock)
+            entryBlock.seal()
             val condition = conditionBlock.addStatement(new IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq())).target
             val thenBlock = cfg.createStatements()
+            val next = thenBlock.addStatement(new IRMethodInvocation(cfg, "next", Some(tempIte), Seq())).target
+            cfg.writeVar(v.getVariables.get(0).getName.asString(), thenBlock, next)
             val elseBlock = cfg.createStatements()
             val branch = cfg.createBranch(condition, thenBlock, elseBlock)
-            conditionBlock.seal()
             branch.seal()
             conditionBlock.setNext(branch)
             // TODO next
             val newContext = visitStatement(cfg)(cfg.createContext(thenBlock, Some(elseBlock), Some(entryBlock)), b)
             newContext.block.seal()
-            newContext.block.setNext(entryBlock)
-            entryBlock.seal()
+            newContext.block.setNext(conditionBlock)
+            conditionBlock.seal()
             cfg.createContext(elseBlock)
         case IfStmt(c, t, None) =>
             val condition = visitExpression(cfg)(context.block, c)
@@ -204,6 +208,9 @@ object Visitor {
         case LabeledStmt(_, s) =>
             // TODO: label
             visitStatement(cfg)(context, s)
+        case LocalClassDeclarationStmt(_) =>
+            // TODO: Local class decl
+            context
         case ReturnStmt(expression) =>
             val expr = expression.map(node => visitExpression(cfg)(context.block, node))
             context.block.addStatement(IRReturn(expr))
@@ -323,6 +330,8 @@ object Visitor {
             val receiver = scope.map(node => visitExpression(cfg)(block, node))
             val args = arguments.map(node => visitExpression(cfg)(block, node))
             block.addStatement(new IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args)).target
+        case MethodReferenceExpr(_, _, _) =>
+            IRMethodReference
         case NameExpr(name) =>
             cfg.readVar(name, block) match {
                 case IRUndef => IRExtern(name)
@@ -331,7 +340,7 @@ object Visitor {
         case NullLiteralExpr() => IRNull
         case ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(new IRMethodInvocation(cfg, "<init>", Some(IRTypeObject(ty)), args)).target
+            block.addStatement(new IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty)), args)).target
         case StringLiteralExpr(n) => IRString(n)
         case SuperExpr(_) =>
             // TODO: more specific
@@ -345,6 +354,8 @@ object Visitor {
         case VariableDeclarationExpr(declarators) =>
             declarators.map(visitVariableDeclarator(cfg)(block, _))
             null // TODO
+        case TypeExpr(ty) =>
+            IRTypeObject(ty)
     }
 
 }

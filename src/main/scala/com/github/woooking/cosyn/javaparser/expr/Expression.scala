@@ -21,6 +21,7 @@ import com.github.javaparser.ast.expr.{
     LambdaExpr => JPLambdaExpr,
     LongLiteralExpr => JPLongLiteralExpr,
     MethodCallExpr => JPMethodCallExpr,
+    MethodReferenceExpr => JPMethodReferenceExpr,
     NameExpr => JPNameExpr,
     NullLiteralExpr => JPNullLiteralExpr,
     ObjectCreationExpr => JPObjectCreationExpr,
@@ -29,6 +30,7 @@ import com.github.javaparser.ast.expr.{
     ThisExpr => JPThisExpr,
     UnaryExpr => JPUnaryExpr,
     VariableDeclarationExpr => JPVariableDeclarationExpr,
+    TypeExpr => JPTypeExpr,
 }
 
 trait Expression[T] extends NodeDelegate[T]
@@ -53,6 +55,7 @@ object Expression {
         case e: JPLambdaExpr => LambdaExpr(e)
         case e: JPLongLiteralExpr => LongLiteralExpr(e)
         case e: JPMethodCallExpr => MethodCallExpr(e)
+        case e: JPMethodReferenceExpr => MethodReferenceExpr(e)
         case e: JPNameExpr => NameExpr(e)
         case e: JPNullLiteralExpr => NullLiteralExpr(e)
         case e: JPObjectCreationExpr => ObjectCreationExpr(e)
@@ -61,5 +64,6 @@ object Expression {
         case e: JPSuperExpr => SuperExpr(e)
         case e: JPUnaryExpr => UnaryExpr(e)
         case e: JPVariableDeclarationExpr => VariableDeclarationExpr(e)
+        case e: JPTypeExpr => TypeExpr(e)
     }
 }

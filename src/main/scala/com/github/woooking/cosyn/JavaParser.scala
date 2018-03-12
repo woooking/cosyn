@@ -7,6 +7,6 @@ import com.github.woooking.cosyn.javaparser.CompilationUnit
 object JavaParser {
 
     def parseFile(file: File): CompilationUnit = {
-        CompilationUnit(JP.parse(file.toJava), file.name)
+        CompilationUnit(JP.parse(file.toJava), file.pathAsString)
     }
 }

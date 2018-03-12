@@ -9,6 +9,9 @@ abstract class DFGNode(val op: NodeType.Type, val info: String) {
         case n: DFGOperationNode =>
             if (!op.equals(n.op)) return false
             info.equals(n.info)
+        case n: DFGDataNode =>
+            if (!op.equals(n.op)) return false
+            info.equals(n.info)
         case _ =>
             false
     }
@@ -62,7 +65,7 @@ object DFGNode {
         case _: IRAssert => DFGOperationNode.Assert
         case _: IRConditionalExpr => DFGOperationNode.ConditionExpr
         case _: IRPhi => DFGOperationNode.Phi
-        case _: IRReturn => DFGOperationNode.ConditionExpr
+        case _: IRReturn => DFGOperationNode.Return
         case _: IRThrow => DFGOperationNode.Throw
     }
 }

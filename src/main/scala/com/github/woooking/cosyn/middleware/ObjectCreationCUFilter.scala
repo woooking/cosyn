@@ -1,12 +1,13 @@
 package com.github.woooking.cosyn.middleware
-import com.github.javaparser.ast.expr.MethodCallExpr
+
+import com.github.javaparser.ast.expr.{MethodCallExpr, ObjectCreationExpr}
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 
-class MethodCallFilter(name: String) extends CompilationUnitFilter {
-    class Visitor extends GenericVisitorAdapter[Boolean, Boolean] {
-        override def visit(n: MethodCallExpr, arg: Boolean): Boolean = {
-            if (n.getName.asString() == name) true
+class ObjectCreationCUFilter(name: String) extends CompilationUnitFilter {
+    class Visitor extends GenericVisitorAdapter[java.lang.Boolean, Boolean] {
+        override def visit(n: ObjectCreationExpr, arg: Boolean): java.lang.Boolean = {
+            if (n.getType.asString() == name) true
             else super.visit(n, arg)
         }
     }
