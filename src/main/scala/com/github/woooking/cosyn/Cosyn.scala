@@ -4,15 +4,20 @@ import better.files.File
 import com.github.woooking.cosyn.cfg.CFG
 import com.github.woooking.cosyn.dfg.{DFG, DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir.Visitor
-import com.github.woooking.cosyn.javaparser.CompilationUnit
+import com.github.woooking.cosyn.javaparser.{CompilationUnit, NodeDelegate}
+import com.github.woooking.cosyn.javaparser.body.{BodyDeclaration, MethodDeclaration, VariableDeclarator}
+import com.github.woooking.cosyn.javaparser.expr._
+import com.github.woooking.cosyn.javaparser.stmt._
 import com.github.woooking.cosyn.middleware.{CompilationUnitFilter, DFGFilter, FileFilter}
 import com.github.woooking.cosyn.mine.{Miner, Setting}
 import com.github.woooking.cosyn.util.GraphUtil
 import de.parsemis.graph.{Edge, Graph, Node}
+import de.parsemis.miner.environment.Settings
 import de.parsemis.miner.general.Fragment
 
 import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.util.Random
 
 class Cosyn(dir: File) {
     type DNode = Node[DFGNode, DFGEdge]
@@ -95,26 +100,54 @@ class Cosyn(dir: File) {
         dfgFilters += filter
     }
 
-    def process(): Unit = {
-        implicit val setting = Setting.create()
+    def process()(implicit setting: Settings[DFGNode, DFGEdge]): Unit = {
         val dfgs = (getJavaFilesFromDirectory(dir).flatMap(pipeline) /: dfgFilters) ((ds, f) => ds.filter(f.valid))
-        println(dfgs.map(_.getNodeCount).max)
         println(s"总文件数: $fileCount")
         println(s"总控制流图数: $cfgCount")
         println(s"总数据流图数: ${dfgs.size}")
-//        dfgs.foreach(x => {
-//            println("=====")
-//            println(x.cfg.body)
-//            x.print()
-//        })
-        val temp = dfgs.take(50)
-        val result = resultFilter(Miner.mine(temp))
+        val temp = Random.shuffle(dfgs).take(80)
+        temp.map(_.cfg.decl.delegate).foreach(println)
+        val result = resultFilter(Miner.mine(temp)(setting))
         println("挖掘结束")
         result.foreach(r => {
-            println("==========")
+            println("=========")
+            println("pattern:")
             GraphUtil.printGraph(r)
-//                        println("---")
-//                        temp.find(_.isSuperGraph(r)).foreach(_.cfg.print())
+            val (dfg ,(_, nodes)) = temp.toStream.map(d => d -> d.isSuperGraph(r)).filter(_._2._1).head
+            println("original code:")
+            println(dfg.cfg.decl.delegate)
+            println("pattern code:")
+            println(generateCode(dfg, nodes))
         })
+    }
+
+    def generateCode(dfg: DFG, nodes: Set[DNode]): String = {
+        println("=====")
+        val recoverNodes = dfg.cfg.recover(nodes)
+        generateCode(dfg.cfg.decl, recoverNodes, "")
+    }
+
+    def generateCode(node: NodeDelegate[_], nodes: Set[NodeDelegate[_]], indent: String): String = node match {
+        case AssignExpr(_, _, _) => "//todo" // Todo
+        case BinaryExpr(_, _, _) => "//todo" // Todo
+        case BlockStmt(s) => s.map(generateCode(_, nodes, indent)).mkString("")
+        case ExpressionStmt(s) =>
+            val code = generateCode(s, nodes, indent)
+            if (code != "") s"$indent$code;\n"
+            else ""
+        case ForeachStmt(_, _, body) =>
+            val code = generateCode(body, nodes, s"$indent    ")
+            s"for () {\n$code}\n"
+        case MethodCallExpr(name, _, _, _) =>
+            if (nodes.contains(node)) s"$name()"
+            else ""
+        case MethodDeclaration(_, _, _, _, _, _, Some(body)) => generateCode(body, nodes, indent)
+        case ObjectCreationExpr(_, ty, _, _, _) => s"${indent}new $ty()"
+        case ReturnStmt(_) => "return;"
+        case VariableDeclarationExpr(v) => v.map(generateCode(_, nodes, indent)).mkString("")
+        case VariableDeclarator(_, _, init) => init.map(generateCode(_, nodes, indent)).mkString("")
+        case TryStmt(_, body, _, _) =>
+            val code = generateCode(body, nodes, s"$indent    ")
+            s"try {\n$code}\n"
     }
 }

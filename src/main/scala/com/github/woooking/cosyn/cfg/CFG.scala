@@ -2,19 +2,33 @@ package com.github.woooking.cosyn.cfg
 
 import java.io.PrintStream
 
+import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir._
 import com.github.woooking.cosyn.ir.statements.{IRPhi, IRStatement}
+import com.github.woooking.cosyn.javaparser.NodeDelegate
+import com.github.woooking.cosyn.javaparser.body.BodyDeclaration
 import com.github.woooking.cosyn.util.{IDGenerator, Printable}
+import de.parsemis.graph.Node
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFG(val file: String, val name: String, val body: String) extends Printable {
+class CFG(val file: String, val name: String, val decl: BodyDeclaration[_]) extends Printable {
+    type DNode = Node[DFGNode, DFGEdge]
+
     private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
     val entry = new CFGStatements(this)
     val exit: CFGExit = new CFGExit(this)
 
     case class Context(block: CFGStatements, break: Option[CFGBlock], continue: Option[CFGBlock])
+
+    def recover(nodes: Set[DNode]): Set[NodeDelegate[_]] = {
+        val statements = blocks.flatMap(_.statements).filter(s => {
+            val node = DFGNode.statement2node(s)
+            nodes.exists(_.getLabel == node)
+        })
+        statements.flatMap(_.fromNode).toSet
+    }
 
     def createContext(b: CFGStatements): Context = createContext(b, None, None)
 

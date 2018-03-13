@@ -1,8 +1,9 @@
 package com.github.woooking.cosyn.ir.statements
 
 import com.github.woooking.cosyn.ir.IRExpression
+import com.github.woooking.cosyn.javaparser.NodeDelegate
 
-trait IRStatement {
+abstract class IRStatement(val fromNode: Set[NodeDelegate[_]]) {
     def uses: Seq[IRExpression]
 
     def init(): Unit = {

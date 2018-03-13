@@ -2,7 +2,10 @@ package com.github.woooking.cosyn.cfg
 
 import java.io.PrintStream
 
+import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir.IRExpression
+import com.github.woooking.cosyn.ir.statements.IRStatement
+import de.parsemis.graph.Node
 
 class CFGBranch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
     thenBlock.preds += this
@@ -18,4 +21,6 @@ class CFGBranch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val 
     }
 
     override def toString: String = s"[Block $id: Branch]"
+
+    override def statements: Seq[IRStatement] = phis
 }

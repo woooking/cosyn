@@ -4,6 +4,7 @@ import java.io.PrintStream
 
 import com.github.woooking.cosyn.cfg.CFGSwitch.SwitchLabel
 import com.github.woooking.cosyn.ir.IRExpression
+import com.github.woooking.cosyn.ir.statements.IRStatement
 
 import scala.collection.mutable
 
@@ -22,6 +23,8 @@ class CFGSwitch(cfg: CFG, selector: IRExpression) extends CFGBlock(cfg) {
     }
 
     override def toString: String = s"[Block $id: Switch]"
+
+    override def statements: Seq[IRStatement] = phis
 }
 
 object CFGSwitch {

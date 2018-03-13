@@ -1,8 +1,10 @@
 package com.github.woooking.cosyn.cfg
 
+import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir.IRExpression
-import com.github.woooking.cosyn.ir.statements.IRPhi
+import com.github.woooking.cosyn.ir.statements.{IRPhi, IRStatement}
 import com.github.woooking.cosyn.util.Printable
+import de.parsemis.graph.Node
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -27,4 +29,7 @@ abstract class CFGBlock(val cfg: CFG) extends Printable {
     }
 
     def setNext(next: CFGBlock): Unit
+
+    def statements: Seq[IRStatement]
+
 }

@@ -40,7 +40,7 @@ object Visitor {
     }
 
     def generateCFG(file: String, decl: ConstructorDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name, decl.delegate.toString)
+        val cfg = new CFG(file, decl.name, decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
@@ -50,7 +50,7 @@ object Visitor {
     }
 
     def generateCFG(file: String, decl: MethodDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name, decl.delegate.toString)
+        val cfg = new CFG(file, decl.name, decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
@@ -159,13 +159,13 @@ object Visitor {
             val entryBlock = cfg.createStatements()
             context.block.setNext(entryBlock)
             val iteExpr = visitExpression(cfg)(entryBlock, ite)
-            val tempIte = entryBlock.addStatement(new IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq())).target
+            val tempIte = entryBlock.addStatement(new IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq(), Set(node))).target
             val conditionBlock = cfg.createStatements()
             entryBlock.setNext(conditionBlock)
             entryBlock.seal()
-            val condition = conditionBlock.addStatement(new IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq())).target
+            val condition = conditionBlock.addStatement(new IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq(), Set(node))).target
             val thenBlock = cfg.createStatements()
-            val next = thenBlock.addStatement(new IRMethodInvocation(cfg, "next", Some(tempIte), Seq())).target
+            val next = thenBlock.addStatement(new IRMethodInvocation(cfg, "next", Some(tempIte), Seq(), Set(node))).target
             cfg.writeVar(v.getVariables.get(0).getName.asString(), thenBlock, next)
             val elseBlock = cfg.createStatements()
             val branch = cfg.createBranch(condition, thenBlock, elseBlock)
@@ -279,7 +279,7 @@ object Visitor {
         case ArrayCreationExpr(ty, lvls, init) =>
             val levels = lvls.flatMap(e => e.dimension.map(d => visitExpression(cfg)(block, d)))
             val initializers = init.toList.flatMap(i => i.values.map(e => visitExpression(cfg)(block, e)))
-            block.addStatement(new IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty)), levels ++ initializers)).target
+            block.addStatement(new IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty)), levels ++ initializers, Set(node))).target
         case ArrayInitializerExpr(vs) =>
             val values = vs.map(visitExpression(cfg)(block, _))
             IRArray(values)
@@ -329,7 +329,7 @@ object Visitor {
         case n @ MethodCallExpr(_, scope, _, arguments) =>
             val receiver = scope.map(node => visitExpression(cfg)(block, node))
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(new IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args)).target
+            block.addStatement(new IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args, Set(node))).target
         case MethodReferenceExpr(_, _, _) =>
             IRMethodReference
         case NameExpr(name) =>
@@ -340,7 +340,7 @@ object Visitor {
         case NullLiteralExpr() => IRNull
         case ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(new IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty)), args)).target
+            block.addStatement(new IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty)), args, Set(node))).target
         case StringLiteralExpr(n) => IRString(n)
         case SuperExpr(_) =>
             // TODO: more specific

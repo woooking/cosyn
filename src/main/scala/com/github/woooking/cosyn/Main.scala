@@ -14,16 +14,18 @@ object Main {
     }
 
     def main(args: Array[String]): Unit = {
-        implicit val setting = Setting.create()
-//        val clientCodes = home / "lab" / "lucene-client-codes"
-        val clientCodes = home / "lab" / "test"
-//        val clientCodes = home / "lab" / "guava-client-codes"
+        implicit val setting = Setting.create(minFreq = 10)
+        val clientCodes = home / "lab" / "lucene-client-codes"
+//        val clientCodes = home / "lab" / "test"
+//        val clientCodes = home / "lab" / "guavaclient-codes"
         val cosyn = new Cosyn(clientCodes)
 //        cosyn.register(new FileFilter {
 //            override def valid(file: File): Boolean = file.contentAsString.contains("com.google.common")
 //        })
-//        cosyn.register(new MethodCallCUFilter("create"))
-//        cosyn.register(new MethodCallDFGFilter("create"))
+        cosyn.register(new FileContentFilter("org.apache.lucene"))
+        cosyn.register(new FileContentFilter("parse"))
+        cosyn.register(new MethodCallCUFilter("parse"))
+        cosyn.register(new MethodCallDFGFilter("parse"))
 //        cosyn.register(new DataNodeDFGFilter("HashMultiset"))
         cosyn.process()
     }
