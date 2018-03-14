@@ -113,7 +113,7 @@ class Cosyn(dir: File) {
             println("=========")
             println("pattern:")
             GraphUtil.printGraph(r)
-            val (dfg ,(_, nodes)) = temp.toStream.map(d => d -> d.isSuperGraph(r)).filter(_._2._1).head
+            val (dfg, (_, nodes)) = temp.toStream.map(d => d -> d.isSuperGraph(r)).filter(_._2._1).head
             println("original code:")
             println(dfg.cfg.decl.delegate)
             println("pattern code:")
@@ -128,26 +128,74 @@ class Cosyn(dir: File) {
     }
 
     def generateCode(node: NodeDelegate[_], nodes: Set[NodeDelegate[_]], indent: String): String = node match {
-        case AssignExpr(_, _, _) => "//todo" // Todo
-        case BinaryExpr(_, _, _) => "//todo" // Todo
+        case AssignExpr(target, ope, value) =>
+            val targetCode = generateCode(target, nodes, "")
+            val valueCode = generateCode(value, nodes, "")
+            if (nodes.contains(node) || targetCode != "" || valueCode != "") s"$targetCode$ope$valueCode"
+            else ""
+        //        case ArrayCreationExpr(_, _, _) => "//todo" // Todo
+        //        case BinaryExpr(_, _, _) => "//todo" // Todo
         case BlockStmt(s) => s.map(generateCode(_, nodes, indent)).mkString("")
         case ExpressionStmt(s) =>
-            val code = generateCode(s, nodes, indent)
+            val code = generateCode(s, nodes, "")
             if (code != "") s"$indent$code;\n"
+            else ""
+        case FieldAccessExpr(scope, name, _) =>
+            val code = generateCode(scope, nodes, "")
+            if (nodes.contains(node)) s"$code.$name"
             else ""
         case ForeachStmt(_, _, body) =>
             val code = generateCode(body, nodes, s"$indent    ")
-            s"for () {\n$code}\n"
-        case MethodCallExpr(name, _, _, _) =>
-            if (nodes.contains(node)) s"$name()"
+            if (nodes.contains(node) || code != "") s"${indent}for () {\n$code$indent}\n"
+            else ""
+        case ForStmt(init, None, update, body) =>
+            val initCode = init.map(generateCode(_, nodes, "")).mkString(", ")
+            val updateCode = update.map(generateCode(_, nodes, "")).mkString(", ")
+            val bodyCode = generateCode(body, nodes, s"$indent    ")
+            if (nodes.contains(node) || initCode != "" || updateCode != null || bodyCode != null)
+                s"${indent}for ($initCode;; $updateCode) {\n$bodyCode$indent}\n"
+            else ""
+        case ForStmt(init, Some(compare), update, body) =>
+            val initCode = init.map(generateCode(_, nodes, "")).mkString(", ")
+            val compareCode = generateCode(compare, nodes, "")
+            val updateCode = update.map(generateCode(_, nodes, "")).mkString(", ")
+            val bodyCode = generateCode(body, nodes, s"$indent    ")
+            if (nodes.contains(node) || initCode != "" || compareCode != null || updateCode != null || bodyCode != null)
+                s"${indent}for ($initCode; $compareCode; $updateCode) {\n$bodyCode$indent}\n"
+            else ""
+        case IfStmt(condition, thenStmt, None) =>
+            val conditionCode = generateCode(condition, nodes, "")
+            val thenCode = generateCode(thenStmt, nodes, s"$indent    ")
+            if (nodes.contains(node) || conditionCode != "" || thenCode != "")
+                s"${indent}if ($conditionCode) {\n$thenCode$indent}\n"
+            else ""
+        case IfStmt(condition, thenStmt, Some(elseStmt)) =>
+            val conditionCode = generateCode(condition, nodes, "")
+            val thenCode = generateCode(thenStmt, nodes, s"$indent    ")
+            val elseCode = generateCode(elseStmt, nodes, s"$indent    ")
+            if (nodes.contains(node) || conditionCode != "" || thenCode != "" || elseCode != "")
+                s"${indent}if ($conditionCode) {\n$thenCode$indent} else {\n$elseCode$indent}\n"
+            else ""
+        case IntegerLiteralExpr(s) =>
+            if (nodes.contains(node)) s"$s"
+            else ""
+        case MethodCallExpr(name, _, _, args) =>
+            val argsCode = args.map(generateCode(_, nodes, "")).mkString(", ")
+            if (nodes.contains(node)) s"$name($argsCode)"
             else ""
         case MethodDeclaration(_, _, _, _, _, _, Some(body)) => generateCode(body, nodes, indent)
-        case ObjectCreationExpr(_, ty, _, _, _) => s"${indent}new $ty()"
+        case ObjectCreationExpr(_, ty, _, args, _) =>
+            val argsCode = args.map(generateCode(_, nodes, ""))
+            val ellip = argsCode.map(c => if (c == "") "..." else c)
+            if (nodes.contains(node)) s"${indent}new $ty($ellip)"
+            else ""
         case ReturnStmt(_) => "return;"
         case VariableDeclarationExpr(v) => v.map(generateCode(_, nodes, indent)).mkString("")
         case VariableDeclarator(_, _, init) => init.map(generateCode(_, nodes, indent)).mkString("")
         case TryStmt(_, body, _, _) =>
             val code = generateCode(body, nodes, s"$indent    ")
-            s"try {\n$code}\n"
+            s"${indent}try {\n$code$indent}\n"
+        case _ =>
+            s"not implemented $node"
     }
 }

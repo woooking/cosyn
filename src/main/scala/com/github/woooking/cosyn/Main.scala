@@ -22,10 +22,9 @@ object Main {
 //        cosyn.register(new FileFilter {
 //            override def valid(file: File): Boolean = file.contentAsString.contains("com.google.common")
 //        })
-        cosyn.register(new FileContentFilter("org.apache.lucene"))
-        cosyn.register(new FileContentFilter("parse"))
-        cosyn.register(new MethodCallCUFilter("parse"))
-        cosyn.register(new MethodCallDFGFilter("parse"))
+        cosyn.register(new FileContentFilter("org.apache.lucene.search"))
+        cosyn.register(new MethodCallCUFilter("search"))
+        cosyn.register(new MethodCallDFGFilter("search"))
 //        cosyn.register(new DataNodeDFGFilter("HashMultiset"))
         cosyn.process()
     }
