@@ -12,7 +12,7 @@ object Setting {
 
     def create(minFreq: Int = 5) = {
         val s = new Sett[N, E]()
-        s.minNodes = 3
+        s.minNodes = 4
         s.minFreq = new IntFrequency(minFreq)
         s.algorithm = new de.parsemis.algorithms.gSpan.Algorithm[N, E]()
         s.strategy = new BFSStrategy[N, E]()

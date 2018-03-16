@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.middleware
+package com.github.woooking.cosyn.filter
 
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 

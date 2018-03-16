@@ -3,7 +3,8 @@ package com.github.woooking.cosyn.cfg
 import java.io.PrintStream
 
 import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
-import com.github.woooking.cosyn.ir.statements.IRStatement
+import com.github.woooking.cosyn.ir.IRTemp
+import com.github.woooking.cosyn.ir.statements.{IRAssignment, IRStatement}
 import de.parsemis.graph.Node
 
 import scala.collection.mutable.ArrayBuffer
@@ -24,9 +25,6 @@ class CFGStatements(cfg: CFG) extends CFGBlock(cfg) {
     }
 
     def optimize(): Unit = {
-        irStatements.foreach {
-            case _ =>
-        }
     }
 
     override def print(ps: PrintStream = System.out): Unit = {

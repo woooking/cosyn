@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.middleware
+package com.github.woooking.cosyn.filter
 
 import com.github.javaparser.ast.expr.{MethodCallExpr, ObjectCreationExpr}
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter

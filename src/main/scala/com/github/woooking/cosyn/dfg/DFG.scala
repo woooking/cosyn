@@ -4,6 +4,7 @@ import java.io.PrintStream
 
 import com.github.woooking.cosyn.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.ir.statements.IRStatement
+import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.util.Printable
 import com.google.common.collect.{BiMap, HashBiMap}
 import de.parsemis.graph._
@@ -13,6 +14,8 @@ import scala.collection.JavaConverters._
 class DFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] with Printable {
     type DNode = Node[DFGNode, DFGEdge]
     type DGraph = Graph[DFGNode, DFGEdge]
+
+    var map: Map[DNode, Set[NodeDelegate[_]]] = _
 
     override def print(ps: PrintStream = System.out): Unit = {
         val ite = edgeIterator();
@@ -24,6 +27,10 @@ class DFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] with Printable {
                 ps.println(edge.getNodeA().getLabel() + " -> " + edge.getNodeB().getLabel())
             }
         }
+    }
+
+    def recover(nodes: Set[DNode]): Set[NodeDelegate[_]] = {
+        nodes.map(map.get).filter(_.nonEmpty).flatMap(_.get)
     }
 
     def isSuperGraph(graph: DGraph): (Boolean, Set[DNode]) = {
@@ -85,13 +92,17 @@ object DFG {
         val statements = cfg.blocks.filter(_.isInstanceOf[CFGStatements]).flatMap {
             case block: CFGStatements => block.irStatements ++ block.phis
         }
-        val map: Map[IRStatement, Node[DFGNode, DFGEdge]] = statements.map(s => s -> dfg.addNode(DFGNode.statement2node(s))).toMap
-        statements.flatMap(s => s.uses.map(use => use -> s)).foreach {
+        val opMap: Map[IRStatement, DNode] = statements.map(s => s -> dfg.addNode(DFGNode.statement2node(s))).toMap
+        val dataMap: Map[DNode, Set[NodeDelegate[_]]] = statements.flatMap(s => s.uses.map(use => use -> s)).map {
             case (from, to) if from.definition.isDefined =>
-                dfg.addEdge(map(from.definition.get), map(to), DFGEdge.singleton, Edge.OUTGOING)
+                dfg.addEdge(opMap(from.definition.get), opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                Map.empty[DNode, Set[NodeDelegate[_]]]
             case (from, to) =>
-                dfg.addEdge(dfg.addNode(new DFGDataNode(from.toString)), map(to), DFGEdge.singleton, Edge.OUTGOING)
-        }
+                val node = dfg.addNode(new DFGDataNode(from.toString))
+                dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                Map(node -> from.fromNode)
+        }.foldLeft(Map.empty[DNode, Set[NodeDelegate[_]]])(_ ++ _)
+        dfg.map = opMap.map(kv => kv._2 -> kv._1.fromNode) ++ dataMap
         dfg
     }
 }

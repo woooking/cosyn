@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.middleware
+package com.github.woooking.cosyn.filter
 import better.files.File
 
 class FileContentFilter(content: String) extends FileFilter {

@@ -22,14 +22,6 @@ class CFG(val file: String, val name: String, val decl: BodyDeclaration[_]) exte
 
     case class Context(block: CFGStatements, break: Option[CFGBlock], continue: Option[CFGBlock])
 
-    def recover(nodes: Set[DNode]): Set[NodeDelegate[_]] = {
-        val statements = blocks.flatMap(_.statements).filter(s => {
-            val node = DFGNode.statement2node(s)
-            nodes.exists(_.getLabel == node)
-        })
-        statements.flatMap(_.fromNode).toSet
-    }
-
     def createContext(b: CFGStatements): Context = createContext(b, None, None)
 
     def createContext(b: CFGStatements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = Context(b, br, c)

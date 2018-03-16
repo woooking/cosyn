@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.ir
 
 import com.github.javaparser.ast.stmt.CatchClause
-import com.github.woooking.cosyn.JavaParser
+import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.woooking.cosyn.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.ir.statements._
@@ -62,8 +62,15 @@ object Visitor {
     def visitVariableDeclarator(cfg: CFG)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {
         case VariableDeclarator(name, _, initializer) =>
             val initValue = initializer.map(node => visitExpression(cfg)(block, node)).getOrElse(IRNull)
-            cfg.writeVar(name, block, initValue)
-            initValue
+            initValue match {
+                case t: IRTemp =>
+                    cfg.writeVar(name, block, t)
+                    t
+                case _ =>
+                    val target = block.addStatement(new IRAssignment(cfg, initValue, Set(node))).target
+                    cfg.writeVar(name, block, target)
+                    target
+            }
     }
 
     def visitCatchClause(cfg: CFG)(block: cfg.Context, node: CatchClause): cfg.Context = ???
@@ -72,7 +79,7 @@ object Visitor {
         case AssertStmt(c, m) =>
             val check = visitExpression(cfg)(context.block, c)
             val message = m.map(visitExpression(cfg)(context.block, _))
-            context.block.addStatement(IRAssert(check, message))
+            context.block.addStatement(new IRAssert(check, message, Set(node)))
             context
         case BlockStmt(statements) =>
             (context /: statements) ((c, n) => visitStatement(cfg)(c, n))
@@ -213,7 +220,7 @@ object Visitor {
             context
         case ReturnStmt(expression) =>
             val expr = expression.map(node => visitExpression(cfg)(context.block, node))
-            context.block.addStatement(IRReturn(expr))
+            context.block.addStatement(new IRReturn(expr, Set(node)))
             context
         case SwitchStmt(s, es) =>
             val selector = visitExpression(cfg)(context.block, s)
@@ -242,7 +249,7 @@ object Visitor {
             visitStatement(cfg)(context, b)
         case ThrowStmt(e) =>
             val exception = visitExpression(cfg)(context.block, e)
-            context.block.addStatement(IRThrow(exception))
+            context.block.addStatement(new IRThrow(exception, Set(node)))
             context
         case TryStmt(r, t, _, f) =>
             // TODO
@@ -275,7 +282,7 @@ object Visitor {
         case ArrayAccessExpr(n, i) =>
             val name = visitExpression(cfg)(block, n)
             val index = visitExpression(cfg)(block, i)
-            block.addStatement(new IRArrayAccess(cfg, name, index)).target
+            block.addStatement(new IRArrayAccess(cfg, name, index, Set(node))).target
         case ArrayCreationExpr(ty, lvls, init) =>
             val levels = lvls.flatMap(e => e.dimension.map(d => visitExpression(cfg)(block, d)))
             val initializers = init.toList.flatMap(i => i.values.map(e => visitExpression(cfg)(block, e)))
@@ -291,7 +298,7 @@ object Visitor {
                     source
                 case _ =>
                     val value = cfg.readVar(name, block)
-                    val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromAssignExprOperator(ope), value, source)).target
+                    val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromAssignExprOperator(ope), value, source, Set(node))).target
                     cfg.writeVar(name, block, target)
                     target
             }
@@ -301,7 +308,7 @@ object Visitor {
         case BinaryExpr(l, ope, r) =>
             val lhs = visitExpression(cfg)(block, l)
             val rhs = visitExpression(cfg)(block, r)
-            block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs)).target
+            block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs, Set(node))).target
         case BooleanLiteralExpr(true) => IRExpression.True
         case BooleanLiteralExpr(false) => IRExpression.False
         case CastExpr(_, e) =>
@@ -310,7 +317,7 @@ object Visitor {
             val condition = visitExpression(cfg)(block, c)
             val thenExpr = visitExpression(cfg)(block, t)
             val elseExpr = visitExpression(cfg)(block, e)
-            block.addStatement(new IRConditionalExpr(cfg, condition, thenExpr, elseExpr)).target
+            block.addStatement(new IRConditionalExpr(cfg, condition, thenExpr, elseExpr, Set(node))).target
         case CharLiteralExpr(n) => IRChar(n)
         case ClassExpr(t) =>
             IRTypeObject(t)
@@ -319,11 +326,11 @@ object Visitor {
             visitExpression(cfg)(block, e)
         case FieldAccessExpr(scope, name, _) =>
             val receiver = visitExpression(cfg)(block, scope)
-            block.addStatement(new IRFieldAccess(cfg, receiver, name)).target
+            block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(node))).target
         case InstanceOfExpr(e, t) =>
             val expression = visitExpression(cfg)(block, e)
-            block.addStatement(new IRInstanceOf(cfg, expression, t)).target
-        case IntegerLiteralExpr(n) => IRInteger(n)
+            block.addStatement(new IRInstanceOf(cfg, expression, t, Set(node))).target
+        case IntegerLiteralExpr(n) => IRInteger(n, Set(node))
         case LambdaExpr(_, _, _) => IRLambda // TODO: lambda expr
         case LongLiteralExpr(n) => IRLong(n)
         case n @ MethodCallExpr(_, scope, _, arguments) =>
@@ -348,9 +355,19 @@ object Visitor {
         case ThisExpr(_) =>
             // TODO: more specific
             IRThis
+        case UnaryExpr(JPUnaryExpr.Operator.PREFIX_INCREMENT, NameExpr(name)) =>
+            val source = cfg.readVar(name, block)
+            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, Set(node)), Set(node))).target
+            cfg.writeVar(name, block, target)
+            target
+        case UnaryExpr(JPUnaryExpr.Operator.POSTFIX_INCREMENT, NameExpr(name)) =>
+            val source = cfg.readVar(name, block)
+            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, Set(node)), Set(node))).target
+            cfg.writeVar(name, block, target)
+            source
         case UnaryExpr(ope, e) =>
             val source = visitExpression(cfg)(block, e)
-            block.addStatement(new IRUnaryOperation(cfg, UnaryOperator.fromAssignExprOperator(ope), source)).target
+            block.addStatement(new IRUnaryOperation(cfg, UnaryOperator.fromAssignExprOperator(ope), source, Set(node))).target
         case VariableDeclarationExpr(declarators) =>
             declarators.map(visitVariableDeclarator(cfg)(block, _))
             null // TODO

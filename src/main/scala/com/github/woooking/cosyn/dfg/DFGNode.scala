@@ -60,6 +60,7 @@ object DFGNode {
         case s: IRFieldAccess => DFGNode(NodeType.FieldAccess, s.field)
         case s: IRMethodInvocation => DFGNode(NodeType.MethodInvocation, s.name)
         case s: IRInstanceOf => DFGNode(NodeType.InstanceOf, s.ty.toString)
+        case _: IRAssignment => DFGOperationNode.Assignment
         case _: IRArrayAccess => DFGOperationNode.ArrayAccess
         case _: IRArrayCreation => DFGOperationNode.ArrayCreation
         case _: IRAssert => DFGOperationNode.Assert
