@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.cfg.CFG
 import com.github.woooking.cosyn.dfg.{DFG, DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir.Visitor
 import com.github.woooking.cosyn.javaparser.{CompilationUnit, NodeDelegate}
-import com.github.woooking.cosyn.javaparser.body.{BodyDeclaration, MethodDeclaration, VariableDeclarator}
+import com.github.woooking.cosyn.javaparser.body.{BodyDeclaration, ConstructorDeclaration, MethodDeclaration, VariableDeclarator}
 import com.github.woooking.cosyn.javaparser.expr._
 import com.github.woooking.cosyn.javaparser.stmt._
 import com.github.woooking.cosyn.filter.{CompilationUnitFilter, DFGFilter, FileFilter}
@@ -123,10 +123,10 @@ class Cosyn(dir: File) {
 //            println("pattern:")
 //            GraphUtil.printGraph(r)
             val (dfg, (_, nodes)) = temp.toStream.map(d => d -> d.isSuperGraph(r)).filter(_._2._1).head
-//            println("original code:")
-//            println(dfg.cfg.file)
-//            println(dfg.cfg.decl.delegate)
-//            println("pattern code:")
+            println("original code:")
+            println(dfg.cfg.file)
+            println(dfg.cfg.decl.delegate)
+            println("pattern code:")
             println(generateCode(dfg, nodes))
         })
     }
@@ -213,6 +213,7 @@ class Cosyn(dir: File) {
             case ConditionalExpr(condition, thenExpr, elseExpr) =>
                 val (conditionCode, thenCode, elseCode, ctx) = gc3(condition, thenExpr, elseExpr, "")
                 rs(s"$conditionCode ? $thenCode : $elseCode", ctx, conditionCode, thenCode, elseCode)
+            case ConstructorDeclaration(_, _, _, _, _, body) => generateCode(body, nodes, names, indent)
             case ExpressionStmt(s) =>
                 val (code, ctx) = gc1(s, "")
                 if (code != "") (s"$indent$code;\n", ctx)
@@ -239,12 +240,16 @@ class Cosyn(dir: File) {
                 rs(s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4, codes: _*)
             case IfStmt(condition, thenStmt, None) =>
                 val (conditionCode, ctx1) = generateCode(condition, nodes, names, "")
-                val (thenCode, ctx2) = gc1(thenStmt, s"$indent    ", ctx1)
-                rs(s"${indent}if ($conditionCode) {\n$thenCode$indent}\n", ctx2, conditionCode, thenCode)
+                val idt = if (nodes.contains(node)) s"$indent    " else indent
+                val (thenCode, ctx2) = gc1(thenStmt, idt, ctx1)
+                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent}\n", ctx2)
+                else rsn(ctx2, conditionCode, thenCode)
             case IfStmt(condition, thenStmt, Some(elseStmt)) =>
                 val (conditionCode, ctx1) = generateCode(condition, nodes, names, "")
-                val (thenCode, elseCode, ctx2) = gc2(thenStmt, elseStmt, s"$indent    ", ctx1)
-                rs(s"${indent}if ($conditionCode) {\n$thenCode$indent} else {\n$elseCode$indent}\n", ctx2, conditionCode, thenCode)
+                val idt = if (nodes.contains(node)) s"$indent    " else indent
+                val (thenCode, elseCode, ctx2) = gc2(thenStmt, elseStmt, idt, ctx1)
+                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent} else {\n${el(elseCode)}$indent}\n", ctx2)
+                else rsn(ctx2, conditionCode, thenCode, elseCode)
             case IntegerLiteralExpr(s) =>
                 rs(s.toString, names)
             case LongLiteralExpr(s) =>
