@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn
 
 import better.files.File
+import com.github.javaparser.ParseProblemException
 import com.github.woooking.cosyn.cfg.CFG
 import com.github.woooking.cosyn.dfg.{DFG, DFGEdge, DFGNode}
 import com.github.woooking.cosyn.ir.Visitor
@@ -44,6 +45,9 @@ class Cosyn(dir: File) {
             else Seq.empty
         } catch {
             case e: NumberFormatException =>
+                println(e.getMessage)
+                Seq.empty
+            case e: ParseProblemException =>
                 println(e.getMessage)
                 Seq.empty
         }
@@ -116,6 +120,7 @@ class Cosyn(dir: File) {
         //            println("###")
         //            d.print()
         //        })
+        println(s"过滤后数据流图数: ${temp.size}")
         val result = resultFilter(Miner.mine(temp)(setting))
         println("挖掘结束")
         result.foreach(r => {
@@ -284,6 +289,8 @@ class Cosyn(dir: File) {
                 rs(s"return $code;", ctx, code)
             case StringLiteralExpr(s) =>
                 rs(s.toString, names)
+            case ThisExpr(_) =>
+                rs("this", names)
             case UnaryExpr(ope, expr) =>
                 val (code, ctx) = gc1(expr, "")
                 val c = if (ope.isPostfix) s"$code${ope.asString()}" else s"${ope.asString()}$code"
