@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.util
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
 import de.parsemis.graph.{Edge, Graph}
 
 object GraphUtil {

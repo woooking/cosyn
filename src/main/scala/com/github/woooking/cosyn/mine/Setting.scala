@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.mine
 
-import com.github.woooking.cosyn.dfg.{DFGEdge, DFGNode}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
 import de.parsemis.graph.ListGraph
 import de.parsemis.miner.environment.{Settings => Sett}
 import de.parsemis.miner.general.IntFrequency

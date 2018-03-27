@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.filter
 
-import com.github.woooking.cosyn.dfg.DFG
-import com.github.woooking.cosyn.dfg.DFGNode.NodeType
+import com.github.woooking.cosyn.dfgprocessor.dfg.DFG
+import com.github.woooking.cosyn.dfgprocessor.dfg.DFGNode.NodeType
 
 class DataNodeDFGFilter(name: String) extends DFGFilter {
     override def valid(dfg: DFG): Boolean = {
