@@ -1,10 +1,10 @@
-package com.github.woooking.cosyn.ir
+package com.github.woooking.cosyn.dfgprocessor.ir
 
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFG, CFGStatements}
-import com.github.woooking.cosyn.ir.statements._
+import com.github.woooking.cosyn.dfgprocessor.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
 import com.github.woooking.cosyn.javaparser.expr._

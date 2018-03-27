@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.ir.statements
+package com.github.woooking.cosyn.dfgprocessor.ir.statements
 
 import com.github.javaparser.ast.expr.UnaryExpr
 

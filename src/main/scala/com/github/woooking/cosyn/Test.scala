@@ -2,7 +2,7 @@ package com.github.woooking.cosyn
 
 import better.files.File.home
 import com.github.woooking.cosyn.dfgprocessor.dfg.DFG
-import com.github.woooking.cosyn.ir.Visitor
+import com.github.woooking.cosyn.dfgprocessor.ir.Visitor
 
 object Test {
 
