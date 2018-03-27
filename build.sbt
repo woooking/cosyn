@@ -10,6 +10,9 @@ libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 libraryDependencies += "com.google.guava" % "guava" % "24.0-jre"
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.0.1"
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.144-R12"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.25"
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.25" % Test
+
 
 scalacOptions ++= Seq(
     "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
