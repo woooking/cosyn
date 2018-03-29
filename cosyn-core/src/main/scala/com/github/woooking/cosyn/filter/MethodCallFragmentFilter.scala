@@ -1,19 +1,24 @@
 package com.github.woooking.cosyn.filter
-import com.github.javaparser.ast.expr.MethodCallExpr
-import com.github.javaparser.ast.visitor.GenericVisitorAdapter
-import com.github.woooking.cosyn.javaparser.CompilationUnit
 
-class MethodCallCUFilter(name: String) extends CompilationUnitFilter {
-    class Visitor extends GenericVisitorAdapter[java.lang.Boolean, Boolean] {
-        override def visit(n: MethodCallExpr, arg: Boolean): java.lang.Boolean = {
-            if (n.getName.asString() == name) true
-            else super.visit(n, arg)
-        }
+import com.github.woooking.cosyn.dfgprocessor.dfg.DFGNode.NodeType
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
+import de.parsemis.graph.Node
+import de.parsemis.miner.general.Fragment
+
+import scala.annotation.tailrec
+
+class MethodCallFragmentFilter(name: String) extends FragmentFilter[DFGNode, DFGEdge] {
+    override def valid(fragment: Fragment[DFGNode, DFGEdge]): Boolean = {
+        val ite = fragment.toGraph.nodeIterator()
+        validNode(ite)
     }
 
-    override def valid(file: CompilationUnit): Boolean = {
-        val result = file.delegate.accept(new Visitor(), false)
-        if (result) true else false
+    @tailrec
+    private def validNode(ite: java.util.Iterator[Node[DFGNode, DFGEdge]]): Boolean = {
+        if (ite.hasNext) {
+            val node = ite.next()
+            if (node.getLabel.op == NodeType.MethodInvocation && node.getLabel.info == name) true
+            else validNode(ite)
+        } else false
     }
-
 }

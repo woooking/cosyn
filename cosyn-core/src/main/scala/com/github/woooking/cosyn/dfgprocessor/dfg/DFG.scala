@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.dfgprocessor.dfg
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.dfgprocessor.cfg.{CFG, CFGStatements}
+import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.IRStatement
 import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.util.Printable
@@ -11,13 +11,13 @@ import de.parsemis.graph._
 
 import scala.collection.JavaConverters._
 
-class DFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] with Printable {
+class DFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
     type DNode = Node[DFGNode, DFGEdge]
     type DGraph = Graph[DFGNode, DFGEdge]
 
     var map: Map[DNode, Set[NodeDelegate[_]]] = _
 
-    override def print(ps: PrintStream = System.out): Unit = {
+    def print(ps: PrintStream = System.out): Unit = {
         val ite = edgeIterator();
         while (ite.hasNext()) {
             val edge = ite.next();
@@ -87,7 +87,7 @@ object DFG {
     type DNode = Node[DFGNode, DFGEdge]
     type DEdge = Edge[DFGNode, DFGEdge]
 
-    def apply(cfg: CFG): DFG = {
+    def apply(cfg: CFGImpl): DFG = {
         val dfg = new DFG(cfg)
         val statements = cfg.blocks.filter(_.isInstanceOf[CFGStatements]).flatMap {
             case block: CFGStatements => block.irStatements ++ block.phis

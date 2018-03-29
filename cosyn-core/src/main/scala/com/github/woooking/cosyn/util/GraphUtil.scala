@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
 import de.parsemis.graph.{Edge, Graph}
 
 object GraphUtil {
-    def printGraph(g: Graph[DFGNode, DFGEdge], ps: PrintStream = System.out): Unit = {
+    def printGraph(ps: PrintStream = System.out)(g: Graph[_, _]): Unit = {
         val nodeIte = g.nodeIterator
         while ( {nodeIte.hasNext}) {
             val node = nodeIte.next

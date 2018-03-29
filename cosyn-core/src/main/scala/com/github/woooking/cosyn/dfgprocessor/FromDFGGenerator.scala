@@ -94,10 +94,14 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with 
             case CastExpr(ty, expr) =>
                 val (code, ctx) = gc1(expr, "")
                 rs(s"($ty)$code", ctx, code)
+            case ClassExpr(ty) =>
+                if (nodes.contains(node)) (s"$ty.class", names)
+                else ("", names)
             case ConditionalExpr(condition, thenExpr, elseExpr) =>
                 val (conditionCode, thenCode, elseCode, ctx) = gc3(condition, thenExpr, elseExpr, "")
                 rs(s"$conditionCode ? $thenCode : $elseCode", ctx, conditionCode, thenCode, elseCode)
             case ConstructorDeclaration(_, _, _, _, _, body) => generateCode(body, nodes, names, indent)
+            case EnclosedExpr(e) => generateCode(e, nodes, names, indent)
             case ExpressionStmt(s) =>
                 val (code, ctx) = gc1(s, "")
                 if (code != "") (s"$indent$code;\n", ctx)
@@ -108,20 +112,23 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with 
                 else rsn(ctx, code)
             case ForeachStmt(_, _, body) =>
                 val (code, ctx) = gc1(body, s"$indent    ")
-                rs(s"${indent}for () {\n$code$indent}\n", ctx, code)
+                if (nodes.contains(node)) (s"${indent}for () {\n$code$indent}\n", ctx)
+                else rsn(ctx, code)
             case ForStmt(init, None, update, body) =>
                 val (initCode, ctx1) = gcl(init, "")
                 val (updateCode, ctx2) = gcl(update, "", ctx1)
                 val (bodyCode, ctx3) = generateCode(body, nodes, ctx2, s"$indent    ")
                 val codes = initCode ++ updateCode :+ bodyCode
-                rs(s"${indent}for (${initCode.mkString("")};; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx3, codes: _*)
+                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "") (s"${indent}for (${initCode.mkString("")}; ; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx3)
+                else rsn(ctx3, codes: _*)
             case ForStmt(init, Some(compare), update, body) =>
                 val (initCode, ctx1) = gcl(init, "")
                 val (compareCode, ctx2) = generateCode(compare, nodes, ctx1, s"$indent    ")
                 val (updateCode, ctx3) = gcl(update, "", ctx2)
                 val (bodyCode, ctx4) = generateCode(body, nodes, ctx3, s"$indent    ")
                 val codes = (initCode :+ compareCode) ++ updateCode :+ bodyCode
-                rs(s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4, codes: _*)
+                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "" || compareCode != "") (s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4)
+                else rsn(ctx4, codes: _*)
             case IfStmt(condition, thenStmt, None) =>
                 val (conditionCode, ctx1) = generateCode(condition, nodes, names, "")
                 val idt = if (nodes.contains(node)) s"$indent    " else indent
@@ -134,6 +141,9 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with 
                 val (thenCode, elseCode, ctx2) = gc2(thenStmt, elseStmt, idt, ctx1)
                 if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent} else {\n${el(elseCode)}$indent}\n", ctx2)
                 else rsn(ctx2, conditionCode, thenCode, elseCode)
+            case InstanceOfExpr(e, ty) =>
+                val (code, ctx) = gc1(e, "")
+                rs(s"$code instanceof $ty", ctx, code)
             case IntegerLiteralExpr(s) =>
                 rs(s.toString, names)
             case LongLiteralExpr(s) =>
@@ -160,7 +170,8 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with 
             case ObjectCreationExpr(_, ty, _, args, _) =>
                 val (argsCode, ctx) = gcl(args, "")
                 val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
-                rs(s"${indent}new $ty($ellip)", ctx, argsCode: _*)
+                if (nodes.contains(node)) (s"${indent}new $ty($ellip)", ctx)
+                else rsn(ctx, argsCode: _*)
             case ReturnStmt(None) =>
                 rs(s"${indent}return;", names)
             case ReturnStmt(Some(expr)) =>
@@ -168,6 +179,10 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with 
                 rs(s"return $code;", ctx, code)
             case StringLiteralExpr(s) =>
                 rs(s.toString, names)
+            case ThrowStmt(e) =>
+                val (code, ctx) = gc1(e, "")
+                if (nodes.contains(node)) (s"throw $code", ctx)
+                else rsn(ctx, code)
             case ThisExpr(_) =>
                 rs("this", names)
             case UnaryExpr(ope, expr) =>

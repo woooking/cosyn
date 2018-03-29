@@ -9,7 +9,7 @@ import de.parsemis.graph.Node
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFGStatements(cfg: CFG) extends CFGBlock(cfg) {
+class CFGStatements(cfg: CFGImpl) extends CFGBlock(cfg) {
     var next: Option[CFGBlock] = None
 
     val irStatements: ArrayBuffer[IRStatement] = ArrayBuffer[IRStatement]()
@@ -24,10 +24,7 @@ class CFGStatements(cfg: CFG) extends CFGBlock(cfg) {
         statement
     }
 
-    def optimize(): Unit = {
-    }
-
-    override def print(ps: PrintStream = System.out): Unit = {
+    def print(ps: PrintStream = System.out): Unit = {
         ps.println(s"$this${next.map(" -> " + _).mkString}")
         phis.foreach(ps.println)
         irStatements.foreach(ps.println)

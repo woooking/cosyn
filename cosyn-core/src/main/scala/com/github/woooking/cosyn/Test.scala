@@ -11,7 +11,6 @@ object Test {
         val cu = JavaParser.parseFile(file)
         val cfgs = Visitor.generateCFGs(cu)
         val cfg = cfgs(5)
-        cfg.print()
         println("======")
         val dfg = DFG(cfg)
         dfg.print()

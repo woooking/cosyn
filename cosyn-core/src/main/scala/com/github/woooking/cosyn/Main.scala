@@ -9,8 +9,8 @@ import com.github.woooking.cosyn.mine.Setting
 
 object Main {
     def main(args: Array[String]): Unit = {
-        implicit val setting = Setting.create(minFreq = 4)
-        val clientCodes = home / "lab" / "lucene-client-codes"
+        implicit val setting = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 5, minNodes = 5)
+        val clientCodes = home / "lab" / "java-codes"
         //        val clientCodes = home / "lab" / "test"
         //        val clientCodes = home / "lab" / "guava-client-codes"
         //        val clientCodes = home / "lab" / "nio-client-codes"
@@ -25,6 +25,7 @@ object Main {
             FromDFGGenerator()
         )
         cosyn.register(new SourceContentFilter("org.apache.lucene"))
+        cosyn.register(new MethodCallFragmentFilter("search"))
         val result = cosyn.process()
         result.foreach(println)
     }

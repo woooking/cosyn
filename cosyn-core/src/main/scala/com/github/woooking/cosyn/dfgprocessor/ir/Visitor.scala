@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.dfgprocessor.ir
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
-import com.github.woooking.cosyn.dfgprocessor.cfg.{CFG, CFGStatements}
+import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
 import com.github.woooking.cosyn.dfgprocessor.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
@@ -13,15 +13,15 @@ import com.github.woooking.cosyn.javaparser.stmt._
 import scala.annotation.tailrec
 
 object Visitor {
-    def generateCFGs(cu: CompilationUnit): Seq[CFG] = generateCFGs(cu.file, cu.types, Seq.empty)
+    def generateCFGs(cu: CompilationUnit): Seq[CFGImpl] = generateCFGs(cu.file, cu.types, Seq.empty)
 
     @tailrec
-    private def generateCFGs(file: String, bodyDecls: List[BodyDeclaration[_]], methods: Seq[CFG]): Seq[CFG] = bodyDecls match {
+    private def generateCFGs(file: String, bodyDecls: List[BodyDeclaration[_]], methods: Seq[CFGImpl]): Seq[CFGImpl] = bodyDecls match {
         case Nil => methods
         case body :: rest => generateCFGs(file, rest, methods ++ generateCFGs(file, body))
     }
 
-    private def generateCFGs(file: String, bodyDecl: BodyDeclaration[_]): Seq[CFG] = bodyDecl match {
+    private def generateCFGs(file: String, bodyDecl: BodyDeclaration[_]): Seq[CFGImpl] = bodyDecl match {
         case AnnotationDeclaration(_, _) => Seq.empty
         case ClassOrInterfaceDeclaration(_, _, _, _, typeDecls) => generateCFGs(file, typeDecls, Seq.empty)
         case FieldDeclaration(_) => Seq.empty
@@ -39,27 +39,25 @@ object Visitor {
             Seq.empty
     }
 
-    def generateCFG(file: String, decl: ConstructorDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name, decl)
+    def generateCFG(file: String, decl: ConstructorDeclaration): CFGImpl = {
+        val cfg = new CFGImpl(file, decl.name, decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
-        cfg.optimize()
         cfg
     }
 
-    def generateCFG(file: String, decl: MethodDeclaration): CFG = {
-        val cfg = new CFG(file, decl.name, decl)
+    def generateCFG(file: String, decl: MethodDeclaration): CFGImpl = {
+        val cfg = new CFGImpl(file, decl.name, decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
-        cfg.optimize()
         cfg
     }
 
-    def visitVariableDeclarator(cfg: CFG)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {
+    def visitVariableDeclarator(cfg: CFGImpl)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {
         case VariableDeclarator(name, _, initializer) =>
             val initValue = initializer.map(node => visitExpression(cfg)(block, node)).getOrElse(IRNull)
             initValue match {
@@ -73,9 +71,9 @@ object Visitor {
             }
     }
 
-    def visitCatchClause(cfg: CFG)(block: cfg.Context, node: CatchClause): cfg.Context = ???
+    def visitCatchClause(cfg: CFGImpl)(block: cfg.Context, node: CatchClause): cfg.Context = ???
 
-    def visitStatement(cfg: CFG)(context: cfg.Context, node: Statement): cfg.Context = node match {
+    def visitStatement(cfg: CFGImpl)(context: cfg.Context, node: Statement): cfg.Context = node match {
         case AssertStmt(c, m) =>
             val check = visitExpression(cfg)(context.block, c)
             val message = m.map(visitExpression(cfg)(context.block, _))
@@ -278,7 +276,7 @@ object Visitor {
             cfg.createContext(elseBlock)
     }
 
-    def visitExpression(cfg: CFG)(block: CFGStatements, node: Expression[_]): IRExpression = node match {
+    def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_]): IRExpression = node match {
         case ArrayAccessExpr(n, i) =>
             val name = visitExpression(cfg)(block, n)
             val index = visitExpression(cfg)(block, i)

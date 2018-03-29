@@ -1,19 +1,13 @@
 package com.github.woooking.cosyn.dfgprocessor.cfg
 
-import java.io.PrintStream
-
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
 import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.{IRPhi, IRStatement}
-import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.javaparser.body.BodyDeclaration
-import com.github.woooking.cosyn.util.{IDGenerator, Printable}
-import de.parsemis.graph.Node
+import com.github.woooking.cosyn.util.IDGenerator
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFG(val file: String, val name: String, val decl: BodyDeclaration[_]) extends Printable {
-    type DNode = Node[DFGNode, DFGEdge]
+class CFGImpl(val file: String, val name: String, val decl: BodyDeclaration[_]) extends CFG {
 
     private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()
@@ -25,10 +19,6 @@ class CFG(val file: String, val name: String, val decl: BodyDeclaration[_]) exte
     def createContext(b: CFGStatements): Context = createContext(b, None, None)
 
     def createContext(b: CFGStatements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = Context(b, br, c)
-
-    override def print(ps: PrintStream = System.out): Unit = {
-        blocks.foreach(_.print(ps))
-    }
 
     def createTempVar(definition: IRStatement): IRTemp = new IRTemp(tempID.next(), definition)
 
@@ -78,13 +68,6 @@ class CFG(val file: String, val name: String, val decl: BodyDeclaration[_]) exte
             case _ =>
         }
         result
-    }
-
-    def optimize(): Unit = {
-        blocks.foreach {
-            case statements: CFGStatements => statements.optimize()
-            case _ =>
-        }
     }
 
     private def exprEquals(a: IRExpression, b: IRExpression): Boolean = {

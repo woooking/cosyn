@@ -1,18 +1,22 @@
 package com.github.woooking.cosyn
 
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
-import com.github.woooking.cosyn.filter.SourceFilter
+import com.github.woooking.cosyn.filter.{FragmentFilter, SourceFilter}
 import com.github.woooking.cosyn.mine.Miner
-import com.github.woooking.cosyn.util.GraphTypeDef
+import com.github.woooking.cosyn.util.{GraphTypeDef, GraphUtil}
 import de.parsemis.graph.{Graph => ParsemisGraph}
 import de.parsemis.miner.environment.Settings
+import org.slf4s.Logging
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E]]
-(source: DataSource[Data], graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph]) extends GraphTypeDef[DFGNode, DFGEdge] {
+(source: DataSource[Data], graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph])
+    extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
 
-    val sourceFilters = mutable.ArrayBuffer[SourceFilter[Data]]()
+    val sourceFilters: ArrayBuffer[SourceFilter[Data]] = mutable.ArrayBuffer()
+    val fragmentFilters: ArrayBuffer[FragmentFilter[N, E]] = mutable.ArrayBuffer()
     var fileCount = 0
     var cfgCount = 0
 
@@ -48,12 +52,20 @@ class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E]]
         sourceFilters += filter
     }
 
+    def register(filter: FragmentFilter[N, E]): Unit = {
+        fragmentFilters += filter
+    }
+
     def process()(implicit setting: Settings[N, E]): Seq[String] = {
         val data = (source.data /: sourceFilters) ((s, f) => s.filter(f.valid))
+        log.info(s"总数据量: ${data.size}")
         val graphs = graphGenerator.generate(data)
-        val temp: Seq[Graph] = graphs.take(80)
-        val result = Miner.mine(temp)(setting)
-        result.map(codeGenerator.generate(temp))
+        log.info(s"总数据流图数: ${graphs.size}")
+        val freqFragments = Miner.mine(graphs)(setting)
+        val filteredFragments = (freqFragments /: fragmentFilters) ((ff, f) => ff.filter(f.valid))
+        log.info(s"频繁子图数: ${filteredFragments.size}")
+        filteredFragments.map(_.toGraph).foreach(GraphUtil.printGraph())
+        filteredFragments.map(codeGenerator.generate(graphs))
     }
 
 

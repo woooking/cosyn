@@ -1,5 +1,7 @@
 package com.github.woooking.cosyn.dfgprocessor.cfg
 
+import java.io.PrintStream
+
 import com.github.woooking.cosyn.dfgprocessor.ir.IRExpression
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.{IRPhi, IRStatement}
 import com.github.woooking.cosyn.util.Printable
@@ -7,7 +9,7 @@ import com.github.woooking.cosyn.util.Printable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-abstract class CFGBlock(val cfg: CFG) extends Printable {
+abstract class CFGBlock(val cfg: CFGImpl) {
     val defs: mutable.Map[String, IRExpression] = mutable.Map()
     val id: Int = cfg.blocks.length
     cfg.blocks += this
@@ -30,4 +32,9 @@ abstract class CFGBlock(val cfg: CFG) extends Printable {
 
     def statements: Seq[IRStatement]
 
+}
+
+object CFGBlock {
+    implicit val cfgBlockPrintable: Printable[CFGBlock] = (_: CFGBlock, _: PrintStream) => {
+    }
 }

@@ -1,22 +1,20 @@
 package com.github.woooking.cosyn.mine
 
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
 import de.parsemis.graph.ListGraph
 import de.parsemis.miner.environment.{Settings => Sett}
 import de.parsemis.miner.general.IntFrequency
+import de.parsemis.parsers.LabelParser
 import de.parsemis.strategy.BFSStrategy
 
 object Setting {
-    type N = DFGNode
-    type E = DFGEdge
-
-    def create(minFreq: Int = 5) = {
+    def create[N, E](nodeParser: LabelParser[N], edgeParser: LabelParser[E], minFreq: Int = 5, minNodes: Int = 4) = {
         val s = new Sett[N, E]()
-        s.minNodes = 4
+        s.minNodes = minNodes
         s.minFreq = new IntFrequency(minFreq)
         s.algorithm = new de.parsemis.algorithms.gSpan.Algorithm[N, E]()
         s.strategy = new BFSStrategy[N, E]()
-        s.factory = new ListGraph.Factory[N, E](DFGNode.parser, DFGEdge.parser)
+        s.factory = new ListGraph.Factory[N, E](nodeParser, edgeParser)
+        s.closeGraph = true
         s
     }
 }

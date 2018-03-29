@@ -43,8 +43,8 @@ object AssignExpr {
             case JPAssignExpr.Operator.MINUS => AssignExpr.Operator.Minus
             case JPAssignExpr.Operator.MULTIPLY => AssignExpr.Operator.Multiply
             case JPAssignExpr.Operator.DIVIDE => AssignExpr.Operator.Divide
-            case JPAssignExpr.Operator.AND => AssignExpr.Operator.And
-            case JPAssignExpr.Operator.OR => AssignExpr.Operator.Or
+            case JPAssignExpr.Operator.BINARY_AND => AssignExpr.Operator.And
+            case JPAssignExpr.Operator.BINARY_OR => AssignExpr.Operator.Or
             case JPAssignExpr.Operator.XOR => AssignExpr.Operator.Xor
             case JPAssignExpr.Operator.REMAINDER => AssignExpr.Operator.Remainder
             case JPAssignExpr.Operator.LEFT_SHIFT => AssignExpr.Operator.LeftShift

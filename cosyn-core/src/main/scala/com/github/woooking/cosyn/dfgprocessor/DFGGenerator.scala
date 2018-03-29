@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.dfgprocessor
 import better.files.File
 import com.github.javaparser.ParseProblemException
 import com.github.woooking.cosyn.{GraphGenerator, JavaParser}
-import com.github.woooking.cosyn.dfgprocessor.cfg.CFG
+import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.dfgprocessor.dfg.DFG
 import com.github.woooking.cosyn.filter.{CompilationUnitFilter, DFGFilter}
 import com.github.woooking.cosyn.dfgprocessor.ir.Visitor
@@ -41,7 +41,7 @@ case class DFGGenerator() extends GraphGenerator[File, DFG] {
         else Seq.empty
     }
 
-    private def pipeline(cfgs: Seq[CFG]): Seq[DFG] = {
+    private def pipeline(cfgs: Seq[CFGImpl]): Seq[DFG] = {
         cfgs.map(DFG.apply)
     }
 
