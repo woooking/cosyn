@@ -9,7 +9,7 @@ import com.github.woooking.cosyn.javaparser.stmt._
 import com.github.woooking.cosyn.util.GraphTypeDef
 import de.parsemis.miner.general.Fragment
 
-case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG] with GraphTypeDef[DFGNode, DFGEdge] {
+case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
     override def generate(originalGraph: Seq[SimpleDFG])(fragment: Fragment[DFGNode, DFGEdge]): String = {
         val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(fragment.toGraph)).filter(_._2._1).head
         generateCode(dfg, nodes)

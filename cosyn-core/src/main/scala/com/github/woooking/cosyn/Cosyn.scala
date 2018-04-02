@@ -11,8 +11,8 @@ import org.slf4s.Logging
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E]]
-(source: DataSource[Data], graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph])
+class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E], R]
+(source: DataSource[Data], graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph, R])
     extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
 
     val sourceFilters: ArrayBuffer[SourceFilter[Data]] = mutable.ArrayBuffer()
@@ -56,7 +56,7 @@ class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E]]
         fragmentFilters += filter
     }
 
-    def process()(implicit setting: Settings[N, E]): Seq[String] = {
+    def process()(implicit setting: Settings[N, E]): Seq[R] = {
         val data = (source.data /: sourceFilters) ((s, f) => s.filter(f.valid))
         log.info(s"总数据量: ${data.size}")
         val graphs = graphGenerator.generate(data)

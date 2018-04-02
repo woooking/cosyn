@@ -15,11 +15,11 @@ object Main {
         //        val clientCodes = home / "lab" / "guava-client-codes"
         //        val clientCodes = home / "lab" / "nio-client-codes"
                 val clientCodes = home / "lab" / "lucene-client-codes"
-        val graphGenerator = DFGGenerator()
+        val graphGenerator = DFGGenerator(None)
         graphGenerator.register(new MethodCallCUFilter("search"))
         graphGenerator.register(new MethodCallDFGFilter("search"))
 
-        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG](
+        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, String](
             DataSource.fromJavaSourceCodeDir(clientCodes),
             graphGenerator,
             FromDFGGenerator()

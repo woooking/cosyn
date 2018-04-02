@@ -10,7 +10,7 @@ import com.github.woooking.cosyn.javaparser.CompilationUnit
 
 import scala.collection.mutable
 
-case class DFGGenerator() extends GraphGenerator[File, SimpleDFG] {
+case class DFGGenerator(maxNode: Option[Int]) extends GraphGenerator[File, SimpleDFG] {
     private[this] val compilationUnitFilters = mutable.ArrayBuffer[CompilationUnitFilter]()
     private[this] val dfgFilters = mutable.ArrayBuffer[DFGFilter]()
 
@@ -45,5 +45,11 @@ case class DFGGenerator() extends GraphGenerator[File, SimpleDFG] {
     }
 
 
-    override def generate(data: Seq[File]): Seq[SimpleDFG] = data.flatMap(pipeline)
+    override def generate(data: Seq[File]): Seq[SimpleDFG] = {
+        val dfgs = data.flatMap(pipeline)
+        maxNode match {
+            case None => dfgs
+            case Some(n) => dfgs.filter(_.getNodeCount < n)
+        }
+    }
 }
