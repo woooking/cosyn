@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.dfgprocessor
 
 import com.github.woooking.cosyn.CodeGenerator
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFG, DFGEdge, DFGNode}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{SimpleDFG, DFGEdge, DFGNode}
 import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.javaparser.body.{ConstructorDeclaration, MethodDeclaration, VariableDeclarator}
 import com.github.woooking.cosyn.javaparser.expr._
@@ -9,13 +9,13 @@ import com.github.woooking.cosyn.javaparser.stmt._
 import com.github.woooking.cosyn.util.GraphTypeDef
 import de.parsemis.miner.general.Fragment
 
-case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, DFG] with GraphTypeDef[DFGNode, DFGEdge] {
-    override def generate(originalGraph: Seq[DFG])(fragment: Fragment[DFGNode, DFGEdge]): String = {
+case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG] with GraphTypeDef[DFGNode, DFGEdge] {
+    override def generate(originalGraph: Seq[SimpleDFG])(fragment: Fragment[DFGNode, DFGEdge]): String = {
         val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(fragment.toGraph)).filter(_._2._1).head
         generateCode(dfg, nodes)
     }
 
-    def generateCode(dfg: DFG, nodes: Set[PNode]): String = {
+    def generateCode(dfg: SimpleDFG, nodes: Set[PNode]): String = {
         val recoverNodes = dfg.recover(nodes)
         generateCode(dfg.cfg.decl, recoverNodes, Set.empty, "")._1
     }

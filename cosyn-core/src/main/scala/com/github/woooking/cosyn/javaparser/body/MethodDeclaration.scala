@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.javaparser.body
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.{ReferenceType, Type, TypeParameter}
 import com.github.javaparser.ast.body.{Parameter, ReceiverParameter, MethodDeclaration => JPMethodDeclaration}
 import com.github.woooking.cosyn.javaparser.stmt.BlockStmt
@@ -30,7 +31,7 @@ object MethodDeclaration {
 
     def unapply(arg: MethodDeclaration): Option[(
         String,
-        Type,
+            Type,
             List[TypeParameter],
             List[Parameter],
             Option[ReceiverParameter],

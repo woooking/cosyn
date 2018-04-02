@@ -11,23 +11,11 @@ import de.parsemis.graph._
 
 import scala.collection.JavaConverters._
 
-class DFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
+class SimpleDFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
     type DNode = Node[DFGNode, DFGEdge]
     type DGraph = Graph[DFGNode, DFGEdge]
 
     var map: Map[DNode, Set[NodeDelegate[_]]] = _
-
-    def print(ps: PrintStream = System.out): Unit = {
-        val ite = edgeIterator();
-        while (ite.hasNext()) {
-            val edge = ite.next();
-            if (edge.getDirection() == Edge.INCOMING) {
-                ps.println(edge.getNodeB().getLabel() + " -> " + edge.getNodeA().getLabel())
-            } else {
-                ps.println(edge.getNodeA().getLabel() + " -> " + edge.getNodeB().getLabel())
-            }
-        }
-    }
 
     def recover(nodes: Set[DNode]): Set[NodeDelegate[_]] = {
         nodes.map(map.get).filter(_.nonEmpty).flatMap(_.get)
@@ -83,12 +71,26 @@ class DFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
     }
 }
 
-object DFG {
+object SimpleDFG {
+    implicit val dfgPrintable = new Printable[SimpleDFG] {
+        override def print(obj: SimpleDFG, ps: PrintStream): Unit = {
+            val ite = obj.edgeIterator();
+            while (ite.hasNext()) {
+                val edge = ite.next();
+                if (edge.getDirection() == Edge.INCOMING) {
+                    ps.println(edge.getNodeB().getLabel() + " -> " + edge.getNodeA().getLabel())
+                } else {
+                    ps.println(edge.getNodeA().getLabel() + " -> " + edge.getNodeB().getLabel())
+                }
+            }
+        }
+    }
+
     type DNode = Node[DFGNode, DFGEdge]
     type DEdge = Edge[DFGNode, DFGEdge]
 
-    def apply(cfg: CFGImpl): DFG = {
-        val dfg = new DFG(cfg)
+    def apply(cfg: CFGImpl): SimpleDFG = {
+        val dfg = new SimpleDFG(cfg)
         val statements = cfg.blocks.filter(_.isInstanceOf[CFGStatements]).flatMap {
             case block: CFGStatements => block.irStatements ++ block.phis
         }
@@ -100,7 +102,7 @@ object DFG {
             case (from, to) =>
                 val node = dfg.addNode(new DFGDataNode(from.toString))
                 dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
-                Map(node -> from.fromNode)
+                Map(node -> from.fromNodes)
         }.foldLeft(Map.empty[DNode, Set[NodeDelegate[_]]])(_ ++ _)
         dfg.map = opMap.map(kv => kv._2 -> kv._1.fromNode) ++ dataMap
         dfg

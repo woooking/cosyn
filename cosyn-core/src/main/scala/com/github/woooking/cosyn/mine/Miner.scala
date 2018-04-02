@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.mine
 
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFG, DFGEdge, DFGNode}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{SimpleDFG, DFGEdge, DFGNode}
 import de.parsemis.graph.Graph
 
 import scala.collection.JavaConverters._

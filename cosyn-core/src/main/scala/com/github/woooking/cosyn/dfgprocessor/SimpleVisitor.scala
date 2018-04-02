@@ -1,9 +1,11 @@
-package com.github.woooking.cosyn.dfgprocessor.ir
+package com.github.woooking.cosyn.dfgprocessor
 
-import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
+import com.github.javaparser.ast.stmt.CatchClause
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
+import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements._
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 import com.github.woooking.cosyn.javaparser.body._
@@ -12,35 +14,40 @@ import com.github.woooking.cosyn.javaparser.stmt._
 
 import scala.annotation.tailrec
 
-object Visitor {
-    def generateCFGs(cu: CompilationUnit): Seq[CFGImpl] = generateCFGs(cu.file, cu.types, Seq.empty)
-
-    @tailrec
-    private def generateCFGs(file: String, bodyDecls: List[BodyDeclaration[_]], methods: Seq[CFGImpl]): Seq[CFGImpl] = bodyDecls match {
-        case Nil => methods
-        case body :: rest => generateCFGs(file, rest, methods ++ generateCFGs(file, body))
+class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
+    def generateCFGs(cu: CompilationUnit): Seq[CFGImpl] = cu match {
+        case CompilationUnit(None, _, _, tys) =>
+            generateCFGs(cu.file, "", tys, Seq.empty)
+        case CompilationUnit(Some(p), _, _, tys) =>
+            generateCFGs(cu.file, s"${p.delegate.getName.asString()}.", tys, Seq.empty)
     }
 
-    private def generateCFGs(file: String, bodyDecl: BodyDeclaration[_]): Seq[CFGImpl] = bodyDecl match {
+    @tailrec
+    private def generateCFGs(file: String, qualifier: String, bodyDecls: List[BodyDeclaration[_]], methods: Seq[CFGImpl]): Seq[CFGImpl] = bodyDecls match {
+        case Nil => methods
+        case body :: rest => generateCFGs(file, qualifier, rest, methods ++ generateCFGs(file, qualifier, body))
+    }
+
+    private def generateCFGs(file: String, qualifier: String, bodyDecl: BodyDeclaration[_]): Seq[CFGImpl] = bodyDecl match {
         case AnnotationDeclaration(_, _) => Seq.empty
-        case ClassOrInterfaceDeclaration(_, _, _, _, typeDecls) => generateCFGs(file, typeDecls, Seq.empty)
+        case ClassOrInterfaceDeclaration(name, _, _, _, typeDecls) => generateCFGs(file, s"$qualifier$name.", typeDecls, Seq.empty)
         case FieldDeclaration(_) => Seq.empty
         case InitializerDeclaration(_, _) => Seq.empty
-        case d @ MethodDeclaration(_, _, _, _, _, _, Some(_)) =>
-            val cfg = generateCFG(file, d)
+        case d@MethodDeclaration(_, _, _, _, _, _, Some(_)) =>
+            val cfg = generateCFG(file, qualifier, d)
             Seq(cfg)
         case MethodDeclaration(_, _, _, _, _, _, None) =>
             Seq.empty
-        case d @ ConstructorDeclaration(_, _, _, _, _, _) =>
-            val cfg = generateCFG(file, d)
+        case d@ConstructorDeclaration(_, _, _, _, _, _) =>
+            val cfg = generateCFG(file, qualifier, d)
             Seq(cfg)
         case EnumDeclaration(_, _, _, _) =>
             // TODO: enum
             Seq.empty
     }
 
-    def generateCFG(file: String, decl: ConstructorDeclaration): CFGImpl = {
-        val cfg = new CFGImpl(file, decl.name, decl)
+    def generateCFG(file: String, qualifier: String, decl: ConstructorDeclaration): CFGImpl = {
+        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
@@ -48,8 +55,8 @@ object Visitor {
         cfg
     }
 
-    def generateCFG(file: String, decl: MethodDeclaration): CFGImpl = {
-        val cfg = new CFGImpl(file, decl.name, decl)
+    def generateCFG(file: String, qualifier: String, decl: MethodDeclaration): CFGImpl = {
+        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
@@ -59,7 +66,7 @@ object Visitor {
 
     def visitVariableDeclarator(cfg: CFGImpl)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {
         case VariableDeclarator(name, _, initializer) =>
-            val initValue = initializer.map(node => visitExpression(cfg)(block, node)).getOrElse(IRNull)
+            val initValue = initializer.map(node => visitExpression(cfg)(block, node)).getOrElse(IRNull(node))
             initValue match {
                 case t: IRTemp =>
                     cfg.writeVar(name, block, t)
@@ -164,13 +171,13 @@ object Visitor {
             val entryBlock = cfg.createStatements()
             context.block.setNext(entryBlock)
             val iteExpr = visitExpression(cfg)(entryBlock, ite)
-            val tempIte = entryBlock.addStatement(new IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq(), Set(node))).target
+            val tempIte = entryBlock.addStatement(IRMethodInvocation(cfg, "iterator", Some(iteExpr), Seq(), Set(node))).target
             val conditionBlock = cfg.createStatements()
             entryBlock.setNext(conditionBlock)
             entryBlock.seal()
-            val condition = conditionBlock.addStatement(new IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq(), Set(node))).target
+            val condition = conditionBlock.addStatement(IRMethodInvocation(cfg, "hasNext", Some(tempIte), Seq(), Set(node))).target
             val thenBlock = cfg.createStatements()
-            val next = thenBlock.addStatement(new IRMethodInvocation(cfg, "next", Some(tempIte), Seq(), Set(node))).target
+            val next = thenBlock.addStatement(IRMethodInvocation(cfg, "next", Some(tempIte), Seq(), Set(node))).target
             cfg.writeVar(v.getVariables.get(0).getName.asString(), thenBlock, next)
             val elseBlock = cfg.createStatements()
             val branch = cfg.createBranch(condition, thenBlock, elseBlock)
@@ -232,13 +239,13 @@ object Visitor {
                     val label = visitExpression(cfg)(context.block, l)
                     val statements = cfg.createStatements()
                     switch(ExpressionLabel(label)) = statements
-                    val newContext = (cfg.createContext(statements, Some(exitBlock), None) /: s)((c, st) => visitStatement(cfg)(c, st))
+                    val newContext = (cfg.createContext(statements, Some(exitBlock), None) /: s) ((c, st) => visitStatement(cfg)(c, st))
                     newContext.block.seal()
                     newContext.block.setNext(exitBlock)
                 case SwitchEntryStmt(None, s) =>
                     val statements = cfg.createStatements()
                     switch(DefaultLabel) = statements
-                    val newContext = (cfg.createContext(statements, Some(exitBlock), None) /: s)((c, st) => visitStatement(cfg)(c, st))
+                    val newContext = (cfg.createContext(statements, Some(exitBlock), None) /: s) ((c, st) => visitStatement(cfg)(c, st))
                     newContext.block.seal()
                     newContext.block.setNext(exitBlock)
             }
@@ -284,10 +291,10 @@ object Visitor {
         case ArrayCreationExpr(ty, lvls, init) =>
             val levels = lvls.flatMap(e => e.dimension.map(d => visitExpression(cfg)(block, d)))
             val initializers = init.toList.flatMap(i => i.values.map(e => visitExpression(cfg)(block, e)))
-            block.addStatement(new IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty)), levels ++ initializers, Set(node))).target
+            block.addStatement(IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty, node)), levels ++ initializers, Set(node))).target
         case ArrayInitializerExpr(vs) =>
             val values = vs.map(visitExpression(cfg)(block, _))
-            IRArray(values)
+            IRArray(values, node)
         case AssignExpr(NameExpr(name), ope, s) =>
             val source = visitExpression(cfg)(block, s)
             ope match {
@@ -307,8 +314,8 @@ object Visitor {
             val lhs = visitExpression(cfg)(block, l)
             val rhs = visitExpression(cfg)(block, r)
             block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.fromBinaryExprOperator(ope), lhs, rhs, Set(node))).target
-        case BooleanLiteralExpr(true) => IRExpression.True
-        case BooleanLiteralExpr(false) => IRExpression.False
+        case BooleanLiteralExpr(true) => IRBoolean(true, node)
+        case BooleanLiteralExpr(false) => IRBoolean(false, node)
         case CastExpr(_, e) =>
             visitExpression(cfg)(block, e)
         case ConditionalExpr(c, t, e) =>
@@ -316,10 +323,10 @@ object Visitor {
             val thenExpr = visitExpression(cfg)(block, t)
             val elseExpr = visitExpression(cfg)(block, e)
             block.addStatement(new IRConditionalExpr(cfg, condition, thenExpr, elseExpr, Set(node))).target
-        case CharLiteralExpr(n) => IRChar(n)
+        case CharLiteralExpr(n) => IRChar(n, node)
         case ClassExpr(t) =>
-            IRTypeObject(t)
-        case DoubleLiteralExpr(n) => IRDouble(n)
+            IRTypeObject(t, node)
+        case DoubleLiteralExpr(n) => IRDouble(n, node)
         case EnclosedExpr(e) =>
             visitExpression(cfg)(block, e)
         case FieldAccessExpr(scope, name, _) =>
@@ -328,13 +335,13 @@ object Visitor {
         case InstanceOfExpr(e, t) =>
             val expression = visitExpression(cfg)(block, e)
             block.addStatement(new IRInstanceOf(cfg, expression, t, Set(node))).target
-        case IntegerLiteralExpr(n) => IRInteger(n, Set(node))
+        case IntegerLiteralExpr(n) => IRInteger(n, node)
         case LambdaExpr(_, _, _) => IRLambda // TODO: lambda expr
-        case LongLiteralExpr(n) => IRLong(n)
-        case n @ MethodCallExpr(_, scope, _, arguments) =>
+        case LongLiteralExpr(n) => IRLong(n, node)
+        case n@MethodCallExpr(_, scope, _, arguments) =>
             val receiver = scope.map(node => visitExpression(cfg)(block, node))
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(new IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args, Set(node))).target
+            block.addStatement(IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args, Set(node))).target
         case MethodReferenceExpr(_, _, _) =>
             IRMethodReference
         case NameExpr(name) =>
@@ -342,25 +349,25 @@ object Visitor {
                 case IRUndef => IRExtern(name)
                 case e => e
             }
-        case NullLiteralExpr() => IRNull
+        case NullLiteralExpr() => IRNull(node)
         case ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(new IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty)), args, Set(node))).target
-        case StringLiteralExpr(n) => IRString(n)
+            block.addStatement(IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty, node)), args, Set(node))).target
+        case StringLiteralExpr(n) => IRString(n, node)
         case SuperExpr(_) =>
             // TODO: more specific
-            IRSuper
+            IRSuper(node)
         case ThisExpr(_) =>
             // TODO: more specific
-            IRThis
+            IRThis(node)
         case UnaryExpr(JPUnaryExpr.Operator.PREFIX_INCREMENT, NameExpr(name)) =>
             val source = cfg.readVar(name, block)
-            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, Set(node)), Set(node))).target
+            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, node), Set(node))).target
             cfg.writeVar(name, block, target)
             target
         case UnaryExpr(JPUnaryExpr.Operator.POSTFIX_INCREMENT, NameExpr(name)) =>
             val source = cfg.readVar(name, block)
-            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, Set(node)), Set(node))).target
+            val target = block.addStatement(new IRBinaryOperation(cfg, BinaryOperator.Plus, source, IRInteger(1, node), Set(node))).target
             cfg.writeVar(name, block, target)
             source
         case UnaryExpr(ope, e) =>
@@ -370,7 +377,7 @@ object Visitor {
             declarators.map(visitVariableDeclarator(cfg)(block, _))
             null // TODO
         case TypeExpr(ty) =>
-            IRTypeObject(ty)
+            IRTypeObject(ty, node)
     }
 
 }
