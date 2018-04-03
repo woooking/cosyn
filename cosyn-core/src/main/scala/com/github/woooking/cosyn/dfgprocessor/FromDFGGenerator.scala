@@ -10,8 +10,8 @@ import com.github.woooking.cosyn.util.GraphTypeDef
 import de.parsemis.miner.general.Fragment
 
 case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
-    override def generate(originalGraph: Seq[SimpleDFG])(fragment: Fragment[DFGNode, DFGEdge]): String = {
-        val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(fragment.toGraph)).filter(_._2._1).head
+    override def generate(originalGraph: Seq[SimpleDFG])(graph: PGraph): String = {
+        val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(graph)).filter(_._2._1).head
         generateCode(dfg, nodes)
     }
 
