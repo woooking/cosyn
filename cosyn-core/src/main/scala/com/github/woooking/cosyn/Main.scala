@@ -2,7 +2,8 @@ package com.github.woooking.cosyn
 
 import better.files.File
 import better.files.File.home
-import com.github.woooking.cosyn.dfgprocessor.dfg.{SimpleDFG, DFGEdge, DFGNode}
+import com.github.woooking.cosyn.cosyn.DataSource
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.dfgprocessor.{DFGGenerator, FromDFGGenerator}
 import com.github.woooking.cosyn.filter._
 import com.github.woooking.cosyn.mine.Setting
@@ -14,7 +15,7 @@ object Main {
         //        val clientCodes = home / "lab" / "test"
         //        val clientCodes = home / "lab" / "guava-client-codes"
         //        val clientCodes = home / "lab" / "nio-client-codes"
-                val clientCodes = home / "lab" / "lucene-client-codes"
+        val clientCodes = home / "lab" / "lucene-client-codes"
         val graphGenerator = DFGGenerator(None)
         graphGenerator.register(new MethodCallCUFilter("search"))
         graphGenerator.register(new MethodCallDFGFilter("search"))

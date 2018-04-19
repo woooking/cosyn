@@ -1,11 +1,12 @@
 package com.github.woooking.cosyn.javaparser.stmt
 
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.stmt.{DoStmt => JPDoStmt}
 import com.github.woooking.cosyn.javaparser.expr.Expression
 
 class DoStmt(override val delegate: JPDoStmt) extends Statement {
     val body: Statement = Statement(delegate.getBody)
-    val expression: Expression[_] = delegate.getCondition
+    val expression: Expression[_ <: Node] = delegate.getCondition
 }
 
 object DoStmt {
@@ -13,7 +14,7 @@ object DoStmt {
 
     def unapply(arg: DoStmt): Option[(
         Statement,
-            Expression[_]
+            Expression[_ <: Node]
         )] = Some((
         arg.body,
         arg.expression

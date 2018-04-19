@@ -35,6 +35,10 @@ abstract class CFGBlock(val cfg: CFGImpl) {
 }
 
 object CFGBlock {
-    implicit val cfgBlockPrintable: Printable[CFGBlock] = (_: CFGBlock, _: PrintStream) => {
+    implicit val cfgBlockPrintable: Printable[CFGBlock] = (b: CFGBlock, ps: PrintStream) => b match {
+        case b: CFGStatements => b.print(ps)
+        case b: CFGBranch => b.print(ps)
+        case b: CFGSwitch => b.print(ps)
+        case b: CFGExit => b.print(ps)
     }
 }

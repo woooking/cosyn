@@ -1,20 +1,21 @@
 package com.github.woooking.cosyn.javaparser.expr
 
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.{AssignExpr => JPAssignExpr}
 
 class AssignExpr(override val delegate: JPAssignExpr) extends Expression[JPAssignExpr] {
-    val target: Expression[_] = Expression(delegate.getTarget)
+    val target: Expression[_ <: Node] = Expression(delegate.getTarget)
     val ope: AssignExpr.Operator.Operator = AssignExpr.Operator(delegate.getOperator)
-    val value: Expression[_] = Expression(delegate.getValue)
+    val value: Expression[_ <: Node] = Expression(delegate.getValue)
 }
 
 object AssignExpr {
     def apply(delegate: JPAssignExpr): AssignExpr = new AssignExpr(delegate)
 
     def unapply(arg: AssignExpr): Option[(
-        Expression[_],
+        Expression[_ <: Node],
             AssignExpr.Operator.Operator,
-            Expression[_]
+            Expression[_ <: Node]
         )] = Some((
         arg.target,
         arg.ope,

@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn
 
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode}
+import com.github.woooking.cosyn.cosyn.DataSource
 import com.github.woooking.cosyn.filter.{FragmentFilter, SourceFilter}
 import com.github.woooking.cosyn.mine.Miner
 import com.github.woooking.cosyn.util.{GraphTypeDef, GraphUtil}

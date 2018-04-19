@@ -11,14 +11,14 @@ import com.github.woooking.cosyn.javaparser.stmt.Statement
 
 import scala.collection.JavaConverters._
 
-trait NodeDelegate[T] {
+trait NodeDelegate[T <: Node] {
     val delegate: T
 
-    implicit def jpExpr2expr(expr: JPExpression): Expression[_] = Expression(expr)
+    implicit def jpExpr2expr(expr: JPExpression): Expression[_ <: Node] = Expression(expr)
 
     implicit def jpStmt2stmt(stmt: JPStatement): Statement = Statement(stmt)
 
-    implicit def jpBodyDecl2bodyDecl[A <: JPBodyDeclaration[_]](bodyDeclaration: JPBodyDeclaration[A]): BodyDeclaration[_] = BodyDeclaration(bodyDeclaration)
+    implicit def jpBodyDecl2bodyDecl[A <: JPBodyDeclaration[_]](bodyDeclaration: JPBodyDeclaration[A]): BodyDeclaration[_ <: Node] = BodyDeclaration(bodyDeclaration)
 
     implicit def jpSimpleName2string(simpleName: SimpleName): String = simpleName.asString()
 

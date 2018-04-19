@@ -1,8 +1,8 @@
-package com.github.woooking.cosyn
+package com.github.woooking.cosyn.cosyn
 
 import better.files.File
 
-trait DataSource[Data] {
+trait DataSource[Data] extends Element[Unit, Seq[Data]] {
     def data: Seq[Data]
 }
 
@@ -12,6 +12,8 @@ object DataSource {
             .filter(_.isRegularFile)
             .filter(_.extension.contains(".java"))
             .toSeq
+
+        override def process(input: Unit): Seq[File] = data
     }
 
     def fromJavaSourceCodeDir(dir: File): DataSource[File] = new JavaSourceCodeDirectory(dir)

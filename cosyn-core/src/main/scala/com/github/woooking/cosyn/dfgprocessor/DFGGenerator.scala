@@ -5,17 +5,17 @@ import com.github.javaparser.ParseProblemException
 import com.github.woooking.cosyn.{GraphGenerator, JavaParser}
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.dfgprocessor.dfg.SimpleDFG
-import com.github.woooking.cosyn.filter.{CompilationUnitFilter, DFGFilter}
+import com.github.woooking.cosyn.filter.{DFGFilter, NodeFilter}
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 
 import scala.collection.mutable
 
 case class DFGGenerator(maxNode: Option[Int]) extends GraphGenerator[File, SimpleDFG] {
-    private[this] val compilationUnitFilters = mutable.ArrayBuffer[CompilationUnitFilter]()
+    private[this] val nodeFilters = mutable.ArrayBuffer[NodeFilter]()
     private[this] val dfgFilters = mutable.ArrayBuffer[DFGFilter]()
 
-    def register(filter: CompilationUnitFilter): Unit = {
-        compilationUnitFilters += filter
+    def register(filter: NodeFilter): Unit = {
+        nodeFilters += filter
     }
 
     def register(filter: DFGFilter): Unit = {
@@ -36,7 +36,7 @@ case class DFGGenerator(maxNode: Option[Int]) extends GraphGenerator[File, Simpl
     }
 
     private def pipeline(compilationUnit: CompilationUnit): Seq[SimpleDFG] = {
-        if ((true /: compilationUnitFilters) ((valid, f) => valid && f.valid(compilationUnit))) pipeline(new SimpleVisitor().generateCFGs(compilationUnit))
+        if ((true /: nodeFilters) ((valid, f) => valid && f.valid(compilationUnit.delegate))) pipeline(new SimpleVisitor().generateCFGs(compilationUnit))
         else Seq.empty
     }
 

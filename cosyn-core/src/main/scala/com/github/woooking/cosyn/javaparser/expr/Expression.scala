@@ -1,42 +1,13 @@
 package com.github.woooking.cosyn.javaparser.expr
 
+import com.github.javaparser.ast.Node
 import com.github.woooking.cosyn.javaparser.NodeDelegate
-import com.github.javaparser.ast.expr.{
-    Expression => JPExpression,
-    ArrayAccessExpr => JPArrayAccessExpr,
-    ArrayCreationExpr => JPArrayCreationExpr,
-    ArrayInitializerExpr => JPArrayInitializerExpr,
-    AssignExpr => JPAssignExpr,
-    BinaryExpr => JPBinaryExpr,
-    BooleanLiteralExpr => JPBooleanLiteralExpr,
-    CastExpr => JPCastExpr,
-    CharLiteralExpr => JPCharLiteralExpr,
-    ClassExpr => JPClassExpr,
-    ConditionalExpr => JPConditionalExpr,
-    DoubleLiteralExpr => JPDoubleLiteralExpr,
-    EnclosedExpr => JPEnclosedExpr,
-    FieldAccessExpr => JPFieldAccessExpr,
-    InstanceOfExpr => JPInstanceOfExpr,
-    IntegerLiteralExpr => JPIntegerLiteralExpr,
-    LambdaExpr => JPLambdaExpr,
-    LongLiteralExpr => JPLongLiteralExpr,
-    MethodCallExpr => JPMethodCallExpr,
-    MethodReferenceExpr => JPMethodReferenceExpr,
-    NameExpr => JPNameExpr,
-    NullLiteralExpr => JPNullLiteralExpr,
-    ObjectCreationExpr => JPObjectCreationExpr,
-    StringLiteralExpr => JPStringLiteralExpr,
-    SuperExpr => JPSuperExpr,
-    ThisExpr => JPThisExpr,
-    UnaryExpr => JPUnaryExpr,
-    VariableDeclarationExpr => JPVariableDeclarationExpr,
-    TypeExpr => JPTypeExpr,
-}
+import com.github.javaparser.ast.expr.{ArrayAccessExpr => JPArrayAccessExpr, ArrayCreationExpr => JPArrayCreationExpr, ArrayInitializerExpr => JPArrayInitializerExpr, AssignExpr => JPAssignExpr, BinaryExpr => JPBinaryExpr, BooleanLiteralExpr => JPBooleanLiteralExpr, CastExpr => JPCastExpr, CharLiteralExpr => JPCharLiteralExpr, ClassExpr => JPClassExpr, ConditionalExpr => JPConditionalExpr, DoubleLiteralExpr => JPDoubleLiteralExpr, EnclosedExpr => JPEnclosedExpr, Expression => JPExpression, FieldAccessExpr => JPFieldAccessExpr, InstanceOfExpr => JPInstanceOfExpr, IntegerLiteralExpr => JPIntegerLiteralExpr, LambdaExpr => JPLambdaExpr, LongLiteralExpr => JPLongLiteralExpr, MethodCallExpr => JPMethodCallExpr, MethodReferenceExpr => JPMethodReferenceExpr, NameExpr => JPNameExpr, NullLiteralExpr => JPNullLiteralExpr, ObjectCreationExpr => JPObjectCreationExpr, StringLiteralExpr => JPStringLiteralExpr, SuperExpr => JPSuperExpr, ThisExpr => JPThisExpr, TypeExpr => JPTypeExpr, UnaryExpr => JPUnaryExpr, VariableDeclarationExpr => JPVariableDeclarationExpr}
 
-trait Expression[T] extends NodeDelegate[T]
+trait Expression[T <: Node] extends NodeDelegate[T]
 
 object Expression {
-    def apply(expression: JPExpression): Expression[_] = expression match {
+    def apply(expression: JPExpression): Expression[_ <: Node] = expression match {
         case e: JPArrayAccessExpr => ArrayAccessExpr(e)
         case e: JPArrayCreationExpr => ArrayCreationExpr(e)
         case e: JPArrayInitializerExpr => ArrayInitializerExpr(e)

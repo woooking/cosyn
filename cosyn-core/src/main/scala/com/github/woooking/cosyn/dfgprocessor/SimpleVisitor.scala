@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.dfgprocessor
 
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
@@ -59,6 +60,14 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
         val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
         decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
+        pair.block.seal()
+        pair.block.setNext(cfg.exit)
+        cfg
+    }
+
+    def generateCFG(decl: BlockStmt): CFGImpl = {
+        val cfg = new CFGImpl("", "", decl)
+        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
         cfg
@@ -283,7 +292,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
             cfg.createContext(elseBlock)
     }
 
-    def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_]): IRExpression = node match {
+    def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_ <: Node]): IRExpression = node match {
         case ArrayAccessExpr(n, i) =>
             val name = visitExpression(cfg)(block, n)
             val index = visitExpression(cfg)(block, i)

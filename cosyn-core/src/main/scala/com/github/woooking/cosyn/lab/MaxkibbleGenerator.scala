@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.maxkibble
+package com.github.woooking.cosyn.lab
 
 import com.github.woooking.cosyn.CodeGenerator
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}

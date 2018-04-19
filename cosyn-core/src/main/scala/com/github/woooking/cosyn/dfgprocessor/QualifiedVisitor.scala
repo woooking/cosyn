@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.dfgprocessor
 
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.resolution.UnsolvedSymbolException
@@ -284,7 +285,7 @@ class QualifiedVisitor(javaParserFacade: JavaParserFacade = null) {
             cfg.createContext(elseBlock)
     }
 
-    def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_]): IRExpression = node match {
+    def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_ <: Node]): IRExpression = node match {
         case ArrayAccessExpr(n, i) =>
             val name = visitExpression(cfg)(block, n)
             val index = visitExpression(cfg)(block, i)

@@ -1,10 +1,11 @@
 package com.github.woooking.cosyn.filter
 
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.{MethodCallExpr, ObjectCreationExpr}
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter
 import com.github.woooking.cosyn.javaparser.CompilationUnit
 
-class ObjectCreationCUFilter(name: String) extends CompilationUnitFilter {
+class ObjectCreationCUFilter(name: String) extends NodeFilter {
     class Visitor extends GenericVisitorAdapter[java.lang.Boolean, Boolean] {
         override def visit(n: ObjectCreationExpr, arg: Boolean): java.lang.Boolean = {
             if (n.getType.asString() == name) true
@@ -12,8 +13,8 @@ class ObjectCreationCUFilter(name: String) extends CompilationUnitFilter {
         }
     }
 
-    override def valid(file: CompilationUnit): Boolean = {
-        val result = file.delegate.accept(new Visitor(), false)
+    override def valid(node: Node): Boolean = {
+        val result = node.accept(new Visitor(), false)
         if (result) true else false
     }
 
