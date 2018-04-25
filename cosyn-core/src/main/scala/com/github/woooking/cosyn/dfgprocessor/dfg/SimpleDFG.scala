@@ -3,12 +3,14 @@ package com.github.woooking.cosyn.dfgprocessor.dfg
 import java.io.PrintStream
 
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
+import com.github.woooking.cosyn.dfgprocessor.ir.IRExpression
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.IRStatement
 import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.util.Printable
 import com.google.common.collect.{BiMap, HashBiMap}
 import de.parsemis.graph._
 
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 class SimpleDFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
@@ -89,21 +91,36 @@ object SimpleDFG {
     type DNode = Node[DFGNode, DFGEdge]
     type DEdge = Edge[DFGNode, DFGEdge]
 
+
     def apply(cfg: CFGImpl): SimpleDFG = {
         val dfg = new SimpleDFG(cfg)
         val statements = cfg.blocks.filter(_.isInstanceOf[CFGStatements]).flatMap {
             case block: CFGStatements => block.irStatements ++ block.phis
         }
         val opMap: Map[IRStatement, DNode] = statements.map(s => s -> dfg.addNode(DFGNode.statement2node(s))).toMap
-        val dataMap: Map[DNode, Set[NodeDelegate[_]]] = statements.flatMap(s => s.uses.map(use => use -> s)).map {
-            case (from, to) if from.definition.isDefined =>
-                dfg.addEdge(opMap(from.definition.get), opMap(to), DFGEdge.singleton, Edge.OUTGOING)
-                Map.empty[DNode, Set[NodeDelegate[_]]]
-            case (from, to) =>
-                val node = dfg.addNode(new DFGDataNode(from.toString))
-                dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
-                Map(node -> from.fromNodes)
-        }.foldLeft(Map.empty[DNode, Set[NodeDelegate[_]]])(_ ++ _)
+
+        @tailrec
+        def build(statements: List[(IRExpression, IRStatement)], dataNodes: Map[String, DNode], dataMap: Map[DNode, Set[NodeDelegate[_]]]): Map[DNode, Set[NodeDelegate[_]]] = statements match {
+            case Nil => dataMap
+            case s :: ss =>
+                val (newDataNodes, newDataMap) = s match {
+                    case (from, to) if from.definition.isDefined =>
+                        dfg.addEdge(opMap(from.definition.get), opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                        (dataNodes, dataMap)
+                    case (from, to) =>
+                        val node = dataNodes.getOrElse(from.toString, dfg.addNode(new DFGDataNode(from.toString)))
+                        dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                        val fromNodes = dataMap.getOrElse(node, Set.empty[NodeDelegate[_]])
+                        (dataNodes.updated(from.toString, node), dataMap.updated(node, fromNodes ++ from.fromNodes))
+                }
+                build(ss, newDataNodes, newDataMap)
+        }
+
+        val dataMap: Map[DNode, Set[NodeDelegate[_]]] = build(
+            statements.flatMap(s => s.uses.map(use => use -> s)).toList,
+            Map.empty,
+            Map.empty
+        )
         dfg.map = opMap.map(kv => kv._2 -> kv._1.fromNode) ++ dataMap
         dfg
     }

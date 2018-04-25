@@ -7,16 +7,18 @@ trait DataSource[Data] extends Element[Unit, Seq[Data]] {
 }
 
 object DataSource {
-    private class JavaSourceCodeDirectory(dir: File) extends DataSource[File] {
-        override def data: Seq[File] = dir.listRecursively
+    private class JavaSourceCodeDirectory(dirs: List[File]) extends DataSource[File] {
+        override def data: Seq[File] = dirs.flatMap(_.listRecursively
             .filter(_.isRegularFile)
             .filter(_.extension.contains(".java"))
-            .toSeq
+            .toSeq)
 
         override def process(input: Unit): Seq[File] = data
     }
 
-    def fromJavaSourceCodeDir(dir: File): DataSource[File] = new JavaSourceCodeDirectory(dir)
+    def fromJavaSourceCodeDir(dirs: List[File]): DataSource[File] = new JavaSourceCodeDirectory(dirs)
 
-    def fromJavaSourceCodeDir(dir: String): DataSource[File] = new JavaSourceCodeDirectory(File(dir))
+    def fromJavaSourceCodeDir(dir: File): DataSource[File] = new JavaSourceCodeDirectory(List(dir))
+
+    def fromJavaSourceCodeDir(dir: String): DataSource[File] = fromJavaSourceCodeDir(File(dir))
 }

@@ -6,10 +6,7 @@ import de.parsemis.parsers.LabelParser
 
 abstract class DFGNode(val op: NodeType.Type, val info: String) {
     override def equals(obj: scala.Any): Boolean = obj match {
-        case n: DFGOperationNode =>
-            if (!op.equals(n.op)) return false
-            info.equals(n.info)
-        case n: DFGDataNode =>
+        case n: DFGNode =>
             if (!op.equals(n.op)) return false
             info.equals(n.info)
         case _ =>

@@ -292,6 +292,27 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
             cfg.createContext(elseBlock)
     }
 
+    def visitFieldAccess(cfg: CFGImpl)(block: CFGStatements, node: FieldAccessExpr): IRExpression = {
+        val FieldAccessExpr(scope, name, _) = node
+        val receiver = visitExpression(cfg)(block, scope)
+        block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(node))).target
+    }
+
+    def visitMethodCallExpr(cfg: CFGImpl)(block: CFGStatements, node: MethodCallExpr): IRExpression = {
+        val MethodCallExpr(_, scope, _, arguments) = node
+        val receiver = scope.map(node => visitExpression(cfg)(block, node))
+        val args = arguments.map(node => visitExpression(cfg)(block, node))
+        block.addStatement(IRMethodInvocation(cfg, node.delegate.getName.getIdentifier, receiver, args, Set(node))).target
+    }
+
+    def visitNameExpr(cfg: CFGImpl)(block: CFGStatements, node: NameExpr): IRExpression = {
+        val name = node.name
+        cfg.readVar(name, block) match {
+            case IRUndef => IRExtern(name)
+            case e => e
+        }
+    }
+
     def visitExpression(cfg: CFGImpl)(block: CFGStatements, node: Expression[_ <: Node]): IRExpression = node match {
         case ArrayAccessExpr(n, i) =>
             val name = visitExpression(cfg)(block, n)
@@ -338,26 +359,17 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
         case DoubleLiteralExpr(n) => IRDouble(n, node)
         case EnclosedExpr(e) =>
             visitExpression(cfg)(block, e)
-        case FieldAccessExpr(scope, name, _) =>
-            val receiver = visitExpression(cfg)(block, scope)
-            block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(node))).target
+        case n: FieldAccessExpr => visitFieldAccess(cfg)(block, n)
         case InstanceOfExpr(e, t) =>
             val expression = visitExpression(cfg)(block, e)
             block.addStatement(new IRInstanceOf(cfg, expression, t, Set(node))).target
         case IntegerLiteralExpr(n) => IRInteger(n, node)
         case LambdaExpr(_, _, _) => IRLambda // TODO: lambda expr
         case LongLiteralExpr(n) => IRLong(n, node)
-        case n@MethodCallExpr(_, scope, _, arguments) =>
-            val receiver = scope.map(node => visitExpression(cfg)(block, node))
-            val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(IRMethodInvocation(cfg, n.delegate.getName.getIdentifier, receiver, args, Set(node))).target
+        case n: MethodCallExpr => visitMethodCallExpr(cfg)(block, n)
         case MethodReferenceExpr(_, _, _) =>
             IRMethodReference
-        case NameExpr(name) =>
-            cfg.readVar(name, block) match {
-                case IRUndef => IRExtern(name)
-                case e => e
-            }
+        case n : NameExpr => visitNameExpr(cfg)(block, n)
         case NullLiteralExpr() => IRNull(node)
         case ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
