@@ -19,6 +19,8 @@ import org.slf4s.Logging
 import scala.annotation.tailrec
 
 object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
+    import com.github.woooking.cosyn.Config._
+
     @tailrec
     private def collectOperationNodes(ite: java.util.Iterator[PNode], result: Seq[DFGNode]): Seq[DFGNode] = {
         if (!ite.hasNext) result
@@ -42,10 +44,9 @@ object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
     }
 
     def complete(nodes: Seq[DFGNode]): Unit = {
-        val dfgNodeFilters = nodes.map(n => new DFGNodeFilter(n))
-        val fragmentFilters = nodes.map(n => new FragmentFilter(n))
+        val dfgNodeFilters = nodes.map(n => DFGNodeFilter(n))
+        val fragmentFilters = nodes.map(FragmentFilter)
 
-        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minNodes = 3)
         val clientCodes = home / "lab" / "java-codes"
         val dataSource = DataSource.fromJavaSourceCodeDir(clientCodes)
         val collector = new Collector[Seq[PFragment]]()
@@ -62,7 +63,7 @@ object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
             .connect(CombinedFilter(dfgNodeFilters))
             .connect(SizeFilter(100, shuffle = true))
             .connect(CallbackFilter(s => log.info(s"总数据流图数： ${s.size}")))
-            .connect[Seq[PFragment]]((input: Seq[SimpleDFG]) => Miner.mine(input)(setting))
+            .connect[Seq[PFragment]]((input: Seq[SimpleDFG]) => Miner.mine(input))
             .connect[Seq[PFragment]]((input: Seq[PFragment]) => input.sortBy(_.frequency().asInstanceOf[IntFrequency].intValue()))
             .connect(CombinedFilter(fragmentFilters))
             .connect(collector)

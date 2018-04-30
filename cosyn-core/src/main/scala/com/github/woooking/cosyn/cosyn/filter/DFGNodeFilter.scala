@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.cosyn.filter
 
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGNode, SimpleDFG}
 
-class DFGNodeFilter(dfgNode: DFGNode) extends SeqFilter[SimpleDFG] {
+case class DFGNodeFilter(dfgNode: DFGNode) extends SeqFilter[SimpleDFG] {
     def valid(dfg: SimpleDFG): Boolean = {
         val nodeIte = dfg.nodeIterator()
         while (nodeIte.hasNext) {
@@ -12,5 +12,5 @@ class DFGNodeFilter(dfgNode: DFGNode) extends SeqFilter[SimpleDFG] {
         false
     }
 
-    override def valid(data: Seq[SimpleDFG]): Seq[SimpleDFG] = data.filter(valid)
+    override def filter(data: Seq[SimpleDFG]): Seq[SimpleDFG] = data.filter(valid)
 }

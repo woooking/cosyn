@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn
 
-import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGNode, SimpleDFG}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.util.GraphUtil
+import de.parsemis.graph.Edge
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsArray, JsNumber, JsObject, JsString, JsValue, RootJsonFormat}
 
 import scala.collection.JavaConverters._
@@ -33,7 +34,15 @@ object CosynJsonProtocol extends DefaultJsonProtocol {
         }
 
         def read(value: JsValue) = value.asJsObject().getFields("nodes", "edges") match {
-            case Seq(JsArray(nodes), JsArray(edges)) => ???
+            case Seq(JsArray(nodes), JsArray(edges)) =>
+                val dfg = new SimpleDFG(null)
+                val dNodes = nodes.map(_.convertTo[DFGNode]).map(dfg.addNode)
+                edges
+                    .map(edge => edge.asJsObject.fields("from").convertTo[Int] -> edge.asJsObject.fields("to").convertTo[Int])
+                    .foreach {
+                        case (from, to) => dfg.addEdge(dNodes(from), dNodes(to), DFGEdge.singleton, Edge.OUTGOING)
+                    }
+                dfg
             case _ => throw DeserializationException("")
         }
     }
