@@ -42,6 +42,10 @@ object IRTemp {
     }.toOption
 }
 
+case class IREnum(ty: String, value: String) extends IRExpression(Set.empty) {
+    override def toString: String = s"$ty.$value"
+}
+
 case object IRUndef extends IRExpression(Set.empty) {
 }
 
@@ -49,7 +53,7 @@ case class IRExtern(name: String) extends IRExpression(Set.empty) {
     override def toString: String = name
 }
 
-case class IRArg(name: String, ty: Type) extends IRExpression(Set.empty) {
+case class IRArg(name: String, ty: String) extends IRExpression(Set.empty) {
     override def toString: String = name
 }
 
@@ -83,15 +87,19 @@ case class IRNull(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fr
     override def toString: String = "null"
 }
 
-case class IRThis(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode))
+case class IRThis(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+    override def toString: String = "this"
+}
 
-case class IRSuper(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode))
+case class IRSuper(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+    override def toString: String = "super"
+}
 
 case object IRLambda extends IRExpression(Set.empty)
 
 case object IRMethodReference extends IRExpression(Set.empty)
 
-case class IRTypeObject(ty: Type, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
-    override def toString: String = ty.asString()
+case class IRTypeObject(ty: String, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+    override def toString: String = ty
 }
 

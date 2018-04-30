@@ -6,6 +6,7 @@ import com.github.woooking.cosyn.javaparser.modules.ModuleDeclaration
 
 // TODO
 class PackageDeclaration(override val delegate: JPPackageDeclaration) extends NodeDelegate[JPPackageDeclaration] {
+    def name: String = delegate.getNameAsString
 }
 
 object PackageDeclaration {

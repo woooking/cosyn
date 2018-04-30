@@ -1,15 +1,13 @@
 package com.github.woooking.cosyn.dfgprocessor.dfg
 
 import com.github.woooking.cosyn.dfgprocessor.dfg.DFGNode.NodeType
+import com.github.woooking.cosyn.dfgprocessor.ir.{IRArg, IRExpression}
 import com.github.woooking.cosyn.dfgprocessor.ir.statements._
 import de.parsemis.parsers.LabelParser
 
 abstract class DFGNode(val op: NodeType.Type, val info: String) {
     override def equals(obj: scala.Any): Boolean = obj match {
-        case n: DFGOperationNode =>
-            if (!op.equals(n.op)) return false
-            info.equals(n.info)
-        case n: DFGDataNode =>
+        case n: DFGNode =>
             if (!op.equals(n.op)) return false
             info.equals(n.info)
         case _ =>
@@ -44,6 +42,7 @@ object DFGNode {
 
         val Op: NodeType.Value = Value("#OP")
         val Data: NodeType.Value = Value("#DATA")
+        val Arg: NodeType.Value = Value("#ARG")
         val MethodInvocation: NodeType.Value = Value("#METHOD_INVOCATION")
         val Reference: NodeType.Value = Value("#REFERENCE")
         val Binary: NodeType.Value = Value("#BINARY")
@@ -52,6 +51,11 @@ object DFGNode {
         val ArrayCreation: NodeType.Value = Value("#ARRAY_CREATION")
         val InstanceOf: NodeType.Value = Value("#INSTANCE_OF")
         val Extern: NodeType.Value = Value("#EXTERN")
+    }
+
+    def expression2node(expression: IRExpression): DFGNode = expression match {
+        case s: IRArg => DFGNode(NodeType.Arg, s.ty)
+        case _ => new DFGDataNode(expression.toString)
     }
 
     def statement2node(statement: IRStatement): DFGNode = statement match {

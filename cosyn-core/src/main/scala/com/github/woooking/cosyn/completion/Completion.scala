@@ -26,7 +26,7 @@ object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
             val node = ite.next()
             node.getLabel match {
                 case n: DFGOperationNode => collectOperationNodes(ite, result :+ n)
-                case _: DFGDataNode => collectOperationNodes(ite, result)
+                case _ => collectOperationNodes(ite, result)
             }
         }
     }
