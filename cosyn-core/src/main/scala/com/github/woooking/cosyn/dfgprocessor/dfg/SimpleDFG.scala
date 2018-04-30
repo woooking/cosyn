@@ -108,7 +108,7 @@ object SimpleDFG {
                         dfg.addEdge(opMap(from.definition.get), opMap(to), DFGEdge.singleton, Edge.OUTGOING)
                         (dataNodes, dataMap)
                     case (from, to) =>
-                        val node = dataNodes.getOrElse(from.toString, dfg.addNode(new DFGDataNode(from.toString)))
+                        val node = dataNodes.getOrElse(from.toString, dfg.addNode(DFGNode.expression2node(from)))
                         dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
                         val fromNodes = dataMap.getOrElse(node, Set.empty[NodeDelegate[_]])
                         (dataNodes.updated(from.toString, node), dataMap.updated(node, fromNodes ++ from.fromNodes))

@@ -53,7 +53,7 @@ case class IRExtern(name: String) extends IRExpression(Set.empty) {
     override def toString: String = name
 }
 
-case class IRArg(name: String, ty: Type) extends IRExpression(Set.empty) {
+case class IRArg(name: String, ty: String) extends IRExpression(Set.empty) {
     override def toString: String = name
 }
 
@@ -99,7 +99,7 @@ case object IRLambda extends IRExpression(Set.empty)
 
 case object IRMethodReference extends IRExpression(Set.empty)
 
-case class IRTypeObject(ty: Type, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
-    override def toString: String = ty.asString()
+case class IRTypeObject(ty: String, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+    override def toString: String = ty
 }
 

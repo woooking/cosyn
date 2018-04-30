@@ -1,6 +1,8 @@
 package com.github.woooking.cosyn.dfgprocessor
 
 import com.github.javaparser.ast.Node
+import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.expr.{UnaryExpr => JPUnaryExpr}
 import com.github.javaparser.ast.stmt.CatchClause
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
@@ -16,6 +18,14 @@ import com.github.woooking.cosyn.javaparser.stmt._
 import scala.annotation.tailrec
 
 class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
+    def resolveParameterType(p: Parameter): String = p.getType.asString()
+
+    def resolveType(ty: Type): String = ty.asString()
+
+    def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = methodCallExpr.name
+
+    def resolveObjectCreationExpr(objectCreationExpr: ObjectCreationExpr): String = s"${objectCreationExpr.ty}::init"
+
     def generateCFGs(cu: CompilationUnit): Seq[CFGImpl] = cu match {
         case CompilationUnit(None, _, _, tys) =>
             generateCFGs(cu.file, "", tys, Seq.empty)
@@ -49,7 +59,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
 
     def generateCFG(file: String, qualifier: String, decl: ConstructorDeclaration): CFGImpl = {
         val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
-        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
+        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
@@ -58,7 +68,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
 
     def generateCFG(file: String, qualifier: String, decl: MethodDeclaration): CFGImpl = {
         val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
-        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, p.getType)))
+        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
         val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
         pair.block.seal()
         pair.block.setNext(cfg.exit)
@@ -298,13 +308,6 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
         block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(node))).target
     }
 
-    def visitMethodCallExpr(cfg: CFGImpl)(block: CFGStatements, node: MethodCallExpr): IRExpression = {
-        val MethodCallExpr(_, scope, _, arguments) = node
-        val receiver = scope.map(node => visitExpression(cfg)(block, node))
-        val args = arguments.map(node => visitExpression(cfg)(block, node))
-        block.addStatement(IRMethodInvocation(cfg, node.delegate.getName.getIdentifier, receiver, args, Set(node))).target
-    }
-
     def visitNameExpr(cfg: CFGImpl)(block: CFGStatements, node: NameExpr): IRExpression = {
         val name = node.name
         cfg.readVar(name, block) match {
@@ -321,7 +324,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
         case ArrayCreationExpr(ty, lvls, init) =>
             val levels = lvls.flatMap(e => e.dimension.map(d => visitExpression(cfg)(block, d)))
             val initializers = init.toList.flatMap(i => i.values.map(e => visitExpression(cfg)(block, e)))
-            block.addStatement(IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty, node)), levels ++ initializers, Set(node))).target
+            block.addStatement(IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(ty.asString(), node)), levels ++ initializers, Set(node))).target
         case ArrayInitializerExpr(vs) =>
             val values = vs.map(visitExpression(cfg)(block, _))
             IRArray(values, node)
@@ -355,7 +358,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
             block.addStatement(new IRConditionalExpr(cfg, condition, thenExpr, elseExpr, Set(node))).target
         case CharLiteralExpr(n) => IRChar(n, node)
         case ClassExpr(t) =>
-            IRTypeObject(t, node)
+            IRTypeObject(t.asString(), node)
         case DoubleLiteralExpr(n) => IRDouble(n, node)
         case EnclosedExpr(e) =>
             visitExpression(cfg)(block, e)
@@ -366,14 +369,17 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
         case IntegerLiteralExpr(n) => IRInteger(n, node)
         case LambdaExpr(_, _, _) => IRLambda // TODO: lambda expr
         case LongLiteralExpr(n) => IRLong(n, node)
-        case n: MethodCallExpr => visitMethodCallExpr(cfg)(block, n)
+        case n@MethodCallExpr(_, scope, _, arguments) =>
+            val receiver = scope.map(node => visitExpression(cfg)(block, node))
+            val args = arguments.map(node => visitExpression(cfg)(block, node))
+            block.addStatement(IRMethodInvocation(cfg, resolveMethodCallExpr(n), receiver, args, Set(node))).target
         case MethodReferenceExpr(_, _, _) =>
             IRMethodReference
-        case n : NameExpr => visitNameExpr(cfg)(block, n)
+        case n: NameExpr => visitNameExpr(cfg)(block, n)
         case NullLiteralExpr() => IRNull(node)
-        case ObjectCreationExpr(_, ty, _, arguments, _) =>
+        case n @ ObjectCreationExpr(_, ty, _, arguments, _) =>
             val args = arguments.map(node => visitExpression(cfg)(block, node))
-            block.addStatement(IRMethodInvocation(cfg, s"$ty::<init>", Some(IRTypeObject(ty, node)), args, Set(node))).target
+            block.addStatement(IRMethodInvocation(cfg, resolveObjectCreationExpr(n), None, args, Set(node))).target
         case StringLiteralExpr(n) => IRString(n, node)
         case SuperExpr(_) =>
             // TODO: more specific
@@ -398,7 +404,7 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
             declarators.map(visitVariableDeclarator(cfg)(block, _))
             null // TODO
         case TypeExpr(ty) =>
-            IRTypeObject(ty, node)
+            IRTypeObject(ty.asString(), node)
     }
 
 }

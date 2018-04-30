@@ -105,7 +105,7 @@ object QualifiedDFG {
                 dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
                 Map(node -> from.fromNodes)
         }.foldLeft(Map.empty[DNode, Set[NodeDelegate[_]]])(_ ++ _)
-        statements.filter(_.isInstanceOf[IRMethodInvocation]).filter(!_.asInstanceOf[IRMethodInvocation].solved).map(opMap.apply).foreach(dfg.removeNode)
+        statements.filter(_.isInstanceOf[IRMethodInvocation]).map(opMap.apply).foreach(dfg.removeNode)
         dfg.map = opMap.map(kv => kv._2 -> kv._1.fromNode) ++ dataMap
         dfg
     }
