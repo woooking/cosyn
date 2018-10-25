@@ -1,7 +1,5 @@
 name := "cosyn-core"
 
-version := "0.1"
-
 libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.6.1"
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 libraryDependencies += "com.google.guava" % "guava" % "24.0-jre"

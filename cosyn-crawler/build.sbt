@@ -1,0 +1,2 @@
+name := "cosyn-crawler"
+

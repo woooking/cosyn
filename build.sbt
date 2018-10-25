@@ -1,6 +1,6 @@
 name := "cosyn"
 
-version := "0.1"
+version := "1.0"
 
 val commonSettings = Seq(
     scalaVersion := "2.12.4",
@@ -59,5 +59,6 @@ val commonSettings = Seq(
 lazy val root = (project in file(".")).aggregate(macros, core)
 lazy val macros = project.in(file("cosyn-macro")).settings(commonSettings: _*)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros)
+lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*)
 
 
