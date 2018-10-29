@@ -8,7 +8,7 @@ import com.github.woooking.cosyn.javaparser.NodeDelegate
 import scala.collection.mutable
 import scala.util.Try
 
-abstract class IRExpression(val fromNodes: Set[NodeDelegate[_]]) {
+abstract class IRExpression(val fromNodes: Set[Node]) {
     val uses: mutable.Set[IRStatement] = mutable.Set()
 
     def definition: Option[IRStatement] = None
@@ -57,41 +57,41 @@ case class IRArg(name: String, ty: String) extends IRExpression(Set.empty) {
     override def toString: String = name
 }
 
-sealed case class IRBoolean(value: Boolean, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+sealed case class IRBoolean(value: Boolean, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s"$value"
 }
 
-case class IRArray(values: List[IRExpression], fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode))
+case class IRArray(values: List[IRExpression], fromNode: Node) extends IRExpression(Set(fromNode))
 
-case class IRChar(value: Char, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRChar(value: Char, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s"'$value'"
 }
 
-case class IRString(value: String, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRString(value: String, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s""""$value""""
 }
 
-case class IRInteger(value: Int, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRInteger(value: Int, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s"$value"
 }
 
-case class IRDouble(value: Double, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRDouble(value: Double, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s"$value"
 }
 
-case class IRLong(value: Long, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRLong(value: Long, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = s"$value"
 }
 
-case class IRNull(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRNull(fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = "null"
 }
 
-case class IRThis(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRThis(fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = "this"
 }
 
-case class IRSuper(fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRSuper(fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = "super"
 }
 
@@ -99,7 +99,7 @@ case object IRLambda extends IRExpression(Set.empty)
 
 case object IRMethodReference extends IRExpression(Set.empty)
 
-case class IRTypeObject(ty: String, fromNode: NodeDelegate[_ <: Node]) extends IRExpression(Set(fromNode)) {
+case class IRTypeObject(ty: String, fromNode: Node) extends IRExpression(Set(fromNode)) {
     override def toString: String = ty
 }
 

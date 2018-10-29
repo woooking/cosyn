@@ -17,7 +17,8 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
 
     def generateCode(dfg: SimpleDFG, nodes: Set[PNode]): String = {
         val recoverNodes = dfg.recover(nodes)
-        generateCode(dfg.cfg.decl, recoverNodes, Set.empty, "")._1
+//        generateCode(dfg.cfg.decl, recoverNodes, Set.empty, "")._1
+        ???
     }
 
     def generateCode(node: NodeDelegate[_], nodes: Set[NodeDelegate[_]], names: Set[String], indent: String, noName: Boolean = false): (String, Set[String]) = {

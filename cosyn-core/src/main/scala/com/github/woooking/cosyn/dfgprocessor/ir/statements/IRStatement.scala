@@ -1,9 +1,9 @@
 package com.github.woooking.cosyn.dfgprocessor.ir.statements
 
+import com.github.javaparser.ast.Node
 import com.github.woooking.cosyn.dfgprocessor.ir.IRExpression
-import com.github.woooking.cosyn.javaparser.NodeDelegate
 
-abstract class IRStatement(val fromNode: Set[NodeDelegate[_]]) {
+abstract class IRStatement(val fromNode: Set[Node]) {
     def uses: Seq[IRExpression]
 
     def init(): Unit = {

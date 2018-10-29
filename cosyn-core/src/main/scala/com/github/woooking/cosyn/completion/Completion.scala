@@ -2,9 +2,10 @@ package com.github.woooking.cosyn.completion
 
 import better.files.File.home
 import com.github.woooking.cosyn.JavaParser
+import com.github.woooking.cosyn.api.DataSource
 import com.github.woooking.cosyn.cosyn.filter._
 import com.github.woooking.cosyn.cosyn.transformer.{SeqMapTransformer, TryTransformer}
-import com.github.woooking.cosyn.cosyn.{Collector, DataSource}
+import com.github.woooking.cosyn.cosyn.Collector
 import com.github.woooking.cosyn.dfgprocessor.SimpleVisitor
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.dfgprocessor.dfg.DFGNode.NodeType

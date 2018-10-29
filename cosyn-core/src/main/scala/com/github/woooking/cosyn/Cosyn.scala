@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn
 
-import com.github.woooking.cosyn.cosyn.DataSource
+import com.github.woooking.cosyn.api.{DataSource, GraphGenerator}
 import com.github.woooking.cosyn.filter.{FragmentFilter, SourceFilter}
 import com.github.woooking.cosyn.mine.Miner
 import com.github.woooking.cosyn.util.{GraphTypeDef, GraphUtil}
@@ -69,6 +69,5 @@ class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E], R]
         subFiltered.foreach(GraphUtil.printGraph())
         subFiltered.map(codeGenerator.generate(graphs))
     }
-
 
 }

@@ -1,6 +1,7 @@
-package com.github.woooking.cosyn.cosyn
+package com.github.woooking.cosyn.api
 
 import better.files.File
+import com.github.woooking.cosyn.cosyn.Element
 
 trait DataSource[Data] extends Element[Unit, Seq[Data]] {
     def data: Seq[Data]

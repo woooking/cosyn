@@ -2,7 +2,8 @@ package com.github.woooking.cosyn.dfgprocessor
 
 import better.files.File
 import com.github.javaparser.ParseProblemException
-import com.github.woooking.cosyn.{GraphGenerator, JavaParser}
+import com.github.woooking.cosyn.JavaParser
+import com.github.woooking.cosyn.api.GraphGenerator
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.dfgprocessor.dfg.SimpleDFG
 import com.github.woooking.cosyn.filter.{DFGFilter, NodeFilter}

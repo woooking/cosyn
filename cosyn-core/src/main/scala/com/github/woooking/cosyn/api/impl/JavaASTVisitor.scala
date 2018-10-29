@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.dfgprocessor
+package com.github.woooking.cosyn.api.impl
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.`type`.Type
@@ -17,7 +17,7 @@ import com.github.woooking.cosyn.javaparser.stmt._
 
 import scala.annotation.tailrec
 
-class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
+class JavaASTVisitor {
     def resolveParameterType(p: Parameter): String = p.getType.asString()
 
     def resolveType(ty: Type): String = ty.asString()
@@ -58,29 +58,32 @@ class SimpleVisitor(javaParserFacade: JavaParserFacade = null) {
     }
 
     def generateCFG(file: String, qualifier: String, decl: ConstructorDeclaration): CFGImpl = {
-        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}")
-        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
-        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
-        pair.block.seal()
-        pair.block.setNext(cfg.exit)
-        cfg
+//        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
+//        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
+//        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body)
+//        pair.block.seal()
+//        pair.block.setNext(cfg.exit)
+//        cfg
+        ???
     }
 
     def generateCFG(file: String, qualifier: String, decl: MethodDeclaration): CFGImpl = {
-        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}")
-        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
-        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
-        pair.block.seal()
-        pair.block.setNext(cfg.exit)
-        cfg
+//        val cfg = new CFGImpl(file, s"$qualifier${decl.signature}", decl)
+//        decl.params.foreach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
+//        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl.body.get)
+//        pair.block.seal()
+//        pair.block.setNext(cfg.exit)
+//        cfg
+        ???
     }
 
     def generateCFG(decl: BlockStmt): CFGImpl = {
-        val cfg = new CFGImpl("", "")
-        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl)
-        pair.block.seal()
-        pair.block.setNext(cfg.exit)
-        cfg
+//        val cfg = new CFGImpl("", "", decl)
+//        val pair = visitStatement(cfg)(cfg.createContext(cfg.entry), decl)
+//        pair.block.seal()
+//        pair.block.setNext(cfg.exit)
+//        cfg
+        ???
     }
 
     def visitVariableDeclarator(cfg: CFGImpl)(block: CFGStatements, node: VariableDeclarator): IRExpression = node match {

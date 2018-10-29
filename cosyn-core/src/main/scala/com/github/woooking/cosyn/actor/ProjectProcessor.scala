@@ -9,7 +9,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.{CombinedTypeSo
 import com.github.woooking.cosyn.CosynJsonProtocol._
 import com.github.woooking.cosyn.JavaParser
 import com.github.woooking.cosyn.actor.ProjectBuilder.TaskFinished
-import com.github.woooking.cosyn.cosyn.DataSource
+import com.github.woooking.cosyn.api.DataSource
 import com.github.woooking.cosyn.dfgprocessor.QualifiedVisitor
 import com.github.woooking.cosyn.dfgprocessor.dfg.SimpleDFG
 import com.github.woooking.cosyn.model.ProjectInfo
