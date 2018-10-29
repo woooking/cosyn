@@ -1,6 +1,6 @@
 name := "cosyn"
 
-version := "0.1"
+version := "1.0"
 
 val commonSettings = Seq(
     scalaVersion := "2.12.4",
