@@ -59,6 +59,5 @@ val commonSettings = Seq(
 lazy val root = (project in file(".")).aggregate(macros, core)
 lazy val macros = project.in(file("cosyn-macro")).settings(commonSettings: _*)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros)
-lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*)
 
 
