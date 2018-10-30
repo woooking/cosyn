@@ -37,8 +37,9 @@ case class DFGGenerator(maxNode: Option[Int]) extends GraphGenerator[File, Simpl
     }
 
     private def pipeline(compilationUnit: CompilationUnit): Seq[SimpleDFG] = {
-        if ((true /: nodeFilters) ((valid, f) => valid && f.valid(compilationUnit.delegate))) pipeline(new SimpleVisitor().generateCFGs(compilationUnit))
-        else Seq.empty
+//        if ((true /: nodeFilters) ((valid, f) => valid && f.valid(compilationUnit.delegate))) pipeline(new SimpleVisitor().generateCFGs(compilationUnit))
+//        else Seq.empty
+        Seq.empty
     }
 
     private def pipeline(cfgs: Seq[CFGImpl]): Seq[SimpleDFG] = {

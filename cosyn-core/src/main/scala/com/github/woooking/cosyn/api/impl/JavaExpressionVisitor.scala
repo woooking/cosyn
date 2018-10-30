@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.api.impl
 
+import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
@@ -195,10 +196,9 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                     target
                 else
                     source
-            case ope => {
+            case ope =>
                 val source = n.getExpression.accept(this, block)
                 block.addStatement(new IRUnaryOperation(cfg, ope, source, Set(n))).target
-            }
         }
     }
 
@@ -208,7 +208,21 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
     }
 
     override def visit(n: TypeExpr, block: CFGStatements): IRExpression = {
-        IRTypeObject(n.getType.asString(), node)
+        IRTypeObject(n.getType.asString(), n)
+    }
+
+    override def visit(n: VariableDeclarator, block: CFGStatements): IRExpression = {
+        val initValue = n.getInitializer.asScala.map(_.accept(this, block)).getOrElse(IRNull(n))
+        val name = n.getName.asString()
+        initValue match {
+            case t: IRTemp =>
+                cfg.writeVar(name, block, t)
+                t
+            case _ =>
+                val target = block.addStatement(new IRAssignment(cfg, initValue, Set(n))).target
+                cfg.writeVar(name, block, target)
+                target
+        }
     }
 
 }

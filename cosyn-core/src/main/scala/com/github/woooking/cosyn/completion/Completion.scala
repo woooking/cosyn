@@ -6,7 +6,6 @@ import com.github.woooking.cosyn.api.DataSource
 import com.github.woooking.cosyn.cosyn.filter._
 import com.github.woooking.cosyn.cosyn.transformer.{SeqMapTransformer, TryTransformer}
 import com.github.woooking.cosyn.cosyn.Collector
-import com.github.woooking.cosyn.dfgprocessor.SimpleVisitor
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.dfgprocessor.dfg.DFGNode.NodeType
 import com.github.woooking.cosyn.dfgprocessor.dfg._
@@ -36,12 +35,12 @@ object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
 
     def complete(code: String): Unit = {
         val block = JavaParser.parseStatements(code)
-        val visitor = new SimpleVisitor()
-        val cfg = visitor.generateCFG(block)
-        val dfg = SimpleDFG(cfg)
-        val ite = dfg.nodeIterator()
-        val nodes = collectOperationNodes(ite, Seq())
-        complete(nodes)
+//        val visitor = new SimpleVisitor()
+//        val cfg = visitor.generateCFG(block)
+//        val dfg = SimpleDFG(cfg)
+//        val ite = dfg.nodeIterator()
+//        val nodes = collectOperationNodes(ite, Seq())
+//        complete(nodes)
     }
 
     def complete(nodes: Seq[DFGNode]): Unit = {
@@ -52,22 +51,22 @@ object Completion extends GraphTypeDef[DFGNode, DFGEdge] with Logging {
         val dataSource = DataSource.fromJavaSourceCodeDir(clientCodes)
         val collector = new Collector[Seq[PFragment]]()
 
-        dataSource
+//        dataSource
 //            .connect(SeqFilter(FileContentFilter("import java.nio")))
-            .connect(SizeFilter(1200, shuffle = true))
-            .connect(CallbackFilter(s => log.info(s"总数据量： ${s.size}")))
-            .connect(TryTransformer(f => JavaParser.parseFile(f)))
-            .connect(CallbackFilter(s => log.info(s"总控制单元数： ${s.size}")))
-            .connect[Seq[CFGImpl]]((input: Seq[CompilationUnit]) => input.flatMap(new SimpleVisitor().generateCFGs))
-            .connect(CallbackFilter(s => log.info(s"总控制流图数： ${s.size}")))
-            .connect(SeqMapTransformer(SimpleDFG.apply))
-            .connect(CombinedFilter(dfgNodeFilters))
-            .connect(SizeFilter(100, shuffle = true))
-            .connect(CallbackFilter(s => log.info(s"总数据流图数： ${s.size}")))
-            .connect[Seq[PFragment]]((input: Seq[SimpleDFG]) => Miner.mine(input))
-            .connect[Seq[PFragment]]((input: Seq[PFragment]) => input.sortBy(_.frequency().asInstanceOf[IntFrequency].intValue()))
-            .connect(CombinedFilter(fragmentFilters))
-            .connect(collector)
+//            .connect(SizeFilter(1200, shuffle = true))
+//            .connect(CallbackFilter(s => log.info(s"总数据量： ${s.size}")))
+//            .connect(TryTransformer(f => JavaParser.parseFile(f)))
+//            .connect(CallbackFilter(s => log.info(s"总控制单元数： ${s.size}")))
+//            .connect[Seq[CFGImpl]]((input: Seq[CompilationUnit]) => input.flatMap(new SimpleVisitor().generateCFGs))
+//            .connect(CallbackFilter(s => log.info(s"总控制流图数： ${s.size}")))
+//            .connect(SeqMapTransformer(SimpleDFG.apply))
+//            .connect(CombinedFilter(dfgNodeFilters))
+//            .connect(SizeFilter(100, shuffle = true))
+//            .connect(CallbackFilter(s => log.info(s"总数据流图数： ${s.size}")))
+//            .connect[Seq[PFragment]]((input: Seq[SimpleDFG]) => Miner.mine(input))
+//            .connect[Seq[PFragment]]((input: Seq[PFragment]) => input.sortBy(_.frequency().asInstanceOf[IntFrequency].intValue()))
+//            .connect(CombinedFilter(fragmentFilters))
+//            .connect(collector)
 
         dataSource.start(())
 

@@ -8,6 +8,7 @@ import com.github.woooking.cosyn.dfgprocessor.ir.statements.IRStatement
 import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.util.Printable
 import com.google.common.collect.{BiMap, HashBiMap}
+import com.github.javaparser.ast.{Node => ASTNode}
 import de.parsemis.graph._
 
 import scala.annotation.tailrec
@@ -17,9 +18,9 @@ class SimpleDFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
     type DNode = Node[DFGNode, DFGEdge]
     type DGraph = Graph[DFGNode, DFGEdge]
 
-    var map: Map[DNode, Set[NodeDelegate[_]]] = _
+    var map: Map[DNode, Set[ASTNode]] = _
 
-    def recover(nodes: Set[DNode]): Set[NodeDelegate[_]] = {
+    def recover(nodes: Set[DNode]): Set[ASTNode] = {
         nodes.map(map.get).filter(_.nonEmpty).flatMap(_.get)
     }
 
@@ -76,13 +77,13 @@ class SimpleDFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
 object SimpleDFG {
     implicit val dfgPrintable = new Printable[SimpleDFG] {
         override def print(obj: SimpleDFG, ps: PrintStream): Unit = {
-            val ite = obj.edgeIterator();
-            while (ite.hasNext()) {
-                val edge = ite.next();
+            val ite = obj.edgeIterator()
+            while (ite.hasNext) {
+                val edge = ite.next()
                 if (edge.getDirection() == Edge.INCOMING) {
-                    ps.println(edge.getNodeB().getLabel() + " -> " + edge.getNodeA().getLabel())
+                    ps.println(edge.getNodeB.getLabel + " -> " + edge.getNodeA.getLabel)
                 } else {
-                    ps.println(edge.getNodeA().getLabel() + " -> " + edge.getNodeB().getLabel())
+                    ps.println(edge.getNodeA.getLabel + " -> " + edge.getNodeB.getLabel)
                 }
             }
         }
@@ -100,7 +101,7 @@ object SimpleDFG {
         val opMap: Map[IRStatement, DNode] = statements.map(s => s -> dfg.addNode(DFGNode.statement2node(s))).toMap
 
         @tailrec
-        def build(statements: List[(IRExpression, IRStatement)], dataNodes: Map[String, DNode], dataMap: Map[DNode, Set[NodeDelegate[_]]]): Map[DNode, Set[NodeDelegate[_]]] = statements match {
+        def build(statements: List[(IRExpression, IRStatement)], dataNodes: Map[String, DNode], dataMap: Map[DNode, Set[ASTNode]]): Map[DNode, Set[ASTNode]] = statements match {
             case Nil => dataMap
             case s :: ss =>
                 val (newDataNodes, newDataMap) = s match {
@@ -113,10 +114,10 @@ object SimpleDFG {
                         val fromNodes = dataMap.getOrElse(node, Set.empty[NodeDelegate[_]])
                         (dataNodes.updated(from.toString, node), dataMap.updated(node, fromNodes ++ from.fromNodes))
                 }
-                build(ss, newDataNodes, newDataMap)
+                build(ss, newDataNodes, newDataMap.asInstanceOf[Map[DNode, Set[ASTNode]]])
         }
 
-        val dataMap: Map[DNode, Set[NodeDelegate[_]]] = build(
+        val dataMap: Map[DNode, Set[ASTNode]] = build(
             statements.flatMap(s => s.uses.map(use => use -> s)).toList,
             Map.empty,
             Map.empty

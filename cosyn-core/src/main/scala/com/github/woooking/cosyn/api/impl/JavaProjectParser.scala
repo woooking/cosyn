@@ -21,7 +21,7 @@ class JavaProjectParser(path: Path) {
             if (result.isSuccessful) {
                 val cu = result.getResult.get()
                 val methods = cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala
-                methods.foreach(method => {
+                val cfgs = methods.map(method => {
                     val cfg = new CFGImpl("", s"${method.getSignature.asString()}")
                     val statementVisitor = new JavaStatementVisitor(cfg)
 
