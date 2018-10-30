@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn
 
-import com.github.woooking.cosyn.api.{DataSource, GraphGenerator}
+import com.github.woooking.cosyn.api.GraphGenerator
 import com.github.woooking.cosyn.filter.{FragmentFilter, SourceFilter}
 import com.github.woooking.cosyn.mine.Miner
 import com.github.woooking.cosyn.util.{GraphTypeDef, GraphUtil}
@@ -13,7 +13,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E], R]
-(source: DataSource[Data], graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph, R], filterSubGraph: Boolean = false)
+(source: Data, graphGenerator: GraphGenerator[Data, Graph], codeGenerator: CodeGenerator[N, E, Graph, R], filterSubGraph: Boolean = false)
     extends GraphTypeDef[N, E] with Logging {
 
     val sourceFilters: ArrayBuffer[SourceFilter[Data]] = mutable.ArrayBuffer()
@@ -58,9 +58,7 @@ class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E], R]
     }
 
     def process()(implicit setting: Settings[N, E]): Seq[R] = {
-        val data = (source.data /: sourceFilters) ((s, f) => s.filter(f.valid))
-        log.info(s"总数据量: ${data.size}")
-        val graphs = graphGenerator.generate(data)
+        val graphs = graphGenerator.generate(source)
         log.info(s"总数据流图数: ${graphs.size}")
         val freqFragments = Miner.mine(graphs)(setting)
         val filteredFragments = (freqFragments /: fragmentFilters) ((ff, f) => ff.filter(f.valid))

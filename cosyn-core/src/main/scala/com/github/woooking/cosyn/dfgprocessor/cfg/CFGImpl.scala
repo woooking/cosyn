@@ -1,6 +1,5 @@
 package com.github.woooking.cosyn.dfgprocessor.cfg
 
-import com.github.javaparser.ast.body.CallableDeclaration
 import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.{IRPhi, IRStatement}
 import com.github.woooking.cosyn.util.IDGenerator

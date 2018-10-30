@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.api.impl
+package com.github.woooking.cosyn.api.impl.java
 
 import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults

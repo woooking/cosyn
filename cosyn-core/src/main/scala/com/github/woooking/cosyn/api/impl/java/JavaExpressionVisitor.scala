@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.api.impl
+package com.github.woooking.cosyn.api.impl.java
 
 import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr._

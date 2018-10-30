@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn.dfgprocessor
 
+import com.github.javaparser.ast.Node
 import com.github.woooking.cosyn.CodeGenerator
-import com.github.woooking.cosyn.dfgprocessor.dfg.{SimpleDFG, DFGEdge, DFGNode}
+import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.javaparser.body.{ConstructorDeclaration, MethodDeclaration, VariableDeclarator}
 import com.github.woooking.cosyn.javaparser.expr._
@@ -17,11 +18,10 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
 
     def generateCode(dfg: SimpleDFG, nodes: Set[PNode]): String = {
         val recoverNodes = dfg.recover(nodes)
-//        generateCode(dfg.cfg.decl, recoverNodes, Set.empty, "")._1
-        ???
+        generateCode(dfg.cfg.decl, recoverNodes, Set.empty, "")._1
     }
 
-    def generateCode(node: NodeDelegate[_], nodes: Set[NodeDelegate[_]], names: Set[String], indent: String, noName: Boolean = false): (String, Set[String]) = {
+    def generateCode(node: Node, nodes: Set[Node], names: Set[String], indent: String, noName: Boolean = false): (String, Set[String]) = {
         @inline
         def el(c: String) = if (c == "") "..." else c
 
