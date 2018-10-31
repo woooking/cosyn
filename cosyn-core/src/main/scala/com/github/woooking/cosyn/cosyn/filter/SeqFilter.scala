@@ -1,11 +1,7 @@
 package com.github.woooking.cosyn.cosyn.filter
 
-import com.github.woooking.cosyn.cosyn.Element
-
-trait SeqFilter[T] extends Element[Seq[T], Seq[T]] {
+trait SeqFilter[T] {
     def filter(data: Seq[T]): Seq[T]
-
-    override def process(input: Seq[T]): Seq[T] = filter(input)
 }
 
 object SeqFilter {

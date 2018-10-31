@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.dfgprocessor.ir.statements
 
-import com.github.javaparser.ast.expr.BinaryExpr
-import com.github.woooking.cosyn.javaparser.expr.AssignExpr
+import com.github.javaparser.ast.expr.{AssignExpr, BinaryExpr}
 
 object BinaryOperator extends Enumeration {
     type BinaryOperator = Value
@@ -26,19 +25,19 @@ object BinaryOperator extends Enumeration {
     val LessEqual: BinaryOperator = Value("<=")
     val GreaterEqual: BinaryOperator = Value(">=")
 
-    def fromAssignExprOperator(ope: AssignExpr.Operator.Operator): BinaryOperator = ope match {
-        case AssignExpr.Operator.Plus => Plus
-        case AssignExpr.Operator.Minus => Minus
-        case AssignExpr.Operator.Multiply => Multiply
-        case AssignExpr.Operator.Divide => Divide
-        case AssignExpr.Operator.And => BitAnd
-        case AssignExpr.Operator.Or => BitOr
-        case AssignExpr.Operator.Xor => BitXor
-        case AssignExpr.Operator.Remainder => Remainder
-        case AssignExpr.Operator.LeftShift => LeftShift
-        case AssignExpr.Operator.SignedRightShift => SignedRightShift
-        case AssignExpr.Operator.UnsignedRightShift => UnsignedRightShift
-        case AssignExpr.Operator.Assign => throw new Exception("Cannot convert assign operator to binary operator!")
+    def fromAssignExprOperator(ope: AssignExpr.Operator): BinaryOperator = ope match {
+        case AssignExpr.Operator.PLUS => Plus
+        case AssignExpr.Operator.MINUS => Minus
+        case AssignExpr.Operator.MULTIPLY => Multiply
+        case AssignExpr.Operator.DIVIDE => Divide
+        case AssignExpr.Operator.BINARY_AND => BitAnd
+        case AssignExpr.Operator.BINARY_OR => BitOr
+        case AssignExpr.Operator.XOR => BitXor
+        case AssignExpr.Operator.REMAINDER => Remainder
+        case AssignExpr.Operator.LEFT_SHIFT => LeftShift
+        case AssignExpr.Operator.SIGNED_RIGHT_SHIFT => SignedRightShift
+        case AssignExpr.Operator.UNSIGNED_RIGHT_SHIFT => UnsignedRightShift
+        case AssignExpr.Operator.ASSIGN => throw new Exception("Cannot convert assign operator to binary operator!")
     }
 
     def fromBinaryExprOperator(ope: BinaryExpr.Operator): BinaryOperator = ope match {

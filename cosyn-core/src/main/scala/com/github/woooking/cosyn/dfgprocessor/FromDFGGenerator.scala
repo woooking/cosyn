@@ -1,14 +1,14 @@
 package com.github.woooking.cosyn.dfgprocessor
 
-import com.github.javaparser.ast.Node
-import com.github.woooking.cosyn.CodeGenerator
+import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, VariableDeclarator}
+import com.github.javaparser.ast.{Node, NodeList}
+import com.github.javaparser.ast.expr._
+import com.github.javaparser.ast.stmt._
+import com.github.woooking.cosyn.api.CodeGenerator
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
-import com.github.woooking.cosyn.javaparser.NodeDelegate
-import com.github.woooking.cosyn.javaparser.body.{ConstructorDeclaration, MethodDeclaration, VariableDeclarator}
-import com.github.woooking.cosyn.javaparser.expr._
-import com.github.woooking.cosyn.javaparser.stmt._
 import com.github.woooking.cosyn.util.GraphTypeDef
-import de.parsemis.miner.general.Fragment
+
+import scala.collection.JavaConverters._
 
 case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
     override def generate(originalGraph: Seq[SimpleDFG])(graph: PGraph): String = {
@@ -26,20 +26,20 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
         def el(c: String) = if (c == "") "..." else c
 
         @inline
-        def gc1(n1: NodeDelegate[_], idt: String, ctx: Set[String] = names) = {
+        def gc1(n1: Node, idt: String, ctx: Set[String] = names) = {
             val (c1, ctx1) = generateCode(n1, nodes, ctx, idt, !nodes.contains(node))
             (c1, ctx1)
         }
 
         @inline
-        def gc2(n1: NodeDelegate[_], n2: NodeDelegate[_], idt: String, ctx: Set[String] = names, notVisitName: Boolean = false) = {
+        def gc2(n1: Node, n2: Node, idt: String, ctx: Set[String] = names, notVisitName: Boolean = false) = {
             val (c1, ctx1) = generateCode(n1, nodes, ctx, idt, notVisitName)
             val (c2, ctx2) = generateCode(n2, nodes, ctx1, idt, notVisitName)
             (c1, c2, ctx2)
         }
 
         @inline
-        def gc3(n1: NodeDelegate[_], n2: NodeDelegate[_], n3: NodeDelegate[_], idt: String, ctx: Set[String] = names, notVisitName: Boolean = false) = {
+        def gc3(n1: Node, n2: Node, n3: Node, idt: String, ctx: Set[String] = names, notVisitName: Boolean = false) = {
             val (c1, ctx1) = generateCode(n1, nodes, ctx, idt)
             val (c2, ctx2) = generateCode(n2, nodes, ctx1, idt)
             val (c3, ctx3) = generateCode(n3, nodes, ctx2, idt)
@@ -47,8 +47,8 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
         }
 
         @inline
-        def gcl(ns: List[NodeDelegate[_]], idt: String, ctx: Set[String] = names) = {
-            ns.foldLeft((Seq.empty[String], ctx))((context, v) => {
+        def gcl[T <: Node](ns: NodeList[T], idt: String, ctx: Set[String] = names) = {
+            ns.asScala.foldLeft((Seq.empty[String], ctx))((context, v) => {
                 val (c, ctx) = generateCode(v, nodes, context._2, idt, !nodes.contains(node))
                 (context._1 :+ c, ctx)
             })
@@ -66,149 +66,151 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
         }
 
         node match {
-            case AssignExpr(NameExpr(name), ope, value) =>
-                val (valueCode, ctx) = gc1(value, "")
-                val newCtx = if (nodes.contains(value)) ctx + name else ctx
-                rs(s"$name $ope $valueCode", newCtx, valueCode)
-            case AssignExpr(target, ope, value) =>
-                val (targetCode, valueCode, ctx) = gc2(target, value, "")
-                rs(s"$targetCode$ope$valueCode", ctx, targetCode, valueCode)
-            case ArrayAccessExpr(name, index) =>
-                val (nameCode, indexCode, ctx) = gc2(name, index, "")
+            case n: AssignExpr if n.getTarget.isNameExpr =>
+                val name = n.getTarget.asNameExpr().getName.asString()
+                val (valueCode, ctx) = gc1(n.getValue, "")
+                val newCtx = if (nodes.contains(n.getValue)) ctx + name else ctx
+                rs(s"$name ${n.getOperator.asString()} $valueCode", newCtx, valueCode)
+            case n: AssignExpr =>
+                val (targetCode, valueCode, ctx) = gc2(n.getTarget, n.getValue, "")
+                rs(s"$targetCode${n.getOperator.asString()}$valueCode", ctx, targetCode, valueCode)
+            case n: ArrayAccessExpr =>
+                val (nameCode, indexCode, ctx) = gc2(n.getName, n.getIndex, "")
                 rs(s"${el(nameCode)}[${el(indexCode)}]", ctx, nameCode, indexCode)
-            case ArrayCreationExpr(ty, _, _) => (s"new $ty[]", names)
-            case ArrayInitializerExpr(values) =>
-                val (valuesCode, ctx) = gcl(values, "")
+            case n: ArrayCreationExpr => (s"new ${n.getElementType}[]", names)
+            case n: ArrayInitializerExpr =>
+                val (valuesCode, ctx) = gcl(n.getValues, "")
                 val ellip = valuesCode.map(el).mkString(", ")
                 rs(s"{$ellip}", ctx, valuesCode: _*)
-            case BinaryExpr(left, ope, right) =>
-                val (leftCode, rightCode, ctx) = gc2(left, right, "")
-                if (nodes.contains(node)) (s"${el(leftCode)} ${ope.asString()} ${el(rightCode)}", ctx)
+            case n: BinaryExpr =>
+                val (leftCode, rightCode, ctx) = gc2(n.getLeft, n.getRight, "")
+                if (nodes.contains(node)) (s"${el(leftCode)} ${n.getOperator.asString()} ${el(rightCode)}", ctx)
                 else if (leftCode != "" && rightCode != "") (s"$leftCode\n$indent$rightCode", ctx)
                 else (s"$leftCode$rightCode", ctx)
-            case BlockStmt(s) =>
-                val (codes, ctx) = gcl(s, indent)
+            case n: BlockStmt =>
+                val (codes, ctx) = gcl(n.getStatements, indent)
                 (codes.mkString(""), ctx)
-            case BooleanLiteralExpr(s) =>
-                if (nodes.contains(node)) (s"$s", names)
+            case n: BooleanLiteralExpr =>
+                if (nodes.contains(node)) (s"${n.getValue}", names)
                 else ("", names)
-            case CastExpr(ty, expr) =>
-                val (code, ctx) = gc1(expr, "")
-                rs(s"($ty)$code", ctx, code)
-            case ClassExpr(ty) =>
-                if (nodes.contains(node)) (s"$ty.class", names)
+            case n: CastExpr =>
+                val (code, ctx) = gc1(n.getExpression, "")
+                rs(s"(${n.getType})$code", ctx, code)
+            case n: ClassExpr =>
+                if (nodes.contains(node)) (s"${n.getType}.class", names)
                 else ("", names)
-            case ConditionalExpr(condition, thenExpr, elseExpr) =>
-                val (conditionCode, thenCode, elseCode, ctx) = gc3(condition, thenExpr, elseExpr, "")
+            case n: ConditionalExpr =>
+                val (conditionCode, thenCode, elseCode, ctx) = gc3(n.getCondition, n.getThenExpr, n.getElseExpr, "")
                 rs(s"$conditionCode ? $thenCode : $elseCode", ctx, conditionCode, thenCode, elseCode)
-            case ConstructorDeclaration(_, _, _, _, _, body) => generateCode(body, nodes, names, indent)
-            case EnclosedExpr(e) => generateCode(e, nodes, names, indent)
-            case ExpressionStmt(s) =>
-                val (code, ctx) = gc1(s, "")
+            case n: ConstructorDeclaration => generateCode(n.getBody, nodes, names, indent)
+            case n: EnclosedExpr => generateCode(n.getInner, nodes, names, indent)
+            case n: ExpressionStmt =>
+                val (code, ctx) = gc1(n.getExpression, "")
                 if (code != "") (s"$indent$code;\n", ctx)
                 else ("", ctx)
-            case FieldAccessExpr(scope, name, _) =>
-                val (code, ctx) = gc1(scope, "")
-                if (nodes.contains(node)) (s"${el(code)}.$name", ctx)
+            case n: FieldAccessExpr =>
+                val (code, ctx) = gc1(n.getScope, "")
+                if (nodes.contains(node)) (s"${el(code)}.${n.getName}", ctx)
                 else rsn(ctx, code)
-            case ForeachStmt(_, _, body) =>
-                val (code, ctx) = gc1(body, s"$indent    ")
+            case n: ForeachStmt =>
+                val (code, ctx) = gc1(n.getBody, s"$indent    ")
                 if (nodes.contains(node)) (s"${indent}for () {\n$code$indent}\n", ctx)
                 else rsn(ctx, code)
-            case ForStmt(init, None, update, body) =>
-                val (initCode, ctx1) = gcl(init, "")
-                val (updateCode, ctx2) = gcl(update, "", ctx1)
-                val (bodyCode, ctx3) = generateCode(body, nodes, ctx2, s"$indent    ")
+            case n: ForStmt if n.getCompare.isEmpty =>
+                val (initCode, ctx1) = gcl(n.getInitialization, "")
+                val (updateCode, ctx2) = gcl(n.getUpdate, "", ctx1)
+                val (bodyCode, ctx3) = generateCode(n.getBody, nodes, ctx2, s"$indent    ")
                 val codes = initCode ++ updateCode :+ bodyCode
                 if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "") (s"${indent}for (${initCode.mkString("")}; ; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx3)
                 else rsn(ctx3, codes: _*)
-            case ForStmt(init, Some(compare), update, body) =>
-                val (initCode, ctx1) = gcl(init, "")
-                val (compareCode, ctx2) = generateCode(compare, nodes, ctx1, s"$indent    ")
-                val (updateCode, ctx3) = gcl(update, "", ctx2)
-                val (bodyCode, ctx4) = generateCode(body, nodes, ctx3, s"$indent    ")
+            case n: ForStmt =>
+                val (initCode, ctx1) = gcl(n.getInitialization, "")
+                val (compareCode, ctx2) = generateCode(n.getCompare.get(), nodes, ctx1, s"$indent    ")
+                val (updateCode, ctx3) = gcl(n.getUpdate, "", ctx2)
+                val (bodyCode, ctx4) = generateCode(n.getBody, nodes, ctx3, s"$indent    ")
                 val codes = (initCode :+ compareCode) ++ updateCode :+ bodyCode
                 if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "" || compareCode != "") (s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4)
                 else rsn(ctx4, codes: _*)
-            case IfStmt(condition, thenStmt, None) =>
-                val (conditionCode, ctx1) = generateCode(condition, nodes, names, "")
+            case n: IfStmt if n.getElseStmt.isEmpty =>
+                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
                 val idt = if (nodes.contains(node)) s"$indent    " else indent
-                val (thenCode, ctx2) = gc1(thenStmt, idt, ctx1)
+                val (thenCode, ctx2) = gc1(n.getThenStmt, idt, ctx1)
                 if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent}\n", ctx2)
                 else rsn(ctx2, conditionCode, thenCode)
-            case IfStmt(condition, thenStmt, Some(elseStmt)) =>
-                val (conditionCode, ctx1) = generateCode(condition, nodes, names, "")
+            case n: IfStmt =>
+                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
                 val idt = if (nodes.contains(node)) s"$indent    " else indent
-                val (thenCode, elseCode, ctx2) = gc2(thenStmt, elseStmt, idt, ctx1)
+                val (thenCode, elseCode, ctx2) = gc2(n.getThenStmt, n.getElseStmt.get(), idt, ctx1)
                 if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent} else {\n${el(elseCode)}$indent}\n", ctx2)
                 else rsn(ctx2, conditionCode, thenCode, elseCode)
-            case InstanceOfExpr(e, ty) =>
-                val (code, ctx) = gc1(e, "")
-                rs(s"$code instanceof $ty", ctx, code)
-            case IntegerLiteralExpr(s) =>
-                rs(s.toString, names)
-            case LongLiteralExpr(s) =>
-                rs(s.toString, names)
-            case MethodCallExpr(name, None, _, args) =>
-                val (argsCode, ctx) = gcl(args, "")
+            case n: InstanceOfExpr =>
+                val (code, ctx) = gc1(n.getExpression, "")
+                rs(s"$code instanceof ${n.getType}", ctx, code)
+            case n: IntegerLiteralExpr =>
+                rs(n.asInt().toString, names)
+            case n: LongLiteralExpr =>
+                rs(n.asLong().toString, names)
+            case n: MethodCallExpr if n.getScope.isEmpty =>
+                val (argsCode, ctx) = gcl(n.getArguments, "")
                 val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
-                if (nodes.contains(node)) (s"$name($ellip)", ctx)
+                if (nodes.contains(node)) (s"${n.getName}($ellip)", ctx)
                 else rsn(ctx, argsCode: _*)
-            case MethodCallExpr(name, Some(scope), _, args) =>
-                val (argsCode, ctx1) = gcl(args, "")
-                val (scopeCode, ctx2) = gc1(scope, "", ctx1)
+            case n: MethodCallExpr =>
+                val (argsCode, ctx1) = gcl(n.getArguments, "")
+                val (scopeCode, ctx2) = gc1(n.getScope.get(), "", ctx1)
                 val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
-                if (nodes.contains(node)) (s"${el(scopeCode)}.$name($ellip)", ctx2)
-                else rsn(ctx2, (scopeCode +: argsCode): _*)
-            case MethodDeclaration(_, _, _, _, _, _, Some(body)) => generateCode(body, nodes, names, indent)
-            case NameExpr(name) =>
+                if (nodes.contains(node)) (s"${el(scopeCode)}.${n.getName}($ellip)", ctx2)
+                else rsn(ctx2, scopeCode +: argsCode: _*)
+            case n: MethodDeclaration if n.getBody.isPresent => generateCode(n.getBody.get(), nodes, names, indent)
+            case n: NameExpr =>
+                val name = n.getName.asString()
                 if (nodes.contains(node)) (name, names)
                 else if (noName) ("", names)
                 else if (names.contains(name)) (name, names)
                 else ("", names)
-            case NullLiteralExpr() =>
-                rs("null", names)
-            case ObjectCreationExpr(_, ty, _, args, _) =>
-                val (argsCode, ctx) = gcl(args, "")
+            case _: NullLiteralExpr => rs("null", names)
+            case n: ObjectCreationExpr=>
+                val (argsCode, ctx) = gcl(n.getArguments, "")
                 val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
-                if (nodes.contains(node)) (s"${indent}new $ty($ellip)", ctx)
+                if (nodes.contains(node)) (s"${indent}new ${n.getType}($ellip)", ctx)
                 else rsn(ctx, argsCode: _*)
-            case ReturnStmt(None) =>
+            case n: ReturnStmt if n.getExpression.isEmpty =>
                 rs(s"${indent}return;", names)
-            case ReturnStmt(Some(expr)) =>
-                val (code, ctx) = gc1(expr, "")
+            case n: ReturnStmt =>
+                val (code, ctx) = gc1(n.getExpression.get(), "")
                 rs(s"return $code;", ctx, code)
-            case StringLiteralExpr(s) =>
-                rs(s.toString, names)
-            case ThrowStmt(e) =>
-                val (code, ctx) = gc1(e, "")
+            case n: StringLiteralExpr =>
+                rs(n.asString(), names)
+            case n: ThrowStmt =>
+                val (code, ctx) = gc1(n.getExpression, "")
                 if (nodes.contains(node)) (s"throw $code", ctx)
                 else rsn(ctx, code)
-            case ThisExpr(_) =>
-                rs("this", names)
-            case UnaryExpr(ope, expr) =>
-                val (code, ctx) = gc1(expr, "")
+            case _: ThisExpr => rs("this", names)
+            case n: UnaryExpr =>
+                val ope = n.getOperator
+                val (code, ctx) = gc1(n.getExpression, "")
                 val c = if (ope.isPostfix) s"$code${ope.asString()}" else s"${ope.asString()}$code"
                 rs(c, ctx, code)
-            case VariableDeclarationExpr(v) =>
-                val (code, ctx) = gcl(v, indent)
+            case n: VariableDeclarationExpr =>
+                val (code, ctx) = gcl(n.getVariables, indent)
                 (code.mkString(""), ctx)
-            case VariableDeclarator(name, ty, None) =>
-                rs(s"$ty $name", names)
-            case VariableDeclarator(name, ty, Some(init)) =>
-                val (code, ctx) = gc1(init, "")
-                val newCtx = if (nodes.contains(node) || nodes.contains(init)) ctx + name else ctx
-                rs(s"$ty $name = $code", newCtx, code)
-                if (nodes.contains(node) || nodes.contains(init)) (s"$ty $name = $code", ctx + name)
+            case n: VariableDeclarator if n.getInitializer.isEmpty =>
+                rs(s"${n.getType} ${n.getName}", names)
+            case n: VariableDeclarator =>
+                val name = n.getName.asString()
+                val (code, ctx) = gc1(n.getInitializer.get(), "")
+                val newCtx = if (nodes.contains(node) || nodes.contains(n.getInitializer.get())) ctx + name else ctx
+                rs(s"${n.getType} $name = $code", newCtx, code)
+                if (nodes.contains(node) || nodes.contains(n.getInitializer.get())) (s"${n.getType} $name = $code", ctx + name)
                 else rsn(ctx, code)
-            case WhileStmt(condition, body) =>
-                val (conditionCode, ctx1) = gc1(condition, "")
-                val (bodyCode, ctx2) = gc1(body, s"$indent    ", ctx1)
+            case n: WhileStmt =>
+                val (conditionCode, ctx1) = gc1(n.getCondition, "")
+                val (bodyCode, ctx2) = gc1(n.getBody, s"$indent    ", ctx1)
                 rs(s"${indent}while ($conditionCode) {\n$bodyCode$indent}\n", ctx2, conditionCode, bodyCode)
-            case TryStmt(_, body, _, _) =>
-                val (code, ctx) = gc1(body, indent)
+            case n: TryStmt =>
+                val (code, ctx) = gc1(n.getTryBlock, indent)
                 //                rs(s"${indent}try {\n$code$indent}\n", ctx, code)
-                rs(s"${indent}$code", ctx, code)
+                rs(s"$indent$code", ctx, code)
             case _ =>
                 (s"not implemented $node", names)
         }

@@ -3,7 +3,8 @@ package com.github.woooking.cosyn
 import java.nio.file.Path
 
 import better.files.File.home
-import com.github.woooking.cosyn.api.impl.java.JavaDFGGenerator
+import com.github.woooking.cosyn.api.Cosyn
+import com.github.woooking.cosyn.impl.java.JavaDFGGenerator
 import com.github.woooking.cosyn.dfgprocessor.FromDFGGenerator
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.mine.Setting

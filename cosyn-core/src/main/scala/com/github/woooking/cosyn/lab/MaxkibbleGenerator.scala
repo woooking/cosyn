@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.lab
 
 import com.github.javaparser.ast.Node
-import com.github.woooking.cosyn.CodeGenerator
+import com.github.woooking.cosyn.api.CodeGenerator
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.util.GraphTypeDef
 

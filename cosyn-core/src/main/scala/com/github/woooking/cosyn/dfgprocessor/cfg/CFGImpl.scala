@@ -1,12 +1,13 @@
 package com.github.woooking.cosyn.dfgprocessor.cfg
 
+import com.github.javaparser.ast.Node
 import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.{IRPhi, IRStatement}
 import com.github.woooking.cosyn.util.IDGenerator
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFGImpl(val file: String, val name: String) extends CFG {
+class CFGImpl(val file: String, val name: String, val decl: Node) extends CFG {
 
     private[this] val tempID = new IDGenerator
     val blocks: ArrayBuffer[CFGBlock] = ArrayBuffer()

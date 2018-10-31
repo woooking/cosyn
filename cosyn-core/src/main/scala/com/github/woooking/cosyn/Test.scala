@@ -7,7 +7,7 @@ object Test {
 
     def main(args: Array[String]): Unit = {
         val file = home / "lab" / "client-codes" / "lucene-solr-master" / "lucene" / "classification" / "src" / "java" / "org" / "apache" / "lucene" / "classification" / "KNearestNeighborClassifier.java"
-        val cu = JavaParser.parseFile(file)
+//        val cu = JavaParser.parseFile(file)
 //        val cfgs = new SimpleVisitor().generateCFGs(cu)
 //        val cfg = cfgs(5)
         println("======")
