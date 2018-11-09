@@ -3,7 +3,6 @@ package com.github.woooking.cosyn.filter
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.{MethodCallExpr, ObjectCreationExpr}
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter
-import com.github.woooking.cosyn.javaparser.CompilationUnit
 
 class ObjectCreationCUFilter(name: String) extends NodeFilter {
     class Visitor extends GenericVisitorAdapter[java.lang.Boolean, Boolean] {

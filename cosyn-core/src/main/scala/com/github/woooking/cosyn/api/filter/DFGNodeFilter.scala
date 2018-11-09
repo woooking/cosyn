@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.cosyn.filter
+package com.github.woooking.cosyn.api.filter
 
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGNode, SimpleDFG}
 
@@ -11,6 +11,4 @@ case class DFGNodeFilter(dfgNode: DFGNode) extends SeqFilter[SimpleDFG] {
         }
         false
     }
-
-    override def filter(data: Seq[SimpleDFG]): Seq[SimpleDFG] = data.filter(valid)
 }

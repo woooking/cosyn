@@ -2,6 +2,8 @@ package com.github.woooking.cosyn.api.filter
 
 import com.github.woooking.cosyn.api.Pipeline.Filter
 
-object SeqFilter {
-    def fromCondition[T](condition: T => Boolean): Filter[Seq[T]] = (input: Seq[T]) => input.filter(condition)
+trait SeqFilter[T] extends Filter[Seq[T]] {
+    def valid(input: T): Boolean
+
+    override final def >>:(input: Seq[T]): Seq[T] = input filter valid
 }

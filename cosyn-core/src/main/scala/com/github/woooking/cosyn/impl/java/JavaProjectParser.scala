@@ -2,44 +2,69 @@ package com.github.woooking.cosyn.impl.java
 
 import java.nio.file.Path
 
-import com.github.javaparser.ParseResult
+import better.files.File
+import com.github.javaparser.{JavaParser, ParseResult}
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, Parameter}
+import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.javaparser.utils.SourceRoot
 import com.github.woooking.cosyn.api.Pipeline
 import com.github.woooking.cosyn.api.Pipeline.Filter
 import com.github.woooking.cosyn.dfgprocessor.cfg.CFGImpl
+import com.github.woooking.cosyn.dfgprocessor.dfg.SimpleDFG
 import com.github.woooking.cosyn.dfgprocessor.ir.IRArg
 
+import reflect.runtime.universe._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class JavaProjectParser extends Pipeline[Path, Seq[CFGImpl]] {
+class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
     type SourceRoots = Seq[SourceRoot]
     type CUResult = ParseResult[CompilationUnit]
-    type CUResults = Seq[CUResult]
+    type CUs = Seq[CompilationUnit]
     type CFGs = Seq[CFGImpl]
+    type DFGs = Seq[SimpleDFG]
 
     private[this] val sourceRootFilters = mutable.ArrayBuffer[Filter[SourceRoots]]()
-    private[this] val cuResultFilters = mutable.ArrayBuffer[Filter[CUResults]]()
+    private[this] val cuFilters = mutable.ArrayBuffer[Filter[CUs]]()
     private[this] val cfgFilters = mutable.ArrayBuffer[Filter[CFGs]]()
+    private[this] val dfgFilters = mutable.ArrayBuffer[Filter[DFGs]]()
 
-    def resolveParameterType(p: Parameter): String = p.getType.asString()
+    def register[T: TypeTag](filter: Filter[T]): this.type = {
+        filter match {
+            case f if typeOf[T] <:< typeOf[SourceRoots] => sourceRootFilters += f.asInstanceOf[Filter[SourceRoots]]
+            case f if typeOf[T] <:< typeOf[CUs] => cuFilters += f.asInstanceOf[Filter[CUs]]
+            case f if typeOf[T] <:< typeOf[CFGs] => cfgFilters += f.asInstanceOf[Filter[CFGs]]
+            case f if typeOf[T] <:< typeOf[DFGs] => dfgFilters += f.asInstanceOf[Filter[DFGs]]
+        }
+        this
+    }
 
-    private val sourceRootsGenerator: Pipeline[Path, SourceRoots] =
+    private def resolveParameterType(p: Parameter): String = p.getType.asString()
+
+    private def sourceFilesGenerator: Pipeline[Path, CUs] =
+        (path: Path) => File(path).listRecursively
+            .filter(_.extension.contains(".java"))
+            .map(_.toJava)
+            .map(JavaParser.parse)
+            .toSeq
+
+    private def sourceRootsGenerator: Pipeline[Path, SourceRoots] =
         (path: Path) => new SymbolSolverCollectionStrategy().collect(path).getSourceRoots.asScala
 
-    private val sourceRootFilter: Filter[SourceRoots] = (Pipeline.id[SourceRoots] /: sourceRootFilters) (_ | _)
+    private def sourceRootFilter: Filter[SourceRoots] = (Pipeline.id[SourceRoots] /: sourceRootFilters) (_ | _)
 
-    private val javaParser: Pipeline[SourceRoots, CUResults] =
-        (sourceRoots: Seq[SourceRoot]) => sourceRoots.flatMap(_.tryToParseParallelized().asScala)
-
-    private val cuResultFilter: Filter[CUResults] = (Pipeline.id[CUResults] /: cuResultFilters) (_ | _)
-
-    private val cuResult2CFG: Pipeline[CUResults, Seq[CFGImpl]] =
-        (cus: CUResults) => cus.filter(_.isSuccessful)
+    private def javaParser: Pipeline[SourceRoots, CUs] =
+        (sourceRoots: Seq[SourceRoot]) => sourceRoots
+            .flatMap(_.tryToParseParallelized().asScala)
+            .filter(_.isSuccessful)
             .map(_.getResult.get())
+
+    private def cuResultFilter: Filter[CUs] = (Pipeline.id[CUs] /: cuFilters) (_ | _)
+
+    private def cuResult2cfg: Pipeline[CUs, Seq[CFGImpl]] =
+        (cus: CUs) => cus
             .flatMap(cu => cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala)
             .map(method => {
                 val cfg = new CFGImpl("", s"${method.getSignature.asString()}", method)
@@ -47,7 +72,8 @@ class JavaProjectParser extends Pipeline[Path, Seq[CFGImpl]] {
 
                 val body = method match {
                     case decl: ConstructorDeclaration => decl.getBody
-                    case decl: MethodDeclaration => decl.getBody.get()
+                    case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
+                    case _: MethodDeclaration => new BlockStmt
                 }
 
                 method.getParameters.forEach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
@@ -57,10 +83,15 @@ class JavaProjectParser extends Pipeline[Path, Seq[CFGImpl]] {
                 cfg
             })
 
-    private val cfgFilter: Filter[CFGs] = (Pipeline.id[CFGs] /: cfgFilters) (_ | _)
+    private def cfgFilter: Filter[CFGs] = (Pipeline.id[CFGs] /: cfgFilters) (_ | _)
 
-    override def >>:(input: Path): Seq[CFGImpl] =
-        input >>: (sourceRootsGenerator | sourceRootFilter | javaParser | cuResultFilter | cuResult2CFG | cfgFilter)
+    private def cfg2dfg: Pipeline[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
+
+    private def dfgFilter: Filter[DFGs] = (Pipeline.id[DFGs] /: dfgFilters) (_ | _)
+
+    override def >>:(input: Path): DFGs =
+    //        input >>: (sourceRootsGenerator | sourceRootFilter | javaParser | cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)
+        input >>: (sourceFilesGenerator | cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)
 
 
 }

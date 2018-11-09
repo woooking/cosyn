@@ -76,7 +76,7 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         context
     }
 
-    override def visit(n: ForeachStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ForEachStmt, context: CFGImpl#Context): CFGImpl#Context = {
         context.block.seal()
         val entryBlock = cfg.createStatements()
         context.block.setNext(entryBlock)

@@ -183,7 +183,14 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                  UnaryExpr.Operator.POSTFIX_INCREMENT |
                  UnaryExpr.Operator.PREFIX_DECREMENT |
                  UnaryExpr.Operator.POSTFIX_DECREMENT =>
-                val name = n.getExpression.asNameExpr().getName.asString()
+                val name = n.getExpression match {
+                    case nameExpr: NameExpr => nameExpr.getName.asString()
+                    case fieldAccessExpr: FieldAccessExpr if fieldAccessExpr.getScope.isThisExpr => fieldAccessExpr.getName.asString()
+                    case x =>
+                        log.warn(s"Assign Expr of $x not implemented.")
+                        ""
+                }
+//                val name = n.getExpression.asNameExpr().getName.asString()
                 val source = cfg.readVar(name, block)
                 val ope = if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.POSTFIX_INCREMENT)
                     BinaryExpr.Operator.PLUS

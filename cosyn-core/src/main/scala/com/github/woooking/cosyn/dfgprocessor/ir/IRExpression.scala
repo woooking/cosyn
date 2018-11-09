@@ -1,9 +1,7 @@
 package com.github.woooking.cosyn.dfgprocessor.ir
 
 import com.github.javaparser.ast.Node
-import com.github.javaparser.ast.`type`.Type
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.IRStatement
-import com.github.woooking.cosyn.javaparser.NodeDelegate
 
 import scala.collection.mutable
 import scala.util.Try

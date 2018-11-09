@@ -5,7 +5,6 @@ import java.io.PrintStream
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
 import com.github.woooking.cosyn.dfgprocessor.ir.IRExpression
 import com.github.woooking.cosyn.dfgprocessor.ir.statements.IRStatement
-import com.github.woooking.cosyn.javaparser.NodeDelegate
 import com.github.woooking.cosyn.util.Printable
 import com.google.common.collect.{BiMap, HashBiMap}
 import com.github.javaparser.ast.{Node => ASTNode}
@@ -111,7 +110,7 @@ object SimpleDFG {
                     case (from, to) =>
                         val node = dataNodes.getOrElse(from.toString, dfg.addNode(DFGNode.expression2node(from)))
                         dfg.addEdge(node, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
-                        val fromNodes = dataMap.getOrElse(node, Set.empty[NodeDelegate[_]])
+                        val fromNodes = dataMap.getOrElse(node, Set.empty[ASTNode])
                         (dataNodes.updated(from.toString, node), dataMap.updated(node, fromNodes ++ from.fromNodes))
                 }
                 build(ss, newDataNodes, newDataMap.asInstanceOf[Map[DNode, Set[ASTNode]]])

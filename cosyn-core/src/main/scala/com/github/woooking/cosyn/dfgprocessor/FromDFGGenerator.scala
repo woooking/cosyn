@@ -23,7 +23,7 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
 
     def generateCode(node: Node, nodes: Set[Node], names: Set[String], indent: String, noName: Boolean = false): (String, Set[String]) = {
         @inline
-        def el(c: String) = if (c == "") "..." else c
+        def el(c: String) = if (c == "") "<HOLE>" else c
 
         @inline
         def gc1(n1: Node, idt: String, ctx: Set[String] = names) = {
@@ -112,7 +112,7 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
                 val (code, ctx) = gc1(n.getScope, "")
                 if (nodes.contains(node)) (s"${el(code)}.${n.getName}", ctx)
                 else rsn(ctx, code)
-            case n: ForeachStmt =>
+            case n: ForEachStmt =>
                 val (code, ctx) = gc1(n.getBody, s"$indent    ")
                 if (nodes.contains(node)) (s"${indent}for () {\n$code$indent}\n", ctx)
                 else rsn(ctx, code)
@@ -152,13 +152,13 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
                 rs(n.asLong().toString, names)
             case n: MethodCallExpr if n.getScope.isEmpty =>
                 val (argsCode, ctx) = gcl(n.getArguments, "")
-                val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
+                val ellip = argsCode.map(c => if (c == "") "<HOLE>" else c).mkString(", ")
                 if (nodes.contains(node)) (s"${n.getName}($ellip)", ctx)
                 else rsn(ctx, argsCode: _*)
             case n: MethodCallExpr =>
                 val (argsCode, ctx1) = gcl(n.getArguments, "")
                 val (scopeCode, ctx2) = gc1(n.getScope.get(), "", ctx1)
-                val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
+                val ellip = argsCode.map(c => if (c == "") "<HOLE>" else c).mkString(", ")
                 if (nodes.contains(node)) (s"${el(scopeCode)}.${n.getName}($ellip)", ctx2)
                 else rsn(ctx2, scopeCode +: argsCode: _*)
             case n: MethodDeclaration if n.getBody.isPresent => generateCode(n.getBody.get(), nodes, names, indent)
@@ -171,7 +171,7 @@ case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG,
             case _: NullLiteralExpr => rs("null", names)
             case n: ObjectCreationExpr=>
                 val (argsCode, ctx) = gcl(n.getArguments, "")
-                val ellip = argsCode.map(c => if (c == "") "..." else c).mkString(", ")
+                val ellip = argsCode.map(c => if (c == "") "<HOLE>" else c).mkString(", ")
                 if (nodes.contains(node)) (s"${indent}new ${n.getType}($ellip)", ctx)
                 else rsn(ctx, argsCode: _*)
             case n: ReturnStmt if n.getExpression.isEmpty =>
