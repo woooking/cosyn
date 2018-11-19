@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.api
 
 import com.github.woooking.cosyn.filter.FragmentFilter
 import com.github.woooking.cosyn.mine.Miner
-import com.github.woooking.cosyn.util.GraphTypeDef
+import com.github.woooking.cosyn.util.{GraphTypeDef, GraphUtil}
 import de.parsemis.graph.{Graph => ParsemisGraph}
 import de.parsemis.miner.environment.Settings
 import org.slf4s.Logging
@@ -58,7 +58,7 @@ class Cosyn[Data, N, E, Graph <: ParsemisGraph[N, E], R]
         val filteredFragments = (freqFragments /: fragmentFilters) ((ff, f) => ff.filter(f.valid))
         val subFiltered = if (filterSubGraph) resultFilter(filteredFragments) else filteredFragments.map(_.toGraph)
         log.info(s"频繁子图数: ${subFiltered.size}")
-//        subFiltered.foreach(GraphUtil.printGraph())
+        subFiltered.foreach(GraphUtil.printGraph())
         subFiltered.map(codeGenerator.generate(graphs))
     }
 

@@ -4,6 +4,7 @@ import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
+import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
 import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements._
@@ -28,7 +29,27 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
         case AssignExpr.Operator.ASSIGN => throw new Exception("Cannot convert assign operator to binary operator!")
     }
 
-    private def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = methodCallExpr.getName.asString()
+    private def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = {
+        try {
+//            println("-----")
+//            println(methodCallExpr.getName.asString())
+//            println(methodCallExpr.resolve().getQualifiedSignature)
+            methodCallExpr.resolve().getQualifiedSignature
+        } catch {
+            case e: UnsolvedSymbolException =>
+                //                println("-----")
+                //                println(methodCallExpr.getName.asString())
+                //                println(cfg.decl)
+                //                e.printStackTrace()
+                methodCallExpr.getName.asString()
+            case e: Throwable =>
+                //                println("-----")
+                //                println(methodCallExpr.getName.asString())
+                //                println(cfg.decl)
+                //                e.printStackTrace()
+                methodCallExpr.getName.asString()
+        }
+    }
 
     private def resolveObjectCreationExpr(objectCreationExpr: ObjectCreationExpr): String = s"${objectCreationExpr.getType}::init"
 
@@ -190,7 +211,7 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                         log.warn(s"Assign Expr of $x not implemented.")
                         ""
                 }
-//                val name = n.getExpression.asNameExpr().getName.asString()
+                //                val name = n.getExpression.asNameExpr().getName.asString()
                 val source = cfg.readVar(name, block)
                 val ope = if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.POSTFIX_INCREMENT)
                     BinaryExpr.Operator.PLUS

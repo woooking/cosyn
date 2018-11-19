@@ -3,10 +3,13 @@ package com.github.woooking.cosyn.impl.java
 import java.nio.file.Path
 
 import better.files.File
-import com.github.javaparser.{JavaParser, ParseResult}
+import better.files.File.home
+import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, Parameter}
 import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.symbolsolver.JavaSymbolSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.{CombinedTypeSolver, JavaParserTypeSolver, ReflectionTypeSolver}
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.javaparser.utils.SourceRoot
 import com.github.woooking.cosyn.api.Pipeline
@@ -20,6 +23,15 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
+    private val parserConfiguration = new ParserConfiguration
+    parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
+        new JavaParserTypeSolver(home / "lab" / "poi-3.14" / "src" / "java" path),
+        new JavaParserTypeSolver(home / "lab" / "poi-3.14" / "src" / "ooxml" / "java" path),
+        new ReflectionTypeSolver(false)
+    )))
+
+    JavaParser.setStaticConfiguration(parserConfiguration)
+
     type SourceRoots = Seq[SourceRoot]
     type CUResult = ParseResult[CompilationUnit]
     type CUs = Seq[CompilationUnit]
@@ -43,7 +55,7 @@ class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
 
     private def resolveParameterType(p: Parameter): String = p.getType.asString()
 
-    private def sourceFilesGenerator: Pipeline[Path, CUs] =
+    private def sourceFilesGenerator: Pipeline[Path, Seq[CompilationUnit]] =
         (path: Path) => File(path).listRecursively
             .filter(_.extension.contains(".java"))
             .map(_.toJava)
