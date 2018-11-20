@@ -1,6 +1,6 @@
 name := "cosyn-core"
 
-libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.6.1"
+libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.7.0"
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 libraryDependencies += "com.google.guava" % "guava" % "24.0-jre"
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.0.1"
@@ -12,4 +12,5 @@ libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.12"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.5.12" % Test
 libraryDependencies += "io.spray" %%  "spray-json" % "1.3.3"
+libraryDependencies += "org.kohsuke" % "github-api" % "1.95"
 

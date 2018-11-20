@@ -1,33 +1,34 @@
 package com.github.woooking.cosyn
 
-import better.files.File
+import java.nio.file.Path
+
 import better.files.File.home
-import com.github.woooking.cosyn.cosyn.DataSource
+import com.github.woooking.cosyn.api.Cosyn
+import com.github.woooking.cosyn.impl.java.JavaDFGGenerator
+import com.github.woooking.cosyn.dfgprocessor.FromDFGGenerator
 import com.github.woooking.cosyn.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
-import com.github.woooking.cosyn.dfgprocessor.{DFGGenerator, FromDFGGenerator}
-import com.github.woooking.cosyn.filter._
 import com.github.woooking.cosyn.mine.Setting
+import de.parsemis.miner.environment.Settings
 
 object Main {
-    def main(args: Array[String]): Unit = {
-        implicit val setting = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 5, minNodes = 5)
-//        val clientCodes = home / "lab" / "java-codes"
-        //        val clientCodes = home / "lab" / "test"
-        //        val clientCodes = home / "lab" / "guava-client-codes"
-        //        val clientCodes = home / "lab" / "nio-client-codes"
-        val clientCodes = home / "lab" / "lucene-client-codes"
-        val graphGenerator = DFGGenerator(None)
-        graphGenerator.register(new MethodCallCUFilter("search"))
-        graphGenerator.register(new MethodCallDFGFilter("search"))
 
-        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, String](
-            DataSource.fromJavaSourceCodeDir(clientCodes),
+    def main(args: Array[String]): Unit = {
+        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4, minNodes = 4)
+//        val clientCodeRoot = home / "lab" / "client-codes" / "poi"
+//        val clientCodeRoot = home / "lab" / "client-codes" / "lucene" / "write-index"
+        val clientCodeRoot = home / "lab" / "client-codes" / "test" / "fill-cell-color"
+//        val clientCodeRoot = home / "lab" / "client-codes" / "commonmark-java"
+        val graphGenerator = JavaDFGGenerator()
+        val cosyn = new Cosyn[Path, DFGNode, DFGEdge, SimpleDFG, String](
+            clientCodeRoot.path,
             graphGenerator,
-            FromDFGGenerator()
+            FromDFGGenerator(),
+            filterSubGraph = true
         )
-        cosyn.register(new SourceContentFilter("org.apache.lucene"))
-        cosyn.register(new MethodCallFragmentFilter("search"))
         val result = cosyn.process()
-        result.foreach(println)
+        result.foreach(r => {
+            println("----- Pattern -----")
+            println(r)
+        })
     }
 }

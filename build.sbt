@@ -3,13 +3,14 @@ name := "cosyn"
 version := "1.0"
 
 val commonSettings = Seq(
-    scalaVersion := "2.12.4",
+    scalaVersion := "2.12.7",
     scalacOptions ++= Seq(
         "-deprecation", // Emit warning and location for usages of deprecated APIs.
         "-encoding", "utf-8", // Specify character encoding used by source files.
         "-explaintypes", // Explain type errors in more detail.
         "-feature", // Emit warning and location for usages of features that should be imported explicitly.
         "-language:existentials", // Existential types (besides wildcard types) can be written and inferred
+        "-language:postfixOps",
         "-language:experimental.macros", // Allow macro definition (besides implementation and application)
         "-language:higherKinds", // Allow higher-kinded types
         "-language:implicitConversions", // Allow definition of implicit functions called views
@@ -59,5 +60,7 @@ val commonSettings = Seq(
 lazy val root = (project in file(".")).aggregate(macros, core)
 lazy val macros = project.in(file("cosyn-macro")).settings(commonSettings: _*)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros)
+lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*).dependsOn(macros)
+lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(commonSettings: _*).dependsOn(macros)
 
 

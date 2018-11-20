@@ -7,7 +7,7 @@ import de.parsemis.parsers.LabelParser
 import de.parsemis.strategy.ThreadedDFSStrategy
 
 object Setting {
-    def create[N, E](nodeParser: LabelParser[N], edgeParser: LabelParser[E], minFreq: Int = 5, minNodes: Int = 4,
+    def create[N, E](nodeParser: LabelParser[N], edgeParser: LabelParser[E], minFreq: Int = 3, minNodes: Int = 4,
                      closeGraph: Boolean = true) = {
         val s = new Sett[N, E]()
         s.minNodes = minNodes
