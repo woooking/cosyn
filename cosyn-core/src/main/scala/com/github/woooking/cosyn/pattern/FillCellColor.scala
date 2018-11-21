@@ -6,38 +6,45 @@ import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
 
 object FillCellColor {
-    val pattern = BlockStmt(
+    val holes = Array.fill(4)(HoleExpr())
+    val stmt = BlockStmt(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
             MethodCallExpr(
-                HoleExpr,
-                "org.apache.poi.ss.usermodel.Workbook.createCellStyle()",
+                holes(0),
+                "org.apache.poi.ss.usermodel.Workbook",
+                "createCellStyle()",
             )
         ),
         MethodCallExpr(
             "style",
-            "org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(short)",
+            "org.apache.poi.ss.usermodel.CellStyle",
+            "setFillForegroundColor(short)",
             MethodCallExpr(
                 EnumConstantExpr(
                     "org.apache.poi.ss.usermodel.IndexedColors",
-                    HoleExpr
+                    holes(1)
                 ),
-                "org.apache.poi.ss.usermodel.IndexedColors.getIndex()"
+                "org.apache.poi.ss.usermodel.IndexedColors",
+                "getIndex()"
             )
         ),
         MethodCallExpr(
             "style",
-            "org.apache.poi.ss.usermodel.CellStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType)",
+            "org.apache.poi.ss.usermodel.CellStyle",
+            "setFillPattern(org.apache.poi.ss.usermodel.FillPatternType)",
             EnumConstantExpr(
                 "org.apache.poi.ss.usermodel.FillPatternType",
-                HoleExpr
+                holes(2)
             ),
         ),
         MethodCallExpr(
-            HoleExpr,
-            "org.apache.poi.ss.usermodel.Cell.setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
+            holes(3),
+            "org.apache.poi.ss.usermodel.Cell",
+            "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
             "style",
         )
     )
+    val pattern = new Pattern(stmt, holes)
 }

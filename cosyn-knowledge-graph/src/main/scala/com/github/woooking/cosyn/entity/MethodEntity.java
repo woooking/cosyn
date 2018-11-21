@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.entity;
 
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -8,9 +9,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @NodeEntity
-public class MethodEntity extends Entity {
+public class MethodEntity {
     transient private ResolvedMethodDeclaration resolved;
     private String signature;
+    @Id
     private String qualifiedSignature;
 
     @Relationship(type = "HAS_METHOD", direction = Relationship.INCOMING)
@@ -18,6 +20,9 @@ public class MethodEntity extends Entity {
 
     @Relationship(type = "EXTENDS")
     private Set<MethodEntity> extendedMethods = new HashSet<>();
+
+    public MethodEntity() {
+    }
 
     public MethodEntity(ResolvedMethodDeclaration resolved, TypeEntity declareType) {
         this.resolved = resolved;

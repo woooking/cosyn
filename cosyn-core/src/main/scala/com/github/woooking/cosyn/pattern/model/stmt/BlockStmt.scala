@@ -5,5 +5,9 @@ class BlockStmt(statements: Seq[Statement]) extends Statement {
 }
 
 object BlockStmt {
-    def apply(statements: Statement*): BlockStmt = new BlockStmt(statements.toSeq)
+    def apply(statements: Statement*): BlockStmt = {
+        val blockStmt = new BlockStmt(statements.toSeq)
+        statements.foreach(_.parent = blockStmt)
+        blockStmt
+    }
 }

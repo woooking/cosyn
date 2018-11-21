@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.entity;
 
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.google.common.collect.ImmutableSet;
+import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -9,8 +10,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @NodeEntity
-public class TypeEntity extends Entity {
+public class TypeEntity {
     transient private ResolvedReferenceTypeDeclaration resolved;
+    @Id
     private String qualifiedName;
     private boolean isInterface;
 
@@ -19,6 +21,9 @@ public class TypeEntity extends Entity {
 
     @Relationship(type = "EXTENDS")
     private Set<TypeEntity> extendedTypes = new HashSet<>();
+
+    public TypeEntity() {
+    }
 
     public TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface) {
         this.resolved = resolved;
