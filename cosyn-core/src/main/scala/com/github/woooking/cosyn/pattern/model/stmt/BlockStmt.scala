@@ -1,7 +1,9 @@
 package com.github.woooking.cosyn.pattern.model.stmt
 
-case class BlockStmt(statements: Seq[Statement]) extends Statement
+class BlockStmt(statements: Seq[Statement]) extends Statement {
+    override def toString: String = statements.mkString("\n")
+}
 
 object BlockStmt {
-    def apply(statements: Statement*): BlockStmt = new BlockStmt(statements)
+    def apply(statements: Statement*): BlockStmt = new BlockStmt(statements.toSeq)
 }

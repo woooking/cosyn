@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
 
 object FillCellColor {
-    val p = BlockStmt(
+    val pattern = BlockStmt(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
