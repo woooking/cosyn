@@ -21,8 +21,6 @@ object KnowledgeGraph {
 
     def isAssignable(source: String, target: String): Boolean = {
         val session = sessionFactory.openSession()
-//        val sourceEntity = session.queryForObject(classOf[TypeEntity], "MATCH (n:TypeEntity) WHERE n.qualifiedName = $name RETURN n;", ImmutableMap.of("name", source))
-//        val targetEntity = session.queryForObject(classOf[TypeEntity], "MATCH (n:TypeEntity) WHERE n.qualifiedName = $name RETURN n;", ImmutableMap.of("name", target))
         val sourceEntity = session.load(classOf[TypeEntity], source)
         val targetEntity = session.load(classOf[TypeEntity], target)
         if (sourceEntity == null || targetEntity == null) return false
