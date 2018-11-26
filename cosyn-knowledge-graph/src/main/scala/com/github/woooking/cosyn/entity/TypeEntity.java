@@ -22,6 +22,12 @@ public class TypeEntity {
     @Relationship(type = "EXTENDS")
     private Set<TypeEntity> extendedTypes = new HashSet<>();
 
+    @Relationship(type = "EXTENDS", direction = Relationship.INCOMING)
+    private Set<TypeEntity> subTypes = new HashSet<>();
+
+    @Relationship(type = "PRODUCES", direction = Relationship.INCOMING)
+    private Set<MethodEntity> producers = new HashSet<>();
+
     public TypeEntity() {
     }
 
@@ -37,10 +43,15 @@ public class TypeEntity {
 
     public void addExtendedTypes(Set<TypeEntity> extendedTypes) {
         this.extendedTypes.addAll(extendedTypes);
+        this.extendedTypes.forEach(t -> t.addSubType(this));
     }
 
-    public void addImplementedTypes(Set<TypeEntity> implementedTypes) {
-        this.extendedTypes.addAll(implementedTypes);
+    public void addSubType(TypeEntity subType) {
+        this.subTypes.add(subType);
+    }
+
+    public void addProducer(MethodEntity producer) {
+        this.producers.add(producer);
     }
 
     public ResolvedReferenceTypeDeclaration getResolved() {
@@ -57,5 +68,13 @@ public class TypeEntity {
 
     public Set<TypeEntity> getExtendedTypes() {
         return ImmutableSet.copyOf(extendedTypes);
+    }
+
+    public Set<TypeEntity> getSubTypes() {
+        return ImmutableSet.copyOf(subTypes);
+    }
+
+    public Set<MethodEntity> getProducers() {
+        return ImmutableSet.copyOf(producers);
     }
 }
