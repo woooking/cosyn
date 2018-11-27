@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
 
 object FillCellColor {
-    val holes = Array.fill(4)(HoleExpr())
+    val holes = Seq.fill(3)(HoleExpr())
     val stmt = BlockStmt(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CellStyle",
@@ -36,11 +36,11 @@ object FillCellColor {
             "setFillPattern(org.apache.poi.ss.usermodel.FillPatternType)",
             EnumConstantExpr(
                 "org.apache.poi.ss.usermodel.FillPatternType",
-                holes(2)
+                "SOLID_FOREGROUND",
             ),
         ),
         MethodCallExpr(
-            holes(3),
+            holes(2),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
             "style",

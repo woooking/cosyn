@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.knowledge_graph
 
 import com.github.javaparser.ast.AccessSpecifier
-import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.pattern.Context
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.SessionFactory
@@ -45,7 +45,12 @@ object KnowledgeGraph {
 
     def producers(context: Context, ty: String): Set[MethodEntity] = {
         val typeEntity = session.load(classOf[TypeEntity], ty)
-        producers(context, typeEntity)
+        producers(context, typeEntity).map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+    }
+
+    def enumConstants(ty: String): Set[String] = {
+        val typeEntity = session.load(classOf[EnumEntity], ty)
+         typeEntity.getConstants.split(",").toSet
     }
 
     def close(): Unit = {

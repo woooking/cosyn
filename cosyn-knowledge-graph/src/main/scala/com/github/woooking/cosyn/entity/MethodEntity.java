@@ -17,6 +17,7 @@ public class MethodEntity {
     @Id
     private String qualifiedSignature;
     private String signature;
+    private String simpleName;
     private boolean isStatic;
     private boolean isConstructor;
     private AccessSpecifier accessSpecifier;
@@ -37,6 +38,7 @@ public class MethodEntity {
         this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
+        this.simpleName = resolved.getName();
         this.isStatic = true;
         this.isConstructor = true;
         this.accessSpecifier = resolved.accessSpecifier();
@@ -48,6 +50,7 @@ public class MethodEntity {
         this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
+        this.simpleName = resolved.getName();
         this.isStatic = resolved.isStatic();
         this.isConstructor = false;
         this.accessSpecifier = resolved.accessSpecifier();
@@ -73,6 +76,10 @@ public class MethodEntity {
         return qualifiedSignature;
     }
 
+    public String getSimpleName() {
+        return simpleName;
+    }
+
     public TypeEntity getDeclareType() {
         return declareType;
     }
@@ -83,5 +90,9 @@ public class MethodEntity {
 
     public boolean isConstructor() {
         return isConstructor;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
     }
 }

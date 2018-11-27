@@ -26,4 +26,21 @@ object CodeUtil {
     def isGetMethod(simpleName: String): Boolean = {
         simpleName.matches("^get[A-Z].*")
     }
+
+    /**
+      * 从方法签名中提取参数类型列表
+      * 例：
+      * func() => []
+      * func(int, long) => ["int", "long"]
+      * org.test.func(java.lang.Object, float) => ["java.lang.Object", "float"]
+      * @param signature 方法的签名
+      * @return 参数类型列表
+      */
+    def methodParams(signature: String): Seq[String] = {
+        val pattern = """.*\(([a-zA-Z.,]*)\)""".r
+        pattern.findFirstMatchIn(signature) match {
+            case Some(m) => m.group(1).split(",")
+            case None => Seq()
+        }
+    }
 }

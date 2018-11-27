@@ -3,11 +3,11 @@ package com.github.woooking.cosyn
 import better.files.File.home
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
-import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, EnumDeclaration, MethodDeclaration}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserAnonymousClassDeclaration
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
-import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.SessionFactory
 
@@ -37,6 +37,28 @@ object GraphBuilder {
                         methodMapping(methodEntity.getQualifiedSignature) = methodEntity
                     } catch {
                         case _: UnsolvedSymbolException =>
+                    }
+                })
+                decl.getConstructors.asScala.foreach(m => {
+                    try {
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        methodMapping(methodEntity.getQualifiedSignature) = methodEntity
+                    } catch {
+                        case _: UnsolvedSymbolException =>
+                    }
+                })
+            })
+        cus.flatMap(_.findAll(classOf[EnumDeclaration]).asScala)
+            .foreach(decl => {
+                val typeEntity = new EnumEntity(decl.resolve())
+                typeMapping(typeEntity.getQualifiedName) = typeEntity
+                decl.getMethods.asScala.foreach(m => {
+                    try {
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        methodMapping(methodEntity.getQualifiedSignature) = methodEntity
+                    } catch {
+                        case _: UnsolvedSymbolException =>
+                        case _: UnsupportedOperationException =>
                     }
                 })
                 decl.getConstructors.asScala.foreach(m => {
@@ -121,7 +143,7 @@ object GraphBuilder {
     }
 
     def main(args: Array[String]): Unit = {
-        val projectRoot = new SymbolSolverCollectionStrategy().collect(home / "lab" / "poi-3.14" / "src" / "java" path)
+        val projectRoot = new SymbolSolverCollectionStrategy().collect(home / "lab" / "poi-4.0.0" / "src" / "java" path)
         val cus = projectRoot.getSourceRoots.asScala
             .flatMap(_.tryToParseParallelized().asScala)
             .filter(_.isSuccessful)
