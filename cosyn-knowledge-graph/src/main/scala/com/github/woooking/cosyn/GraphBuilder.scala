@@ -29,11 +29,11 @@ object GraphBuilder {
     def buildTypeMapping(cus: Seq[CompilationUnit]): Unit = {
         cus.flatMap(_.findAll(classOf[ClassOrInterfaceDeclaration]).asScala)
             .foreach(decl => {
-                val typeEntity = new TypeEntity(decl.resolve(), decl.isInterface)
+                val typeEntity = new TypeEntity(decl.resolve(), decl.isInterface, decl.isAbstract, decl.getJavadocComment.orElse(null))
                 typeMapping(typeEntity.getQualifiedName) = typeEntity
                 decl.getMethods.asScala.foreach(m => {
                     try {
-                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                         methodMapping(methodEntity.getQualifiedSignature) = methodEntity
                     } catch {
                         case _: UnsolvedSymbolException =>
@@ -41,7 +41,7 @@ object GraphBuilder {
                 })
                 decl.getConstructors.asScala.foreach(m => {
                     try {
-                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                         methodMapping(methodEntity.getQualifiedSignature) = methodEntity
                     } catch {
                         case _: UnsolvedSymbolException =>
@@ -50,11 +50,11 @@ object GraphBuilder {
             })
         cus.flatMap(_.findAll(classOf[EnumDeclaration]).asScala)
             .foreach(decl => {
-                val typeEntity = new EnumEntity(decl.resolve())
+                val typeEntity = new EnumEntity(decl.resolve(), decl.getJavadocComment.orElse(null))
                 typeMapping(typeEntity.getQualifiedName) = typeEntity
                 decl.getMethods.asScala.foreach(m => {
                     try {
-                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                         methodMapping(methodEntity.getQualifiedSignature) = methodEntity
                     } catch {
                         case _: UnsolvedSymbolException =>
@@ -63,7 +63,7 @@ object GraphBuilder {
                 })
                 decl.getConstructors.asScala.foreach(m => {
                     try {
-                        val methodEntity = new MethodEntity(m.resolve(), typeEntity)
+                        val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                         methodMapping(methodEntity.getQualifiedSignature) = methodEntity
                     } catch {
                         case _: UnsolvedSymbolException =>

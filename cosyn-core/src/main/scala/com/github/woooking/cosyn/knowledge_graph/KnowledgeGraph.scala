@@ -4,7 +4,7 @@ import com.github.javaparser.ast.AccessSpecifier
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.pattern.Context
 import org.neo4j.ogm.config.Configuration
-import org.neo4j.ogm.session.SessionFactory
+import org.neo4j.ogm.session.{Session, SessionFactory}
 
 import scala.collection.JavaConverters._
 
@@ -16,7 +16,22 @@ object KnowledgeGraph {
 
     val sessionFactory = new SessionFactory(configuration, "com.github.woooking.cosyn.entity")
 
-    val session = sessionFactory.openSession()
+    val session: Session = sessionFactory.openSession()
+
+    def getMethodEntity(qualifiedSignature: String): MethodEntity = {
+        session.load(classOf[MethodEntity], qualifiedSignature)
+    }
+
+    def getTypeEntity(qualifiedName: String): TypeEntity = {
+        session.load(classOf[TypeEntity], qualifiedName)
+    }
+
+    def getAllNonAbstractSubTypes(typeEntity: TypeEntity): Set[TypeEntity] = {
+        val entity = session.load(classOf[TypeEntity], typeEntity.getQualifiedName)
+        val subTypes = entity.getSubTypes.asScala.toSet
+        val initSet: Set[TypeEntity] = if (entity.isAbstract || entity.isInterface) Set() else Set(entity)
+        (initSet /: subTypes) ((ts, t) => ts ++ getAllNonAbstractSubTypes(t))
+    }
 
     private def isAssignable(source: TypeEntity, target: TypeEntity): Boolean = {
         val sourceEntity = session.load(classOf[TypeEntity], source.getQualifiedName)
@@ -40,7 +55,7 @@ object KnowledgeGraph {
     private def producers(context: Context, typeEntity: TypeEntity): Set[MethodEntity] = {
         val entity = session.load(classOf[TypeEntity], typeEntity.getQualifiedName)
         val methods = entity.getProducers.asScala.filter(isAccessible(context, _))
-        (methods.toSet /: entity.getSubTypes.asScala)((methods, subType) => methods ++ producers(context, subType))
+        (methods.toSet /: entity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType))
     }
 
     def producers(context: Context, ty: String): Set[MethodEntity] = {
@@ -50,7 +65,7 @@ object KnowledgeGraph {
 
     def enumConstants(ty: String): Set[String] = {
         val typeEntity = session.load(classOf[EnumEntity], ty)
-         typeEntity.getConstants.split(",").toSet
+        typeEntity.getConstants.split(",").toSet
     }
 
     def close(): Unit = {

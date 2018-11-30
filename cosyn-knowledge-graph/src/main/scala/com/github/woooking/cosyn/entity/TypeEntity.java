@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.entity;
 
+import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.google.common.collect.ImmutableSet;
 import org.neo4j.ogm.annotation.Id;
@@ -15,6 +16,8 @@ public class TypeEntity {
     @Id
     private String qualifiedName;
     private boolean isInterface;
+    private boolean isAbstract;
+    private String javadoc;
 
     @Relationship(type = "HAS_METHOD")
     private Set<MethodEntity> hasMethods = new HashSet<>();
@@ -31,10 +34,12 @@ public class TypeEntity {
     public TypeEntity() {
     }
 
-    public TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface) {
+    public TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
         this.resolved = resolved;
         this.qualifiedName = resolved.getQualifiedName();
         this.isInterface = isInterface;
+        this.isAbstract = isAbstract;
+        this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
     }
 
     public void addHasMethod(MethodEntity methodEntity) {
@@ -76,5 +81,13 @@ public class TypeEntity {
 
     public Set<MethodEntity> getProducers() {
         return ImmutableSet.copyOf(producers);
+    }
+
+    public boolean isAbstract() {
+        return isAbstract;
+    }
+
+    public boolean isInterface() {
+        return isInterface;
     }
 }

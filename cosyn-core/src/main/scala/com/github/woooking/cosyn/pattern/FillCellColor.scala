@@ -14,36 +14,45 @@ object FillCellColor {
             MethodCallExpr(
                 holes(0),
                 "org.apache.poi.ss.usermodel.Workbook",
-                "createCellStyle()",
+                "createCellStyle",
             )
         ),
         MethodCallExpr(
             "style",
             "org.apache.poi.ss.usermodel.CellStyle",
-            "setFillForegroundColor(short)",
-            MethodCallExpr(
-                EnumConstantExpr(
+            "setFillForegroundColor",
+            MethodCallArgs(
+                "short",
+                MethodCallExpr(
+                    EnumConstantExpr(
+                        "org.apache.poi.ss.usermodel.IndexedColors",
+                        holes(1)
+                    ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
-                    holes(1)
-                ),
-                "org.apache.poi.ss.usermodel.IndexedColors",
-                "getIndex()"
-            )
+                    "getIndex",
+                )
+            ),
         ),
         MethodCallExpr(
             "style",
             "org.apache.poi.ss.usermodel.CellStyle",
-            "setFillPattern(org.apache.poi.ss.usermodel.FillPatternType)",
-            EnumConstantExpr(
+            "setFillPattern",
+            MethodCallArgs(
                 "org.apache.poi.ss.usermodel.FillPatternType",
-                "SOLID_FOREGROUND",
-            ),
+                EnumConstantExpr(
+                    "org.apache.poi.ss.usermodel.FillPatternType",
+                    "SOLID_FOREGROUND",
+                ),
+            )
         ),
         MethodCallExpr(
             holes(2),
             "org.apache.poi.ss.usermodel.Cell",
-            "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
-            "style",
+            "setCellStyle",
+            MethodCallArgs(
+                "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
+                "style",
+            )
         )
     )
     val pattern = new Pattern(stmt, holes)

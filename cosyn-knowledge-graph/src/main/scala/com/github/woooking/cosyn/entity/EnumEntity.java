@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.entity;
 
+import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedEnumConstantDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedEnumDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
@@ -16,8 +17,8 @@ public class EnumEntity extends TypeEntity {
     public EnumEntity() {
     }
 
-    public EnumEntity(ResolvedEnumDeclaration resolved) {
-        super(resolved, false);
+    public EnumEntity(ResolvedEnumDeclaration resolved, JavadocComment javadocComment) {
+        super(resolved, false, false, javadocComment);
         this.constants = resolved.getEnumConstants().stream().map(ResolvedEnumConstantDeclaration::getName).collect(Collectors.joining(","));
     }
 

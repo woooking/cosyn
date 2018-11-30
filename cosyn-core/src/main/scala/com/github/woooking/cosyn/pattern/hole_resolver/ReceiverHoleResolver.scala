@@ -1,10 +1,13 @@
-package com.github.woooking.cosyn.pattern
+package com.github.woooking.cosyn.pattern.hole_resolver
+
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.pattern._
 import com.github.woooking.cosyn.pattern.model.expr.{HoleExpr, MethodCallExpr}
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.util.CodeUtil
 
 class ReceiverHoleResolver extends HoleResolver {
+
     private sealed trait MethodType
 
     private case class ConstructorType(ty: String) extends MethodType
@@ -19,6 +22,10 @@ class ReceiverHoleResolver extends HoleResolver {
         hole.parent match {
             case p: MethodCallExpr if p.receiver.contains(hole) =>
                 val vars = context.findVariables(p.receiverType)
+                //                val methodEntity = KnowledgeGraph.getMethodEntity(p.getQualifiedSignature)
+//                val typeEntity = KnowledgeGraph.getTypeEntity(p.receiverType)
+//                val subTypes = KnowledgeGraph.getAllNonAbstractSubTypes(typeEntity)
+
                 val producers = KnowledgeGraph.producers(context, p.receiverType)
                 val cases = producers.groupBy {
                     case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)

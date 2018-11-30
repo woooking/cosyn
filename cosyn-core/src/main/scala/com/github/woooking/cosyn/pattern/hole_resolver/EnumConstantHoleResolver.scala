@@ -1,9 +1,8 @@
-package com.github.woooking.cosyn.pattern
+package com.github.woooking.cosyn.pattern.hole_resolver
 
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.pattern.model.expr.{EnumConstantExpr, HoleExpr, MethodCallExpr}
+import com.github.woooking.cosyn.pattern.model.expr.{EnumConstantExpr, HoleExpr}
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
-import com.github.woooking.cosyn.util.CodeUtil
+import com.github.woooking.cosyn.pattern.{Context, EnumConstantQA, HoleResolver, QA}
 
 class EnumConstantHoleResolver extends HoleResolver {
     private sealed trait MethodType

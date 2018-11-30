@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.entity;
 
 import com.github.javaparser.ast.AccessSpecifier;
+import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
@@ -21,6 +22,7 @@ public class MethodEntity {
     private boolean isStatic;
     private boolean isConstructor;
     private AccessSpecifier accessSpecifier;
+    private String javadoc;
 
     @Relationship(type = "HAS_METHOD", direction = Relationship.INCOMING)
     private TypeEntity declareType;
@@ -34,7 +36,7 @@ public class MethodEntity {
     public MethodEntity() {
     }
 
-    public MethodEntity(ResolvedConstructorDeclaration resolved, TypeEntity declareType) {
+    public MethodEntity(ResolvedConstructorDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
         this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
@@ -43,10 +45,11 @@ public class MethodEntity {
         this.isConstructor = true;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
+        this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
         declareType.addHasMethod(this);
     }
 
-    public MethodEntity(ResolvedMethodDeclaration resolved, TypeEntity declareType) {
+    public MethodEntity(ResolvedMethodDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
         this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
@@ -55,6 +58,7 @@ public class MethodEntity {
         this.isConstructor = false;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
+        this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
         declareType.addHasMethod(this);
     }
 
