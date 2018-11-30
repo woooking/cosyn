@@ -19,8 +19,7 @@ case class ChoiceQA(question: String, choices: Seq[Choice]) extends QA {
         pattern.findFirstMatchIn(input) match {
             case None => ???
             case Some(m) =>
-                val newHoles = choices(m.group(1).toInt - 1).action(context, hole)
-                Right(newHoles)
+                choices(m.group(1).toInt - 1).action(context, hole)
         }
     }
 }
