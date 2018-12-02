@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 
 object KnowledgeGraph {
     private val configuration = new Configuration.Builder()
-        .uri("bolt://localhost")
+        .uri("bolt://162.105.88.181")
         .credentials("neo4j", "poi")
         .build()
 
