@@ -34,6 +34,9 @@ public class MethodEntity {
     @Relationship(type = "PRODUCES")
     private TypeEntity produce;
 
+    @Relationship(type = "PRODUCES_MULTIPLE")
+    private TypeEntity produceMultiple;
+
     public MethodEntity() {
     }
 
@@ -71,6 +74,12 @@ public class MethodEntity {
         assert this.produce == null;
         this.produce = produce;
         produce.addProducer(this);
+    }
+
+    public void setProduceMultiple(TypeEntity produceMultiple) {
+        assert this.produceMultiple == null;
+        this.produceMultiple = produceMultiple;
+        produceMultiple.addMultipleProducer(this);
     }
 
     public String getSignature() {

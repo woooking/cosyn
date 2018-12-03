@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.entity;
 
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.google.common.collect.ImmutableSet;
@@ -25,16 +26,33 @@ public class TypeEntity {
     @Relationship(type = "EXTENDS")
     private Set<TypeEntity> extendedTypes = new HashSet<>();
 
+    @Relationship(type = "ITERABLE")
+    private TypeEntity iterableType;
+
     @Relationship(type = "EXTENDS", direction = Relationship.INCOMING)
     private Set<TypeEntity> subTypes = new HashSet<>();
 
     @Relationship(type = "PRODUCES", direction = Relationship.INCOMING)
     private Set<MethodEntity> producers = new HashSet<>();
 
-    public TypeEntity() {
+    @Relationship(type = "PRODUCES_MULTIPLE", direction = Relationship.INCOMING)
+    private Set<MethodEntity> multipleProducers = new HashSet<>();
+
+
+    public static TypeEntity fromDeclaration(ClassOrInterfaceDeclaration decl) {
+        return new TypeEntity(decl.resolve(), decl.isInterface(), decl.isAbstract(), decl.getJavadocComment().orElse(null));
     }
 
-    public TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
+    public static TypeEntity fake(String qualifiedName) {
+        var typeEntity = new TypeEntity();
+        typeEntity.qualifiedName = qualifiedName;
+        return typeEntity;
+    }
+
+    protected TypeEntity() {
+    }
+
+    protected TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
         this.resolved = resolved;
         this.qualifiedName = resolved.getQualifiedName();
         this.isInterface = isInterface;
@@ -59,6 +77,14 @@ public class TypeEntity {
         this.producers.add(producer);
     }
 
+    public void addMultipleProducer(MethodEntity producer) {
+        this.multipleProducers.add(producer);
+    }
+
+    public void setIterableType(TypeEntity iterableType) {
+        this.iterableType = iterableType;
+    }
+
     public ResolvedReferenceTypeDeclaration getResolved() {
         return resolved;
     }
@@ -81,6 +107,10 @@ public class TypeEntity {
 
     public Set<MethodEntity> getProducers() {
         return ImmutableSet.copyOf(producers);
+    }
+
+    public Set<MethodEntity> getMultipleProducers() {
+        return ImmutableSet.copyOf(multipleProducers);
     }
 
     public boolean isAbstract() {

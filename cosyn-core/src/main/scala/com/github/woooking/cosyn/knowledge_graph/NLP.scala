@@ -2,9 +2,6 @@ package com.github.woooking.cosyn.knowledge_graph
 
 import java.util.Properties
 
-import edu.stanford.nlp.pipeline.{CoreDocument, StanfordCoreNLP}
-import edu.stanford.nlp.semgraph.SemanticGraph
-
 import scala.collection.JavaConverters._
 
 object NLP {
