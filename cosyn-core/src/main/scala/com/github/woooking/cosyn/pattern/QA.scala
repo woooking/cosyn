@@ -17,9 +17,17 @@ case class ChoiceQA(question: String, choices: Seq[Choice]) extends QA {
     override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
         val pattern = """#(\d)+""".r
         pattern.findFirstMatchIn(input) match {
-            case None => ???
+            case None =>
+                println("Error Format!")
+                Left(this)
             case Some(m) =>
-                choices(m.group(1).toInt - 1).action(context, hole)
+                choices(m.group(1).toInt - 1).action(context, hole) match {
+                    case NewQA(qa) => Left(qa)
+                    case Resolved(newHoles) => Right(newHoles)
+                    case UnImplemented =>
+                        println("Not Implemented! Please try other choices.")
+                        Left(this)
+                }
         }
     }
 }
@@ -37,14 +45,19 @@ case class EnumConstantQA(ty: String) extends QA {
                 hole.fill = Some(NameExpr(c))
                 Right(Seq())
             case None =>
-                ???
+                println(s"Could not understand $input!")
+                Left(this)
         }
     }
 }
 
-case class PrimitiveQA(ty: String) extends QA {
-    override def toString: String = if (ty == "java.lang.String") s"Please input a string:"
-    else s"Please input a $ty:"
+case class PrimitiveQA(hint: Option[String], ty: String) extends QA {
+    override def toString: String = hint match {
+        case Some(h) if ty == "java.lang.String" => s"Please input $h:"
+        case Some(h) => s"Please input a $ty($h):"
+        case None if ty == "java.lang.String" => "Please input a string:"
+        case None => s"Please input a $ty:"
+    }
 
     override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
         try {
@@ -79,6 +92,7 @@ case class PrimitiveQA(ty: String) extends QA {
             }
         } catch {
             case _: NumberFormatException =>
+                println("Error Format!")
                 Left(this)
         }
 

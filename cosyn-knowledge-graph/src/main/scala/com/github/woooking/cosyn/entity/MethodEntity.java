@@ -5,6 +5,7 @@ import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
+import com.google.common.collect.ImmutableSet;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -90,6 +91,14 @@ public class MethodEntity {
 
     public AccessSpecifier getAccessSpecifier() {
         return accessSpecifier;
+    }
+
+    public String getJavadoc() {
+        return javadoc;
+    }
+
+    public Set<MethodEntity> getExtendedMethods() {
+        return ImmutableSet.copyOf(extendedMethods);
     }
 
     public boolean isConstructor() {

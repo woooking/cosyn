@@ -35,9 +35,9 @@ object Pattern {
 
     @tailrec
     def qa(context: Context, pattern: Pattern): Pattern = {
-        println("-----")
-        println(pattern.stmts)
-        println("-----")
+//        println("-----")
+//        println(pattern.stmts)
+//        println("-----")
         pattern.holes.toList match {
             case Nil => pattern
             case hole :: tails =>

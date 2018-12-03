@@ -50,9 +50,9 @@ object CodeUtil {
       * @return 参数类型列表
       */
     def methodParams(signature: String): Seq[String] = {
-        val pattern = """.*\(([a-zA-Z.,]*)\)""".r
+        val pattern = """.*\(([a-zA-Z., ]*)\)""".r
         pattern.findFirstMatchIn(signature) match {
-            case Some(m) => m.group(1).split(",")
+            case Some(m) => m.group(1).split(", ")
             case None => Seq()
         }
     }

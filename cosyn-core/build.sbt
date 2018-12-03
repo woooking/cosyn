@@ -14,4 +14,5 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.5.12" % Test
 libraryDependencies += "io.spray" %%  "spray-json" % "1.3.3"
 libraryDependencies += "org.kohsuke" % "github-api" % "1.95"
+libraryDependencies += "edu.stanford.nlp" % "stanford-corenlp" % "3.9.2"
 

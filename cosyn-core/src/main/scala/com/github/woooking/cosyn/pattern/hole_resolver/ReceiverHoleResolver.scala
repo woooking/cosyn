@@ -38,7 +38,7 @@ class ReceiverHoleResolver extends HoleResolver {
                     case (StaticType(ty), ms) => Seq(StaticChoice(ty, ms))
                     case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
                     case (OtherType, m) =>
-                        m.map(_.getQualifiedSignature).foreach(println)
+//                        m.map(_.getQualifiedSignature).foreach(println)
                         Seq()
                 }
                 val simpleName = CodeUtil.qualifiedClassName2Simple(p.receiverType).toLowerCase

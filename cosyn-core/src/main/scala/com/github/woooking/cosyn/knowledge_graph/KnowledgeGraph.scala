@@ -18,6 +18,20 @@ object KnowledgeGraph {
 
     val session: Session = sessionFactory.openSession()
 
+    def getMethodJavadoc(qualifiedSignature: String): Option[String] = {
+        val methodEntity = session.load(classOf[MethodEntity], qualifiedSignature)
+        methodEntity.getJavadoc match {
+            case javadoc if javadoc == "" =>
+                methodEntity.getExtendedMethods.asScala.toStream
+                    .map(_.getQualifiedSignature)
+                    .map(getMethodJavadoc)
+                    .filter(_.isDefined)
+                    .map(_.get)
+                    .headOption
+            case javadoc => Some(javadoc)
+        }
+    }
+
     def getMethodEntity(qualifiedSignature: String): MethodEntity = {
         session.load(classOf[MethodEntity], qualifiedSignature)
     }

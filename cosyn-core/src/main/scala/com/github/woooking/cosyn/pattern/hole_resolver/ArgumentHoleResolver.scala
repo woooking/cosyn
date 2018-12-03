@@ -1,10 +1,13 @@
 package com.github.woooking.cosyn.pattern.hole_resolver
 
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.javaparser.JavaParser
+import com.github.woooking.cosyn.knowledge_graph.{KnowledgeGraph, NLP}
 import com.github.woooking.cosyn.pattern._
 import com.github.woooking.cosyn.pattern.model.expr.{HoleExpr, MethodCallExpr}
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.util.CodeUtil
+
+import scala.collection.JavaConverters._
 
 class ArgumentHoleResolver extends HoleResolver {
     private sealed trait MethodType
@@ -17,16 +20,28 @@ class ArgumentHoleResolver extends HoleResolver {
 
     private case object OtherType extends MethodType
 
+    private def extractParamInfoFromJavadoc(index: Int)(javadocComment: String): String = {
+        val javadoc = JavaParser.parseJavadoc(javadocComment)
+//        println(javadocComment)
+        val paramTags = javadoc.getBlockTags.asScala.filter(_.getTagName == "param")
+        val tag = paramTags(index)
+        NLP.getNounPhrase(tag.getName.get(), tag.getContent.toText)
+    }
+
     override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[QA] = {
         hole.parent match {
             case p: MethodCallExpr =>
-                p.args.find(_.value == hole) match {
-                    case Some(arg) =>
+                p.args.indexWhere(_.value == hole) match {
+                    case index if index != -1 =>
+                        val arg = p.args(index)
                         val vars = context.findVariables(arg.ty)
                         if (CodeUtil.isPrimitive(arg.ty) || arg.ty == "java.lang.String") {
-                            Some(PrimitiveQA(arg.ty))
+                            Some(PrimitiveQA(
+                                KnowledgeGraph.getMethodJavadoc(p.getQualifiedSignature).map(extractParamInfoFromJavadoc(index)),
+                                arg.ty
+                            ))
                         } else {
-                            val producers = KnowledgeGraph.producers(context, p.receiverType)
+                            val producers = KnowledgeGraph.producers(context, arg.ty)
                             val cases = producers.groupBy {
                                 case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)
                                 case m if m.isStatic => StaticType(m.getDeclareType.getQualifiedName)
@@ -38,14 +53,14 @@ class ArgumentHoleResolver extends HoleResolver {
                                 case (StaticType(ty), ms) => Seq(StaticChoice(ty, ms))
                                 case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
                                 case (OtherType, m) =>
-                                    m.map(_.getQualifiedSignature).foreach(println)
+//                                    m.map(_.getQualifiedSignature).foreach(println)
                                     Seq()
                             }
-                            val simpleName = CodeUtil.qualifiedClassName2Simple(p.receiverType).toLowerCase
+                            val simpleName = CodeUtil.qualifiedClassName2Simple(arg.ty).toLowerCase
                             val q = s"Which $simpleName?"
                             Some(ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodChoices))
                         }
-                    case None =>
+                    case _ =>
                         None
                 }
             case _ =>
