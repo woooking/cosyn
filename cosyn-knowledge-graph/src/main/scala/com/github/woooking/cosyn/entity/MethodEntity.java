@@ -4,7 +4,6 @@ import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import com.google.common.collect.ImmutableSet;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -15,7 +14,6 @@ import java.util.Set;
 
 @NodeEntity
 public class MethodEntity {
-    transient private ResolvedMethodLikeDeclaration resolved;
     @Id
     private String qualifiedSignature;
     private String signature;
@@ -41,7 +39,6 @@ public class MethodEntity {
     }
 
     public MethodEntity(ResolvedConstructorDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
-        this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
@@ -54,7 +51,6 @@ public class MethodEntity {
     }
 
     public MethodEntity(ResolvedMethodDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
-        this.resolved = resolved;
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();

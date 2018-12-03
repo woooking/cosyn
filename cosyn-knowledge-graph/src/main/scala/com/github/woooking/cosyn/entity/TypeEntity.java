@@ -13,7 +13,6 @@ import java.util.Set;
 
 @NodeEntity
 public class TypeEntity {
-    transient private ResolvedReferenceTypeDeclaration resolved;
     @Id
     private String qualifiedName;
     private boolean isInterface;
@@ -53,7 +52,6 @@ public class TypeEntity {
     }
 
     protected TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
-        this.resolved = resolved;
         this.qualifiedName = resolved.getQualifiedName();
         this.isInterface = isInterface;
         this.isAbstract = isAbstract;
@@ -83,10 +81,6 @@ public class TypeEntity {
 
     public void setIterableType(TypeEntity iterableType) {
         this.iterableType = iterableType;
-    }
-
-    public ResolvedReferenceTypeDeclaration getResolved() {
-        return resolved;
     }
 
     public String getQualifiedName() {
