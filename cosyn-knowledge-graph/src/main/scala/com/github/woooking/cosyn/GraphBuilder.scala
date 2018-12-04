@@ -1,16 +1,14 @@
 package com.github.woooking.cosyn
 
 import better.files.File.home
-import com.github.javaparser.{JavaParser, ParseStart, ParserConfiguration, Providers}
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
-import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, EnumDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.body._
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedType
-import com.github.javaparser.symbolsolver.JavaSymbolSolver
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserAnonymousClassDeclaration
-import com.github.javaparser.symbolsolver.resolution.typesolvers.{JavaParserTypeSolver, ReflectionTypeSolver}
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserAnonymousClassDeclaration, JavaParserClassDeclaration, JavaParserEnumDeclaration, JavaParserInterfaceDeclaration}
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import org.neo4j.ogm.config.Configuration
@@ -18,34 +16,14 @@ import org.neo4j.ogm.session.SessionFactory
 import org.slf4s.Logging
 
 import scala.annotation.tailrec
-import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.util.Try
-
-sealed trait TypeDecl {
-    def getMethods: Seq[MethodDeclaration]
-
-    def getConstructors: Seq[ConstructorDeclaration]
-}
-
-final case class ClassOrInterfaceDecl(decl: ClassOrInterfaceDeclaration) extends TypeDecl {
-    def getMethods: Seq[MethodDeclaration] = decl.getMethods.asScala
-
-    def getConstructors: Seq[ConstructorDeclaration] = decl.getConstructors.asScala
-}
-
-final case class EnumDecl(decl: EnumDeclaration) extends TypeDecl {
-    def getMethods: Seq[MethodDeclaration] = decl.getMethods.asScala
-
-    def getConstructors: Seq[ConstructorDeclaration] = decl.getConstructors.asScala
-}
 
 object GraphBuilder extends Logging {
     private val methodMapping = mutable.Map[String, MethodEntity]()
     private val typeMapping = mutable.Map[String, TypeEntity]()
 
-    private val typeSolver = new ReflectionTypeSolver()
+    private val jdkSolver = new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path)
 
     @tailrec
     private def getComponentTypeRecursively(ty: ResolvedType): ResolvedType = {
@@ -55,15 +33,18 @@ object GraphBuilder extends Logging {
         }
     }
 
-    private def buildEntity(decl: TypeDecl): TypeEntity = {
-        val typeEntity = decl match {
-            case ClassOrInterfaceDecl(d) =>
-                TypeEntity.fromDeclaration(d)
-            case EnumDecl(d) =>
-                new EnumEntity(d.resolve(), d.getJavadocComment.orElse(null))
+    private def buildTypeEntity(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = {
+        val (typeEntity, decl) = resolved match {
+            case r: JavaParserClassDeclaration =>
+                (TypeEntity.fromDeclaration(r.getWrappedNode), r.getWrappedNode)
+            case r: JavaParserInterfaceDeclaration =>
+                (TypeEntity.fromDeclaration(r.getWrappedNode), r.getWrappedNode)
+            case r: JavaParserEnumDeclaration =>
+                (EnumEntity.fromDeclaration(r.getWrappedNode), r.getWrappedNode)
         }
+
         typeMapping(typeEntity.getQualifiedName) = typeEntity
-        decl.getMethods.foreach(m => {
+        decl.getMethods.asScala.foreach(m => {
             try {
                 val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                 methodMapping(methodEntity.getQualifiedSignature) = methodEntity
@@ -72,7 +53,7 @@ object GraphBuilder extends Logging {
                 case _: UnsupportedOperationException =>
             }
         })
-        decl.getConstructors.foreach(m => {
+        decl.getConstructors.asScala.foreach(m => {
             try {
                 val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
                 methodMapping(methodEntity.getQualifiedSignature) = methodEntity
@@ -86,22 +67,7 @@ object GraphBuilder extends Logging {
 
     private def type2entity(decl: ClassOrInterfaceType) = {
         val qualifiedName = decl.resolve().getQualifiedName
-        Seq(typeMapping.getOrElseUpdate(qualifiedName, TypeEntity.fake(qualifiedName)))
-        //        Try {
-        //            val qualifiedName = decl.resolve().getQualifiedName
-        //            typeMapping(qualifiedName)
-        //        }.toOption.toSeq
-    }
-
-    private def iterableType2entity(decl: ClassOrInterfaceType) = {
-        Try {
-            decl.getTypeArguments.asScala match {
-                case None => Seq()
-                case Some(targs) => targs.asScala
-            }
-            val qualifiedName = decl.resolve().getQualifiedName
-            typeMapping(qualifiedName)
-        }.toOption.toSeq
+        typeMapping.getOrElseUpdate(qualifiedName, buildTypeEntity(jdkSolver.solveType(qualifiedName)))
     }
 
     private def getIterableType(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = resolved.getAllAncestors.asScala
@@ -111,21 +77,19 @@ object GraphBuilder extends Logging {
         .map(_.asReferenceType().getQualifiedName)
         .map(typeMapping.apply).orNull
 
-    def buildTypeMapping(cus: Seq[CompilationUnit]): Unit = {
-        cus.flatMap(_.findAll(classOf[ClassOrInterfaceDeclaration]).asScala)
-            .map(ClassOrInterfaceDecl.apply)
-            .foreach(buildEntity)
-        cus.flatMap(_.findAll(classOf[EnumDeclaration]).asScala)
-            .map(EnumDecl.apply)
-            .foreach(buildEntity)
+    def buildTypeMapping(typeDeclarations: Seq[TypeDeclaration[_]]): Unit = {
+        typeDeclarations
+            .map(_.resolve())
+            .foreach(buildTypeEntity)
     }
 
-    def buildExtendRelation(cus: Seq[CompilationUnit]): Unit = {
-        cus.flatMap(_.findAll(classOf[ClassOrInterfaceDeclaration]).asScala)
+    def buildExtendRelation(classDecls: Seq[ClassOrInterfaceDeclaration]): Unit = {
+        classDecls
             .foreach(decl => {
                 val qualifiedName = decl.resolve().getQualifiedName
                 val typeEntity = typeMapping(qualifiedName)
-                typeEntity.addExtendedTypes((decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala).flatMap(type2entity).toSet.asJava)
+                val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
+                typeEntity.addExtendedTypes(parentTypes.map(type2entity).toSet.asJava)
                 typeEntity.setIterableType(getIterableType(decl.resolve()))
             })
     }
@@ -197,24 +161,20 @@ object GraphBuilder extends Logging {
     def main(args: Array[String]): Unit = {
         val strategy = new SymbolSolverCollectionStrategy()
         val projectPoi = strategy.collect(home / "lab" / "poi-4.0.0" / "src" / "java" path)
-        //        val projectJdk = strategy.collect(home / "lab" / "jdk-11" path)
 
         log.info("Start parsing codes")
-        val pois = projectPoi.getSourceRoots.asScala
+        val cus = projectPoi.getSourceRoots.asScala
             .flatMap(_.tryToParseParallelized().asScala)
             .map(_.getResult.get())
 
-        //        val jdks = projectJdk.getSourceRoots.asScala
-        //            .flatMap(_.tryToParseParallelized().asScala)
-        //            .map(_.getResult.get())
-
-        //        val cus = pois ++ jdks
-        val cus = pois
+        val classOrInterfaceDeclarations = cus.flatMap(_.findAll(classOf[ClassOrInterfaceDeclaration]).asScala)
+        val enumDeclarations = cus.flatMap(_.findAll(classOf[EnumDeclaration]).asScala)
+        val typeDeclarations = classOrInterfaceDeclarations ++ enumDeclarations
 
         log.info("Start building type entities")
-        buildTypeMapping(cus)
+        buildTypeMapping(typeDeclarations)
         log.info("Start building extend relations")
-        buildExtendRelation(cus)
+        buildExtendRelation(classOrInterfaceDeclarations)
         log.info("Start building method extend relations")
         buildMethodExtendRelation(cus)
         log.info("Start building produce relations")

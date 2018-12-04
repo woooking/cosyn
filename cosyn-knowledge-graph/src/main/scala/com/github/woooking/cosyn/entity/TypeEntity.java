@@ -37,7 +37,6 @@ public class TypeEntity {
     @Relationship(type = "PRODUCES_MULTIPLE", direction = Relationship.INCOMING)
     private Set<MethodEntity> multipleProducers = new HashSet<>();
 
-
     public static TypeEntity fromDeclaration(ClassOrInterfaceDeclaration decl) {
         return new TypeEntity(decl.resolve(), decl.isInterface(), decl.isAbstract(), decl.getJavadocComment().orElse(null));
     }
