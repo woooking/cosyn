@@ -1,10 +1,10 @@
 package com.github.woooking.cosyn.entity;
 
-import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedEnumConstantDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedEnumDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserEnumDeclaration;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import java.util.stream.Collectors;
@@ -15,8 +15,8 @@ public class EnumEntity extends TypeEntity {
 
     private String constants;
 
-    public static EnumEntity fromDeclaration(EnumDeclaration decl) {
-        return new EnumEntity(decl.resolve(), decl.getJavadocComment().orElse(null));
+    public static EnumEntity fromDeclaration(JavaParserEnumDeclaration decl) {
+        return new EnumEntity(decl, decl.getWrappedNode().getJavadocComment().orElse(null));
     }
 
     protected EnumEntity() {

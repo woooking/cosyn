@@ -1,9 +1,10 @@
 package com.github.woooking.cosyn.pattern.model.expr
 
-import com.github.woooking.cosyn.util.CodeUtil
+import com.github.woooking.cosyn.util.CodeUtil.qualifiedClassName2Simple
 
 case class EnumConstantExpr(enumType: String, name: NameOrHole) extends Expression {
-    override def toString: String = s"${CodeUtil.qualifiedClassName2Simple(enumType)}.$name"
+    name.parent = this
+    override def toString: String = s"${qualifiedClassName2Simple(enumType)}.$name"
 }
 
 object EnumConstantExpr {

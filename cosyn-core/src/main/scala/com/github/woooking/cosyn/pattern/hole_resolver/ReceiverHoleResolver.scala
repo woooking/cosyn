@@ -7,43 +7,20 @@ import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.util.CodeUtil
 
 class ReceiverHoleResolver extends HoleResolver {
-
-    private sealed trait MethodType
-
-    private case class ConstructorType(ty: String) extends MethodType
-
-    private case class GetType(ty: String) extends MethodType
-
-    private case class StaticType(ty: String) extends MethodType
-
-    private case object OtherType extends MethodType
-
     override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[QA] = {
         hole.parent match {
             case p: MethodCallExpr if p.receiver.contains(hole) =>
-                val vars = context.findVariables(p.receiverType)
-                //                val methodEntity = KnowledgeGraph.getMethodEntity(p.getQualifiedSignature)
-//                val typeEntity = KnowledgeGraph.getTypeEntity(p.receiverType)
-//                val subTypes = KnowledgeGraph.getAllNonAbstractSubTypes(typeEntity)
-
-                val producers = KnowledgeGraph.producers(context, p.receiverType)
-                val cases = producers.groupBy {
-                    case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)
-                    case m if m.isStatic => StaticType(m.getDeclareType.getQualifiedName)
-                    case m if CodeUtil.isGetMethod(m.getSimpleName) => GetType(m.getDeclareType.getQualifiedName)
-                    case _ => OtherType
+                val rawPaths = KnowledgeGraph.getIterablePaths(p.receiverType)
+                val paths = rawPaths.filter(p => !rawPaths.exists(p2 => p.head.getExtendedTypes.contains(p2.head)))
+                if (paths.size == 1) {
+                    Some(QAHelper.choiceQAForType(context, p.receiverType))
+                } else {
+                    val question = paths
+                        .map(p => CodeUtil.qualifiedClassName2Simple(p.head.getQualifiedName).toLowerCase())
+                        .map(b => s"A $b")
+                        .mkString("", "/", "?")
+                    Some(ChoiceQA(question, paths.map(IterableChoice.apply).toSeq))
                 }
-                val methodChoices = cases.flatMap {
-                    case (ConstructorType(ty), ms) => Seq(ConstructorChoice(ty, ms))
-                    case (StaticType(ty), ms) => Seq(StaticChoice(ty, ms))
-                    case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
-                    case (OtherType, m) =>
-                        m.map(_.getQualifiedSignature).foreach(println)
-                        Seq()
-                }
-                val simpleName = CodeUtil.qualifiedClassName2Simple(p.receiverType).toLowerCase
-                val q = s"Which $simpleName?"
-                Some(ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodChoices))
             case _ =>
                 None
         }

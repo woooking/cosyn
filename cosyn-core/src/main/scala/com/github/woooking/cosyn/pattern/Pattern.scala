@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.pattern
 
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.pattern.hole_resolver.{ArgumentHoleResolver, CombineHoleResolver, EnumConstantHoleResolver, ReceiverHoleResolver}
+import com.github.woooking.cosyn.pattern.hole_resolver._
 import com.github.woooking.cosyn.pattern.model.expr.HoleExpr
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 
@@ -17,6 +17,7 @@ object Pattern {
         new EnumConstantHoleResolver,
         new ReceiverHoleResolver,
         new ArgumentHoleResolver,
+        new VariableInitializationHoleResolver,
     )
 
     val patterns = Map(
@@ -36,7 +37,7 @@ object Pattern {
     @tailrec
     def qa(context: Context, pattern: Pattern): Pattern = {
         println("-----")
-        println(pattern.stmts)
+        println(pattern.stmts.generateCode(""))
         println("-----")
         pattern.holes.toList match {
             case Nil => pattern
@@ -55,7 +56,7 @@ object Pattern {
         //        val cu = JavaParser.parse(testFile)
         val context = new Context(Seq("java.lang.Object"))
         context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-        println(qa(context, FillCellColor.pattern).stmts)
+        println(qa(context, FillCellColor.pattern).stmts.generateCode(""))
         KnowledgeGraph.close()
     }
 }

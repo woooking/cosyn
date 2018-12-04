@@ -18,6 +18,16 @@ object KnowledgeGraph {
 
     val session: Session = sessionFactory.openSession()
 
+    private def getIterablePaths(qualifiedName: String, path: List[TypeEntity]): Set[List[TypeEntity]] = {
+        val entity = getTypeEntity(qualifiedName)
+        val newPath = entity :: path
+        (Set(newPath) /: entity.getIterables.asScala) ((s, t) => s ++ getIterablePaths(t.getQualifiedName, newPath))
+    }
+
+    def getIterablePaths(qualifiedName: String): Set[List[TypeEntity]] = {
+        getIterablePaths(qualifiedName, Nil)
+    }
+
     def getMethodJavadoc(qualifiedSignature: String): Option[String] = {
         val methodEntity = session.load(classOf[MethodEntity], qualifiedSignature)
         methodEntity.getJavadoc match {
