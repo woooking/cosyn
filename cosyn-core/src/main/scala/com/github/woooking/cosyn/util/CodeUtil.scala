@@ -28,12 +28,26 @@ object CodeUtil {
     }
 
     /**
+      * 根据方法名称判断一个方法是否是创建对象方法，方法名以create/new开头，后面接一个大写字母或结尾
+      * 例：
+      * create => true
+      * newInstance => true
+      * createObject => true
+      * news => false
+      * @param simpleName 方法的简化名称
+      * @return 是否是一个创建对象方法
+      */
+    def isCreateMethod(simpleName: String): Boolean = {
+        simpleName.matches("^(create|new)([A-Z].*|$)")
+    }
+
+    /**
       * 根据方法名称判断一个方法是否是get方法，即方法名以get开头，后面接一个大写字母
       * 例：
       * get => false
       * getSheet => true
       * getsheet => false
-      * @param qualifiedName 方法的简化名称
+      * @param simpleName 方法的简化名称
       * @return 是否是get方法
       */
     def isGetMethod(simpleName: String): Boolean = {

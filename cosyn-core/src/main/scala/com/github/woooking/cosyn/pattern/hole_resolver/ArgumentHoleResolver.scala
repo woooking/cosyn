@@ -1,13 +1,12 @@
 package com.github.woooking.cosyn.pattern.hole_resolver
 
 import com.github.javaparser.JavaParser
-import com.github.woooking.cosyn.knowledge_graph.{KnowledgeGraph, NLP}
+import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph, NLP}
 import com.github.woooking.cosyn.pattern._
 import com.github.woooking.cosyn.pattern.model.expr.{HoleExpr, MethodCallExpr}
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.util.CodeUtil
 
-import scala.collection.JavaConverters._
 
 class ArgumentHoleResolver extends HoleResolver {
     private sealed trait MethodType
@@ -20,14 +19,6 @@ class ArgumentHoleResolver extends HoleResolver {
 
     private case object OtherType extends MethodType
 
-    private def extractParamInfoFromJavadoc(index: Int)(javadocComment: String): String = {
-        val javadoc = JavaParser.parseJavadoc(javadocComment)
-//        println(javadocComment)
-        val paramTags = javadoc.getBlockTags.asScala.filter(_.getTagName == "param")
-        val tag = paramTags(index)
-        NLP.getNounPhrase(tag.getName.get(), tag.getContent.toText)
-    }
-
     override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[QA] = {
         hole.parent match {
             case p: MethodCallExpr =>
@@ -37,7 +28,7 @@ class ArgumentHoleResolver extends HoleResolver {
                         val vars = context.findVariables(arg.ty)
                         if (CodeUtil.isPrimitive(arg.ty) || arg.ty == "java.lang.String") {
                             Some(PrimitiveQA(
-                                KnowledgeGraph.getMethodJavadoc(p.getQualifiedSignature).map(extractParamInfoFromJavadoc(index)),
+                                KnowledgeGraph.getMethodJavadoc(p.getQualifiedSignature).map(JavadocUtil.extractParamInfoFromJavadoc(index)),
                                 arg.ty
                             ))
                         } else {

@@ -1,6 +1,8 @@
 package com.github.woooking.cosyn.pattern
 
 import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
+import com.github.woooking.cosyn.pattern.hole_resolver.QAHelper
 import com.github.woooking.cosyn.pattern.model.ASTUtil
 import com.github.woooking.cosyn.pattern.model.expr._
 import com.github.woooking.cosyn.pattern.model.stmt.{BlockStmt, ForEachStmt}
@@ -43,7 +45,7 @@ case class StaticChoice(ty: String, methods: Set[MethodEntity]) extends Choice {
 }
 
 case class StaticMethodChoice(ty: String, method: MethodEntity) extends Choice {
-    override def toString: String = method.getQualifiedSignature
+    override def toString: String = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
         val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
@@ -53,7 +55,10 @@ case class StaticMethodChoice(ty: String, method: MethodEntity) extends Choice {
 }
 
 case class GetChoice(ty: String, method: MethodEntity) extends Choice {
-    override def toString: String = s"From a ${CodeUtil.qualifiedClassName2Simple(ty)}(${method.getQualifiedSignature})"
+    override def toString: String = {
+        val javadoc = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
+        s"$javadoc from ${CodeUtil.qualifiedClassName2Simple(ty).toLowerCase()}"
+    }
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
         val receiver = HoleExpr()
@@ -64,7 +69,10 @@ case class GetChoice(ty: String, method: MethodEntity) extends Choice {
 }
 
 case class IterableChoice(path: List[TypeEntity]) extends Choice {
-    override def toString: String = path.head.getSimpleName.toLowerCase()
+    override def toString: String = {
+        val requireObject = path.last.getSimpleName.toLowerCase()
+        if (path.size == 1) s"A $requireObject" else s"Some ${requireObject}s in a ${path.head.getSimpleName.toLowerCase()}"
+    }
 
     private def buildForEachStmt(context: Context, hole: HoleExpr, outer: TypeEntity, inner: TypeEntity, remains: List[TypeEntity]): (ForEachStmt, String) = {
         remains match {
@@ -83,12 +91,16 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
     }
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val stmt = ASTUtil.getParentStmt(hole)
-        val blockStmt = stmt.parent.asInstanceOf[BlockStmt]
-        val init = HoleExpr()
-        val (innerForEach, innerName) = buildForEachStmt(context, hole, path.head, path.tail.head, path.tail.tail)
-        val varDecl = VariableDeclaration(path.head.getQualifiedName, innerName, init)
-        blockStmt.replace(stmt, varDecl, innerForEach)
-        Resolved(Seq(init))
+        if (path.size == 1) {
+            NewQA(QAHelper.choiceQAForType(context, path.head.getQualifiedName))
+        } else {
+            val stmt = ASTUtil.getParentStmt(hole)
+            val blockStmt = stmt.parent.asInstanceOf[BlockStmt]
+            val init = HoleExpr()
+            val (innerForEach, innerName) = buildForEachStmt(context, hole, path.head, path.tail.head, path.tail.tail)
+            val varDecl = VariableDeclaration(path.head.getQualifiedName, innerName, init)
+            blockStmt.replace(stmt, varDecl, innerForEach)
+            Resolved(Seq(init))
+        }
     }
 }

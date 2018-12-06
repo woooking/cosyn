@@ -52,11 +52,12 @@ object Pattern {
     }
 
     def main(args: Array[String]): Unit = {
-        //        val testFile = Resource.my.getAsStream("/Test1.java")
-        //        val cu = JavaParser.parse(testFile)
+        //        val context = new Context(Seq("java.lang.Object"))
+        //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
+        //        println(qa(context, FillCellColor.pattern).stmts.generateCode(""))
         val context = new Context(Seq("java.lang.Object"))
         context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-        println(qa(context, FillCellColor.pattern).stmts.generateCode(""))
+        println(qa(context, CreateHyperlink.pattern).stmts.generateCode(""))
         KnowledgeGraph.close()
     }
 }

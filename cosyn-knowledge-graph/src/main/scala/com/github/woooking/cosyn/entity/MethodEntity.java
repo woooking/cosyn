@@ -94,6 +94,10 @@ public class MethodEntity {
         return declareType;
     }
 
+    public TypeEntity getProduce() {
+        return produce;
+    }
+
     public AccessSpecifier getAccessSpecifier() {
         return accessSpecifier;
     }

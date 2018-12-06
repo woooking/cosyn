@@ -7,9 +7,12 @@ import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.util.CodeUtil
 
 object QAHelper {
+
     private sealed trait MethodType
 
     private case class ConstructorType(ty: String) extends MethodType
+
+    private case class StaticCreateType(ty: String) extends MethodType
 
     private case class GetType(ty: String) extends MethodType
 
@@ -22,13 +25,16 @@ object QAHelper {
         val producers = KnowledgeGraph.producers(context, referenceType)
         val cases = producers.groupBy {
             case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)
-            case m if m.isStatic => StaticType(m.getDeclareType.getQualifiedName)
+            case m if m.isStatic =>
+                if (CodeUtil.isCreateMethod(m.getSimpleName)) StaticCreateType(m.getProduce.getQualifiedName)
+                else StaticType(m.getDeclareType.getQualifiedName)
             case m if CodeUtil.isGetMethod(m.getSimpleName) => GetType(m.getDeclareType.getQualifiedName)
             case _ => OtherType
         }
         val methodChoices = cases.flatMap {
             case (ConstructorType(ty), ms) => Seq(ConstructorChoice(ty, ms))
-            case (StaticType(ty), ms) => Seq(StaticChoice(ty, ms))
+            case (StaticCreateType(ty), ms) => Seq(ConstructorChoice(ty, ms))
+            case (StaticType(ty), ms) => ms.map(m => StaticMethodChoice(ty, m))
             case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
             case (OtherType, m) =>
                 m.map(_.getQualifiedSignature).foreach(println)

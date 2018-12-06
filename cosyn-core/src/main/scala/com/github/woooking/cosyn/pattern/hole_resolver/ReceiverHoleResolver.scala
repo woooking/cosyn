@@ -15,9 +15,9 @@ class ReceiverHoleResolver extends HoleResolver {
                 if (paths.size == 1) {
                     Some(QAHelper.choiceQAForType(context, p.receiverType))
                 } else {
+                    val requireObject = CodeUtil.qualifiedClassName2Simple(p.receiverType).toLowerCase()
                     val question = paths
-                        .map(p => CodeUtil.qualifiedClassName2Simple(p.head.getQualifiedName).toLowerCase())
-                        .map(b => s"A $b")
+                        .map(p => if (p.size == 1) s"A $requireObject" else s"Some ${requireObject}s in a ${p.head.getSimpleName.toLowerCase()}")
                         .mkString("", "/", "?")
                     Some(ChoiceQA(question, paths.map(IterableChoice.apply).toSeq))
                 }

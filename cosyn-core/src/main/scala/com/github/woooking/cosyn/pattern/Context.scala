@@ -13,4 +13,8 @@ class Context(val extendedTypes: Seq[String]) {
             .filter(p => KnowledgeGraph.isAssignable(p._2, ty))
             .map(_._1)
     }
+
+    def update(pattern: Pattern): Unit = {
+
+    }
 }

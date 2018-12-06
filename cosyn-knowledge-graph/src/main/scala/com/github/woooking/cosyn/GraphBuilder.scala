@@ -84,8 +84,9 @@ object GraphBuilder extends Logging {
                     if (!resolvedMethod.declaringType().isInstanceOf[JavaParserAnonymousClassDeclaration]) {
                         val methodEntity = EntityManager.getMethodEntity(resolvedMethod.getQualifiedSignature)
                         resolvedMethod.getReturnType match {
-                            case returnType if resolvedMethod.getReturnType.isVoid =>
-                            case returnType if resolvedMethod.getReturnType.isPrimitive =>
+                            case _ if resolvedMethod.getReturnType.isTypeVariable =>
+                            case _ if resolvedMethod.getReturnType.isVoid =>
+                            case _ if resolvedMethod.getReturnType.isPrimitive =>
                             case returnType if resolvedMethod.getReturnType.isReferenceType =>
                                 val name = returnType.asReferenceType().getQualifiedName
                                 methodEntity.setProduce(EntityManager.getTypeEntityOrCreate(name))
