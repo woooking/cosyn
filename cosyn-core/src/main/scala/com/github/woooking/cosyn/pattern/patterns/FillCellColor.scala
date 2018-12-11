@@ -1,13 +1,15 @@
-package com.github.woooking.cosyn.pattern
+package com.github.woooking.cosyn.pattern.patterns
 
-import com.github.woooking.cosyn.pattern.model.expr.NameExpr._
-import com.github.woooking.cosyn.pattern.model.expr.{MethodCallExpr, _}
-import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
+import com.github.woooking.cosyn.pattern.Pattern
+import com.github.woooking.cosyn.pattern.model.expr._
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
+import com.github.woooking.cosyn.pattern.model.expr.NameExpr._
+import com.github.woooking.cosyn.pattern.model.expr.MethodCallExpr
+import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 
 object FillCellColor {
     val holes = Seq.fill(3)(HoleExpr())
-    val stmt = BlockStmt(
+    val stmt = BlockStmt.of(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",

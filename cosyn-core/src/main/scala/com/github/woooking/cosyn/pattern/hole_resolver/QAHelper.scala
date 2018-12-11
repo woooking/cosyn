@@ -1,47 +1,48 @@
 package com.github.woooking.cosyn.pattern.hole_resolver
 
+import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern._
-import com.github.woooking.cosyn.pattern.model.expr.HoleExpr
-import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
+import com.github.woooking.cosyn.pattern.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
 import com.github.woooking.cosyn.util.CodeUtil
 
 object QAHelper {
-
     private sealed trait MethodType
 
-    private case class ConstructorType(ty: String) extends MethodType
+    sealed abstract class MethodCategory(val questionGenerator: String => String)
 
-    private case class StaticCreateType(ty: String) extends MethodType
+    object MethodCategory {
+        final case object Create extends MethodCategory(ty => s"Create a new ${CodeUtil.qualifiedClassName2Simple(ty)}")
+        final case object Load extends MethodCategory(ty => s"Load a ${CodeUtil.qualifiedClassName2Simple(ty)}")
+        final case object Get extends MethodCategory(ty => s"Get a ${CodeUtil.qualifiedClassName2Simple(ty)}")
+    }
 
-    private case class GetType(ty: String) extends MethodType
-
-    private case class StaticType(ty: String) extends MethodType
-
-    private case object OtherType extends MethodType
+    private final case object OtherType extends MethodCategory(_ => "Unknown")
 
     def choiceQAForType(context: Context, referenceType: String): QA = {
         val vars = context.findVariables(referenceType)
         val producers = KnowledgeGraph.producers(context, referenceType)
-        val cases = producers.groupBy {
-            case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)
-            case m if m.isStatic =>
-                if (CodeUtil.isCreateMethod(m.getSimpleName)) StaticCreateType(m.getProduce.getQualifiedName)
-                else StaticType(m.getDeclareType.getQualifiedName)
-            case m if CodeUtil.isGetMethod(m.getSimpleName) => GetType(m.getDeclareType.getQualifiedName)
-            case _ => OtherType
+
+        val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
+            case m if CreateMethodJudger.judge(m) => MethodCategory.Create
+            case m if LoadMethodJudger.judge(m) => MethodCategory.Load
+            case m if GetMethodJudger.judge(m) => MethodCategory.Get
+            case _ =>
+                OtherType
         }
-        val methodChoices = cases.flatMap {
-            case (ConstructorType(ty), ms) => Seq(ConstructorChoice(ty, ms))
-            case (StaticCreateType(ty), ms) => Seq(ConstructorChoice(ty, ms))
-            case (StaticType(ty), ms) => ms.map(m => StaticMethodChoice(ty, m))
-            case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
+        val methodCategoryChoices = cases.flatMap {
             case (OtherType, m) =>
-                m.map(_.getQualifiedSignature).foreach(println)
+                println("-----")
+                m.foreach(f => {
+                    println(f.getQualifiedSignature)
+                    println(KnowledgeGraph.getMethodJavadoc(f.getQualifiedSignature).getOrElse(""))
+                })
+                println("-----")
                 Seq()
+            case (category, ms) => Seq(MethodCategoryChoice(referenceType, category, ms))
         }
         val simpleName = CodeUtil.qualifiedClassName2Simple(referenceType).toLowerCase
         val q = s"Which $simpleName?"
-        ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodChoices)
+        ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
     }
 }

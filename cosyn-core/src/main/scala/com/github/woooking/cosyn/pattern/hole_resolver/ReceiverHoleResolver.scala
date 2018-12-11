@@ -19,7 +19,8 @@ class ReceiverHoleResolver extends HoleResolver {
                     val question = paths
                         .map(p => if (p.size == 1) s"A $requireObject" else s"Some ${requireObject}s in a ${p.head.getSimpleName.toLowerCase()}")
                         .mkString("", "/", "?")
-                    Some(ChoiceQA(question, paths.map(IterableChoice.apply).toSeq))
+                    val vars = paths.map(_.head.getQualifiedName).flatMap(context.findVariables)
+                    Some(ChoiceQA(question, vars.map(VariableChoice.apply).toSeq ++ paths.map(IterableChoice.apply).toSeq))
                 }
             case _ =>
                 None

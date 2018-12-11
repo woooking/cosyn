@@ -19,6 +19,13 @@ object JavadocUtil {
         NLP.getNounPhrase(tag.getName.get(), tag.getContent.toText)
     }
 
+    def extractReturnInfoFromJavadoc(javadocComment: String): String = {
+        val javadoc = JavaParser.parseJavadoc(javadocComment)
+        val paramTags = javadoc.getBlockTags.asScala.filter(_.getTagName == "return")
+        val tag = paramTags.headOption.get
+        tag.getContent.toText
+    }
+
     def extractFirstSentence(javadocComment: String): String = {
         val javadoc = JavaParser.parseJavadoc(javadocComment)
         val description = (javadoc.getDescription.toText /: javadocDescriptionPreFilters) ((t, f) => f(t))

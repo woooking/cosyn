@@ -92,7 +92,9 @@ object GraphBuilder extends Logging {
                                 methodEntity.setProduce(EntityManager.getTypeEntityOrCreate(name))
                             case returnType if resolvedMethod.getReturnType.isArray =>
                                 val name = getComponentTypeRecursively(returnType)
-                                methodEntity.setProduce(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
+                                if (name.isReferenceType) {
+                                    methodEntity.setProduceMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
+                                }
                         }
                     }
                 } catch {

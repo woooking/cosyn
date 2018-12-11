@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.util
 
 import com.github.javaparser.JavaParser
+import com.github.woooking.cosyn.entity.MethodEntity
 
 object CodeUtil {
     private val PrimitiveTypes = Array(
@@ -25,20 +26,6 @@ object CodeUtil {
       */
     def qualifiedClassName2Simple(qualifiedName: String): String = {
         qualifiedName.split('.').last
-    }
-
-    /**
-      * 根据方法名称判断一个方法是否是创建对象方法，方法名以create/new开头，后面接一个大写字母或结尾
-      * 例：
-      * create => true
-      * newInstance => true
-      * createObject => true
-      * news => false
-      * @param simpleName 方法的简化名称
-      * @return 是否是一个创建对象方法
-      */
-    def isCreateMethod(simpleName: String): Boolean = {
-        simpleName.matches("^(create|new)([A-Z].*|$)")
     }
 
     /**

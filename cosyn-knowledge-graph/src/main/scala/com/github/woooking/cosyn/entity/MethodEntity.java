@@ -20,6 +20,7 @@ public class MethodEntity {
     private String simpleName;
     private boolean isStatic;
     private boolean isConstructor;
+    private boolean isDeprecated;
     private AccessSpecifier accessSpecifier;
     private String javadoc;
 
@@ -38,24 +39,26 @@ public class MethodEntity {
     public MethodEntity() {
     }
 
-    public MethodEntity(ResolvedConstructorDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
+    public MethodEntity(ResolvedConstructorDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocComment javadocComment) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
         this.isStatic = true;
         this.isConstructor = true;
+        this.isDeprecated = isDeprecated;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
         this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
         declareType.addHasMethod(this);
     }
 
-    public MethodEntity(ResolvedMethodDeclaration resolved, TypeEntity declareType, JavadocComment javadocComment) {
+    public MethodEntity(ResolvedMethodDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocComment javadocComment) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
         this.isStatic = resolved.isStatic();
         this.isConstructor = false;
+        this.isDeprecated = isDeprecated;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
         this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
@@ -116,5 +119,9 @@ public class MethodEntity {
 
     public boolean isStatic() {
         return isStatic;
+    }
+
+    public boolean isDeprecated() {
+        return isDeprecated;
     }
 }

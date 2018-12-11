@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.pattern.model.expr
 
+import com.github.woooking.cosyn.pattern.model.Node
 import com.github.woooking.cosyn.util.CodeUtil
 
 case class VariableDeclaration(ty: String, name: String, init: Option[Expression]) extends Expression {
@@ -9,6 +10,8 @@ case class VariableDeclaration(ty: String, name: String, init: Option[Expression
         case None => s"${CodeUtil.qualifiedClassName2Simple(ty)} $name"
         case Some(i) => s"${CodeUtil.qualifiedClassName2Simple(ty)} $name = $i"
     }
+
+    override def children: Seq[Node] = init.toSeq
 }
 
 object VariableDeclaration {

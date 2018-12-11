@@ -1,4 +1,5 @@
 package com.github.woooking.cosyn.pattern.model.expr
+import com.github.woooking.cosyn.pattern.model.Node
 
 case class HoleExpr(id: Int, private var _fill: Option[Expression]) extends Expression with NameOrHole {
     def fill: Option[Expression] = _fill
@@ -12,6 +13,8 @@ case class HoleExpr(id: Int, private var _fill: Option[Expression]) extends Expr
         case None => "<HOLE>"
         case Some(value) => value.toString
     }
+
+    override def children: Seq[Node] = _fill.toSeq
 }
 
 object HoleExpr {

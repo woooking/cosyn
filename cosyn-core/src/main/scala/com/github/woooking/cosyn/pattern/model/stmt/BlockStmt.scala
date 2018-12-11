@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.pattern.model.stmt
+import com.github.woooking.cosyn.pattern.model.Node
 
-class BlockStmt(var statements: Seq[Statement]) extends Statement {
+case class BlockStmt(var statements: Seq[Statement]) extends Statement {
     statements.foreach(_.parent = this)
 
     def replace(oldStmt: Statement, newStmts: Statement*): Unit = {
@@ -13,8 +14,10 @@ class BlockStmt(var statements: Seq[Statement]) extends Statement {
     override def generateCode(indent: String): String = {
         statements.map(_.generateCode(indent)).mkString("\n")
     }
+
+    override def children: Seq[Node] = statements
 }
 
 object BlockStmt {
-    def apply(statements: Statement*): BlockStmt = new BlockStmt(statements.toSeq)
+    def of(statements: Statement*): BlockStmt = new BlockStmt(statements.toSeq)
 }

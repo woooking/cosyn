@@ -84,7 +84,9 @@ object KnowledgeGraph {
 
     def producers(context: Context, ty: String): Set[MethodEntity] = {
         val typeEntity = session.load(classOf[TypeEntity], ty)
-        producers(context, typeEntity).map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+        producers(context, typeEntity)
+            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+            .filter(!_.isDeprecated)
     }
 
     def enumConstants(ty: String): Set[String] = {

@@ -1,10 +1,13 @@
 package com.github.woooking.cosyn.pattern.model.stmt
 
+import com.github.woooking.cosyn.pattern.model.Node
 import com.github.woooking.cosyn.pattern.model.expr.Expression
 
-class ExprStmt(expr: Expression) extends Statement {
+case class ExprStmt(expr: Expression) extends Statement {
     expr.parent = this
     override def toString: String = s"$expr;"
+
+    override def children: Seq[Node] = Seq(expr)
 }
 
 object ExprStmt {

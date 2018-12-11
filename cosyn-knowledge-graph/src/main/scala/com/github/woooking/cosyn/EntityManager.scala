@@ -31,7 +31,9 @@ object EntityManager extends Logging {
         typeMapping(typeEntity.getQualifiedName) = typeEntity
         resolved.getDeclaredMethods.asScala.foreach(m => {
             try {
-                val methodEntity = new MethodEntity(m, typeEntity, m.asInstanceOf[JavaParserMethodDeclaration].getWrappedNode.getJavadocComment.orElse(null))
+                val astNode = m.asInstanceOf[JavaParserMethodDeclaration].getWrappedNode
+                val isDeprecated = astNode.getAnnotationByClass(classOf[Deprecated]).isPresent
+                val methodEntity = new MethodEntity(m, isDeprecated, typeEntity, astNode.getJavadocComment.orElse(null))
                 methodMapping(methodEntity.getQualifiedSignature) = methodEntity
             } catch {
                 case _: UnsolvedSymbolException =>
@@ -43,9 +45,10 @@ object EntityManager extends Logging {
             try {
                 val methodEntity = m match {
                     case d: JavaParserConstructorDeclaration[_] =>
-                        new MethodEntity(m, typeEntity, d.getWrappedNode.getJavadocComment.orElse(null))
+                        val isDeprecated = d.getWrappedNode.getAnnotationByClass(classOf[Deprecated]).isPresent
+                        new MethodEntity(m, isDeprecated, typeEntity, d.getWrappedNode.getJavadocComment.orElse(null))
                     case d: DefaultConstructorDeclaration[_] =>
-                        new MethodEntity(m, typeEntity, null)
+                        new MethodEntity(m, false, typeEntity, null)
                 }
                 methodMapping(methodEntity.getQualifiedSignature) = methodEntity
             } catch {

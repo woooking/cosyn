@@ -32,24 +32,7 @@ class ArgumentHoleResolver extends HoleResolver {
                                 arg.ty
                             ))
                         } else {
-                            val producers = KnowledgeGraph.producers(context, arg.ty)
-                            val cases = producers.groupBy {
-                                case m if m.isConstructor => ConstructorType(m.getDeclareType.getQualifiedName)
-                                case m if m.isStatic => StaticType(m.getDeclareType.getQualifiedName)
-                                case m if CodeUtil.isGetMethod(m.getSimpleName) => GetType(m.getDeclareType.getQualifiedName)
-                                case _ => OtherType
-                            }
-                            val methodChoices = cases.flatMap {
-                                case (ConstructorType(ty), ms) => Seq(ConstructorChoice(ty, ms))
-                                case (StaticType(ty), ms) => Seq(StaticChoice(ty, ms))
-                                case (GetType(ty), ms) => ms.map(m => GetChoice(ty, m))
-                                case (OtherType, m) =>
-                                    m.map(_.getQualifiedSignature).foreach(println)
-                                    Seq()
-                            }
-                            val simpleName = CodeUtil.qualifiedClassName2Simple(arg.ty).toLowerCase
-                            val q = s"Which $simpleName?"
-                            Some(ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodChoices))
+                            Some(QAHelper.choiceQAForType(context, arg.ty))
                         }
                     case _ =>
                         None

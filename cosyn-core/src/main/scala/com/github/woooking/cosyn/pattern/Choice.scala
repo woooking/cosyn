@@ -30,41 +30,30 @@ case class VariableChoice(name: String) extends Choice {
     }
 }
 
-case class ConstructorChoice(ty: String, methods: Set[MethodEntity]) extends Choice {
-    override def toString: String = s"A new ${CodeUtil.qualifiedClassName2Simple(ty)}"
+case class MethodCategoryChoice(ty: String, category: QAHelper.MethodCategory, methods: Set[MethodEntity]) extends Choice {
+    override def toString: String = category.questionGenerator(ty)
 
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = UnImplemented
+    override def action(context: Context, hole: HoleExpr): ChoiceResult =
+        NewQA(ChoiceQA("Which method?", methods.map(MethodChoice.apply).toSeq))
 }
 
-case class StaticChoice(ty: String, methods: Set[MethodEntity]) extends Choice {
-    override def toString: String = s"Operation in ${CodeUtil.qualifiedClassName2Simple(ty)}"
-
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        NewQA(ChoiceQA("Which operation?", methods.map(m => StaticMethodChoice(ty, m)).toSeq))
-    }
-}
-
-case class StaticMethodChoice(ty: String, method: MethodEntity) extends Choice {
+case class MethodChoice(method: MethodEntity) extends Choice {
     override def toString: String = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
 
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
-        hole.fill = MethodCallExpr(NameExpr(CodeUtil.qualifiedClassName2Simple(ty)), ty, method.getSimpleName, args: _*)
-        Resolved(args.map(_.value.asInstanceOf[HoleExpr]))
-    }
-}
-
-case class GetChoice(ty: String, method: MethodEntity) extends Choice {
-    override def toString: String = {
-        val javadoc = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
-        s"$javadoc from ${CodeUtil.qualifiedClassName2Simple(ty).toLowerCase()}"
-    }
-
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val receiver = HoleExpr()
-        val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
-        hole.fill = MethodCallExpr(receiver, ty, method.getSimpleName, args: _*)
-        Resolved(args.map(_.value.asInstanceOf[HoleExpr]) :+ receiver)
+    override def action(context: Context, hole: HoleExpr): ChoiceResult = method match {
+        case _ if method.isConstructor =>
+            UnImplemented
+        case _ if method.isStatic =>
+            val receiverType = method.getDeclareType.getQualifiedName
+            val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
+            hole.fill = MethodCallExpr(NameExpr(CodeUtil.qualifiedClassName2Simple(receiverType)), receiverType, method.getSimpleName, args: _*)
+            Resolved(args.map(_.value.asInstanceOf[HoleExpr]))
+        case _ =>
+            val receiverType = method.getDeclareType.getQualifiedName
+            val receiver = HoleExpr()
+            val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
+            hole.fill = MethodCallExpr(receiver, receiverType, method.getSimpleName, args: _*)
+            Resolved(args.map(_.value.asInstanceOf[HoleExpr]) :+ receiver)
     }
 }
 
@@ -79,13 +68,13 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
             case Nil =>
                 val iterableName = outer.getSimpleName.toLowerCase()
                 val varName = inner.getSimpleName.toLowerCase()
-                val forEachStmt = ForEachStmt(inner.getQualifiedName, varName, NameExpr(iterableName), BlockStmt(ASTUtil.getParentStmt(hole)))
+                val forEachStmt = ForEachStmt(inner.getQualifiedName, varName, NameExpr(iterableName), BlockStmt.of(ASTUtil.getParentStmt(hole)))
                 hole.fill = NameExpr(varName)
                 (forEachStmt, iterableName)
             case head :: tail =>
                 val (innerForEach, innerName) = buildForEachStmt(context, hole, inner, head, tail)
                 val iterableName = outer.getSimpleName.toLowerCase()
-                val forEachStmt = ForEachStmt(inner.getQualifiedName, innerName, NameExpr(iterableName), BlockStmt(innerForEach))
+                val forEachStmt = ForEachStmt(inner.getQualifiedName, innerName, NameExpr(iterableName), BlockStmt.of(innerForEach))
                 (forEachStmt, iterableName)
         }
     }

@@ -4,6 +4,7 @@ import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern.hole_resolver._
 import com.github.woooking.cosyn.pattern.model.expr.HoleExpr
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
+import com.github.woooking.cosyn.pattern.patterns.{CreateConditionalFormatting, CreateHyperlink, FillCellColor}
 
 import scala.annotation.tailrec
 import scala.io.StdIn
@@ -52,12 +53,21 @@ object Pattern {
     }
 
     def main(args: Array[String]): Unit = {
+        //        ---- case 1 ----
         //        val context = new Context(Seq("java.lang.Object"))
         //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
         //        println(qa(context, FillCellColor.pattern).stmts.generateCode(""))
+        //        ---- case 2 ----
+        //        val context = new Context(Seq("java.lang.Object"))
+        //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
+        //        val pattern = CreateHyperlink.pattern
+        //         ---- case 3 ----
         val context = new Context(Seq("java.lang.Object"))
-        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-        println(qa(context, CreateHyperlink.pattern).stmts.generateCode(""))
+        context.variables += "sheet" -> "org.apache.poi.hssf.usermodel.HSSFSheet"
+        val pattern = CreateConditionalFormatting.pattern
+
+        context.update(pattern)
+        println(qa(context, pattern).stmts.generateCode(""))
         KnowledgeGraph.close()
     }
 }

@@ -1,9 +1,10 @@
 package com.github.woooking.cosyn.pattern.model.stmt
 
+import com.github.woooking.cosyn.pattern.model.Node
 import com.github.woooking.cosyn.pattern.model.expr.Expression
 import com.github.woooking.cosyn.util.CodeUtil
 
-class ForEachStmt(ty: String, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
+case class ForEachStmt(ty: String, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
     iterable.parent = this
     block.parent = this
 
@@ -16,6 +17,8 @@ class ForEachStmt(ty: String, variable: String, iterable: Expression, block: Blo
         s"""for (${CodeUtil.qualifiedClassName2Simple(ty)} $variable : $iterable) {
            |    $block
            |}""".stripMargin
+
+    override def children: Seq[Node] = Seq(iterable, block)
 }
 
 object ForEachStmt {
