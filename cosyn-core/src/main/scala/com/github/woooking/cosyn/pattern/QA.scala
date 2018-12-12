@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.pattern
 
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern.model.expr._
+import com.github.woooking.cosyn.pattern.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 
 sealed trait QA {
@@ -32,9 +33,9 @@ case class ChoiceQA(question: String, choices: Seq[Choice]) extends QA {
     }
 }
 
-case class EnumConstantQA(ty: String) extends QA {
+case class EnumConstantQA(ty: BasicType) extends QA {
     override def toString: String = {
-        val simpleName = CodeUtil.qualifiedClassName2Simple(ty).toLowerCase
+        val simpleName = CodeUtil.qualifiedClassName2Simple(ty.ty).toLowerCase
         s"Which $simpleName?"
     }
 
@@ -46,6 +47,26 @@ case class EnumConstantQA(ty: String) extends QA {
                 Right(Seq())
             case None =>
                 println(s"Could not understand $input!")
+                println(s"Valid inputs are ${constants.map(_.toLowerCase).mkString("/")}.")
+                Left(this)
+        }
+    }
+}
+
+case class StaticFieldAccessQA(receiverType: BasicType, targetType: Type) extends QA {
+    override def toString: String = {
+        s"Which field?"
+    }
+
+    override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
+        val fields = KnowledgeGraph.staticFields(receiverType, targetType)
+        fields.find(_.toLowerCase() == input.toLowerCase()) match {
+            case Some(c) =>
+                hole.fill = NameExpr(c)
+                Right(Seq())
+            case None =>
+                println(s"Could not understand $input!")
+                println(s"Valid inputs are ${fields.map(_.toLowerCase).mkString("/")}.")
                 Left(this)
         }
     }

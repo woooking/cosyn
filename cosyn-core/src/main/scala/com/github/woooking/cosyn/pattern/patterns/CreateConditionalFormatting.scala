@@ -5,9 +5,10 @@ import com.github.woooking.cosyn.pattern.model.expr._
 import com.github.woooking.cosyn.pattern.model.expr.NameExpr._
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
+import com.github.woooking.cosyn.pattern.model.ty.{ArrayType, BasicType}
 
 object CreateConditionalFormatting {
-    val holes = Seq.fill(6)(HoleExpr())
+    val holes = Seq.fill(7)(HoleExpr())
     val stmt = BlockStmt.of(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
@@ -29,8 +30,13 @@ object CreateConditionalFormatting {
                     "byte",
                     StaticFieldAccessExpr(
                         "org.apache.poi.ss.usermodel.ComparisonOperator",
+                        "byte",
                         holes(1)
                     ),
+                ),
+                MethodCallArgs(
+                    "java.lang.String",
+                    holes(2)
                 )
             )
         ),
@@ -47,8 +53,8 @@ object CreateConditionalFormatting {
             "fontFmt",
             "org.apache.poi.ss.usermodel.FontFormatting",
             "setFontStyle",
-            MethodCallArgs("boolean", holes(2)),
             MethodCallArgs("boolean", holes(3)),
+            MethodCallArgs("boolean", holes(4)),
         ),
         MethodCallExpr(
             "fontFmt",
@@ -59,7 +65,7 @@ object CreateConditionalFormatting {
                 MethodCallExpr(
                     EnumConstantExpr(
                         "org.apache.poi.ss.usermodel.IndexedColors",
-                        holes(4)
+                        holes(5)
                     ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
                     "getIndex",
@@ -70,7 +76,7 @@ object CreateConditionalFormatting {
             "sheetCF",
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "addConditionalFormatting",
-            MethodCallArgs("org.apache.poi.ss.util.CellRangeAddress[]", holes(5)),
+            MethodCallArgs(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holes(6)),
             MethodCallArgs("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
         ),
     )

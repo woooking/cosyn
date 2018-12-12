@@ -2,12 +2,17 @@ package com.github.woooking.cosyn.pattern.model.expr
 
 import akka.japi.Option.Some
 import com.github.woooking.cosyn.pattern.model.Node
+import com.github.woooking.cosyn.pattern.model.ty.{BasicType, Type}
 
-case class MethodCallArgs(ty: String, value: Expression) {
+case class MethodCallArgs(ty: Type, value: Expression) {
     override def toString: String = value.toString
 }
 
-case class MethodCallExpr private (receiver: Option[Expression], receiverType: String, simpleName: String, args: Seq[MethodCallArgs]) extends Expression {
+object MethodCallArgs {
+    def apply(ty: String, value: Expression): MethodCallArgs = new MethodCallArgs(BasicType(ty), value)
+}
+
+case class MethodCallExpr private (receiver: Option[Expression], receiverType: BasicType, simpleName: String, args: Seq[MethodCallArgs]) extends Expression {
     receiver.foreach(_.parent = this)
     args.foreach(_.value.parent = this)
 
@@ -19,7 +24,10 @@ case class MethodCallExpr private (receiver: Option[Expression], receiverType: S
 }
 
 object MethodCallExpr {
-    def apply(receiver: Expression, receiverType: String, simpleName: String, args: MethodCallArgs*): MethodCallExpr =
+    def apply(receiver: Expression, receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr =
         new MethodCallExpr(Some(receiver), receiverType, simpleName, args)
+
+    def apply(receiver: Expression, receiverType: String, simpleName: String, args: MethodCallArgs*): MethodCallExpr =
+        new MethodCallExpr(Some(receiver), BasicType(receiverType), simpleName, args)
 }
 

@@ -1,20 +1,8 @@
 package com.github.woooking.cosyn.util
 
-import com.github.javaparser.JavaParser
-import com.github.woooking.cosyn.entity.MethodEntity
+import com.github.woooking.cosyn.pattern.model.ty.Type
 
 object CodeUtil {
-    private val PrimitiveTypes = Array(
-        "boolean",
-        "byte",
-        "short",
-        "int",
-        "long",
-        "float",
-        "double",
-        "char",
-    )
-
     /**
       * 从类的全限定名称中提取简化名称，即以'.'分割后的最后一段字符串
       * 例：
@@ -50,10 +38,10 @@ object CodeUtil {
       * @param signature 方法的签名
       * @return 参数类型列表
       */
-    def methodParams(signature: String): Seq[String] = {
+    def methodParams(signature: String): Seq[Type] = {
         val pattern = """.*\(([a-zA-Z., ]*)\)""".r
         pattern.findFirstMatchIn(signature) match {
-            case Some(m) => m.group(1).split(", ")
+            case Some(m) => m.group(1).split(", ").map(Type.fromString)
             case None => Seq()
         }
     }
@@ -75,16 +63,4 @@ object CodeUtil {
         }
     }
 
-    /**
-      * 判断一个类型名是否是原始类型
-      * @param ty 需要判断的类型
-      * @return 是否是原始类型
-      */
-    def isPrimitive(ty: String): Boolean = {
-        PrimitiveTypes.contains(ty)
-    }
-
-    def parseJavadoc(): Unit = {
-//        JavaParser.parseJavadoc();
-    }
 }

@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.pattern.rules
 
 import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
+import com.github.woooking.cosyn.pattern.model.ty.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
 object LoadMethodJudger extends PositiveJudger[MethodEntity] {
@@ -15,7 +16,9 @@ object LoadMethodJudger extends PositiveJudger[MethodEntity] {
     }
 
     // 参数中有java.io.InputStream的子类
-    private val paramRule: Rule = methodEntity => CodeUtil.methodParams(methodEntity.getQualifiedSignature).exists(param => KnowledgeGraph.isAssignable(param, "java.io.InputStream"))
+    private val paramRule: Rule = methodEntity =>
+        CodeUtil.methodParams(methodEntity.getQualifiedSignature)
+            .exists(param => KnowledgeGraph.isAssignable(param, BasicType("java.io.InputStream")))
 
     override def rules: Seq[Rule] = Seq(nameRule, javadocRule, paramRule)
 }

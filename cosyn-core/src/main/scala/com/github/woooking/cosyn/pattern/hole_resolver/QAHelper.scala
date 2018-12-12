@@ -3,6 +3,7 @@ package com.github.woooking.cosyn.pattern.hole_resolver
 import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern._
+import com.github.woooking.cosyn.pattern.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.pattern.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
 import com.github.woooking.cosyn.util.CodeUtil
 
@@ -19,30 +20,36 @@ object QAHelper {
 
     private final case object OtherType extends MethodCategory(_ => "Unknown")
 
-    def choiceQAForType(context: Context, referenceType: String): QA = {
-        val vars = context.findVariables(referenceType)
-        val producers = KnowledgeGraph.producers(context, referenceType)
+    def choiceQAForType(context: Context, ty: Type): QA = {
+        ty match {
+            case bt @ BasicType(t) =>
+                val vars = context.findVariables(bt)
+                val producers = KnowledgeGraph.producers(context, bt)
 
-        val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
-            case m if CreateMethodJudger.judge(m) => MethodCategory.Create
-            case m if LoadMethodJudger.judge(m) => MethodCategory.Load
-            case m if GetMethodJudger.judge(m) => MethodCategory.Get
+                val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
+                    case m if CreateMethodJudger.judge(m) => MethodCategory.Create
+                    case m if LoadMethodJudger.judge(m) => MethodCategory.Load
+                    case m if GetMethodJudger.judge(m) => MethodCategory.Get
+                    case _ =>
+                        OtherType
+                }
+                val methodCategoryChoices = cases.flatMap {
+                    case (OtherType, m) =>
+                        println("-----")
+                        m.foreach(f => {
+                            println(f.getQualifiedSignature)
+                            println(KnowledgeGraph.getMethodJavadoc(f.getQualifiedSignature).getOrElse(""))
+                        })
+                        println("-----")
+                        Seq()
+                    case (category, ms) => Seq(MethodCategoryChoice(bt, category, ms))
+                }
+                val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
+                val q = s"Which $simpleName?"
+                ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
             case _ =>
-                OtherType
+                ???
         }
-        val methodCategoryChoices = cases.flatMap {
-            case (OtherType, m) =>
-                println("-----")
-                m.foreach(f => {
-                    println(f.getQualifiedSignature)
-                    println(KnowledgeGraph.getMethodJavadoc(f.getQualifiedSignature).getOrElse(""))
-                })
-                println("-----")
-                Seq()
-            case (category, ms) => Seq(MethodCategoryChoice(referenceType, category, ms))
-        }
-        val simpleName = CodeUtil.qualifiedClassName2Simple(referenceType).toLowerCase
-        val q = s"Which $simpleName?"
-        ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
+
     }
 }

@@ -11,12 +11,16 @@ import static java.util.stream.Collectors.*;
 public class StaticFieldInfo {
     private Map<String, List<String>> fieldsInfo;
 
+    public StaticFieldInfo() {
+
+    }
+
     private StaticFieldInfo(ResolvedReferenceTypeDeclaration decl) {
         this.fieldsInfo = decl.getDeclaredFields().stream()
             .filter(ResolvedFieldDeclaration::isStatic)
             .collect(
                 groupingBy(
-                    (ResolvedFieldDeclaration f) -> f.declaringType().getQualifiedName(),
+                    (ResolvedFieldDeclaration f) -> f.getType().describe(),
                     mapping(ResolvedFieldDeclaration::getName, toList())
                 )
             );

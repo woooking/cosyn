@@ -4,6 +4,7 @@ import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern.hole_resolver._
 import com.github.woooking.cosyn.pattern.model.expr.HoleExpr
 import com.github.woooking.cosyn.pattern.model.stmt.BlockStmt
+import com.github.woooking.cosyn.pattern.model.ty.BasicType
 import com.github.woooking.cosyn.pattern.patterns.{CreateConditionalFormatting, CreateHyperlink, FillCellColor}
 
 import scala.annotation.tailrec
@@ -16,6 +17,7 @@ case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
 object Pattern {
     val resolver = CombineHoleResolver(
         new EnumConstantHoleResolver,
+        new StaticFieldAccessHoleResolver,
         new ReceiverHoleResolver,
         new ArgumentHoleResolver,
         new VariableInitializationHoleResolver,
@@ -63,7 +65,7 @@ object Pattern {
         //        val pattern = CreateHyperlink.pattern
         //         ---- case 3 ----
         val context = new Context(Seq("java.lang.Object"))
-        context.variables += "sheet" -> "org.apache.poi.hssf.usermodel.HSSFSheet"
+        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
         val pattern = CreateConditionalFormatting.pattern
 
         context.update(pattern)

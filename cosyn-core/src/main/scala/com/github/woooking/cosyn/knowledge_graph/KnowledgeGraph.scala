@@ -3,9 +3,11 @@ package com.github.woooking.cosyn.knowledge_graph
 import com.github.javaparser.ast.AccessSpecifier
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.pattern.Context
+import com.github.woooking.cosyn.pattern.model.ty.{ArrayType, BasicType, Type}
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.{Session, SessionFactory}
 
+import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 object KnowledgeGraph {
@@ -24,8 +26,8 @@ object KnowledgeGraph {
         (Set(newPath) /: entity.getIterables.asScala) ((s, t) => s ++ getIterablePaths(t.getQualifiedName, newPath))
     }
 
-    def getIterablePaths(qualifiedName: String): Set[List[TypeEntity]] = {
-        getIterablePaths(qualifiedName, Nil)
+    def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]] = {
+        getIterablePaths(basicType.ty, Nil)
     }
 
     def getMethodJavadoc(qualifiedSignature: String): Option[String] = {
@@ -64,11 +66,19 @@ object KnowledgeGraph {
         else sourceEntity.getExtendedTypes.asScala.exists(e => isAssignable(e, targetEntity))
     }
 
-    def isAssignable(source: String, target: String): Boolean = {
-        val sourceEntity = session.load(classOf[TypeEntity], source)
-        val targetEntity = session.load(classOf[TypeEntity], target)
-        if (sourceEntity == null || targetEntity == null) return false
-        isAssignable(sourceEntity, targetEntity)
+    @tailrec
+    def isAssignable(source: Type, target: Type): Boolean = {
+        (source, target) match {
+            case (ArrayType(s), ArrayType(t)) => isAssignable(s, t)
+            case (BasicType(s), BasicType(t)) =>
+                val sourceEntity = session.load(classOf[TypeEntity], s)
+                val targetEntity = session.load(classOf[TypeEntity], t)
+                if (sourceEntity == null || targetEntity == null) return false
+                isAssignable(sourceEntity, targetEntity)
+            case _ =>
+                false
+        }
+
     }
 
     private def isAccessible(context: Context, methodEntity: MethodEntity): Boolean = {
@@ -82,16 +92,26 @@ object KnowledgeGraph {
         (methods.toSet /: entity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType))
     }
 
-    def producers(context: Context, ty: String): Set[MethodEntity] = {
-        val typeEntity = session.load(classOf[TypeEntity], ty)
-        producers(context, typeEntity)
-            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
-            .filter(!_.isDeprecated)
+    def producers(context: Context, ty: Type): Set[MethodEntity] = {
+        ty match {
+            case BasicType(t) =>
+                val typeEntity = session.load(classOf[TypeEntity], t)
+                producers(context, typeEntity)
+                    .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                    .filter(!_.isDeprecated)
+            case ArrayType(_) => ???
+        }
+
     }
 
-    def enumConstants(ty: String): Set[String] = {
-        val typeEntity = session.load(classOf[EnumEntity], ty)
+    def enumConstants(ty: BasicType): Set[String] = {
+        val typeEntity = session.load(classOf[EnumEntity], ty.ty)
         typeEntity.getConstants.split(",").toSet
+    }
+
+    def staticFields(receiverType: BasicType, targetType: Type): Set[String] = {
+        val typeEntity = session.load(classOf[TypeEntity], receiverType.ty)
+        typeEntity.getStaticFields.getFieldsInfo.getOrDefault(targetType.toString, java.util.List.of()).asScala.toSet
     }
 
     def close(): Unit = {

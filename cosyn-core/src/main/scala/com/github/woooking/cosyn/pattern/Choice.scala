@@ -8,6 +8,7 @@ import com.github.woooking.cosyn.pattern.model.expr._
 import com.github.woooking.cosyn.pattern.model.stmt.{BlockStmt, ForEachStmt}
 import com.github.woooking.cosyn.util.CodeUtil
 import com.github.woooking.cosyn.pattern.model.stmt.ExprStmt._
+import com.github.woooking.cosyn.pattern.model.ty.BasicType
 
 sealed trait ChoiceResult
 
@@ -30,8 +31,8 @@ case class VariableChoice(name: String) extends Choice {
     }
 }
 
-case class MethodCategoryChoice(ty: String, category: QAHelper.MethodCategory, methods: Set[MethodEntity]) extends Choice {
-    override def toString: String = category.questionGenerator(ty)
+case class MethodCategoryChoice(ty: BasicType, category: QAHelper.MethodCategory, methods: Set[MethodEntity]) extends Choice {
+    override def toString: String = category.questionGenerator(ty.ty)
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult =
         NewQA(ChoiceQA("Which method?", methods.map(MethodChoice.apply).toSeq))
@@ -81,7 +82,7 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
         if (path.size == 1) {
-            NewQA(QAHelper.choiceQAForType(context, path.head.getQualifiedName))
+            NewQA(QAHelper.choiceQAForType(context, BasicType(path.head.getQualifiedName)))
         } else {
             val stmt = ASTUtil.getParentStmt(hole)
             val blockStmt = stmt.parent.asInstanceOf[BlockStmt]

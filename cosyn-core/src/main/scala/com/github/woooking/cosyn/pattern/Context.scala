@@ -3,13 +3,14 @@ package com.github.woooking.cosyn.pattern
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern.model.ASTCollector
 import com.github.woooking.cosyn.pattern.model.expr.VariableDeclaration
+import com.github.woooking.cosyn.pattern.model.ty.Type
 
 import scala.collection.mutable
 
 class Context(val extendedTypes: Seq[String]) {
-    val variables: mutable.Buffer[(String, String)] = mutable.Buffer[(String, String)]()
+    val variables: mutable.Buffer[(String, Type)] = mutable.Buffer()
 
-    def findVariables(ty: String): Seq[String] = {
+    def findVariables(ty: Type): Seq[String] = {
         variables
             .filter(p => KnowledgeGraph.isAssignable(p._2, ty))
             .map(_._1)

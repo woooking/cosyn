@@ -132,6 +132,10 @@ public class TypeEntity {
         return ImmutableSet.copyOf(iterables);
     }
 
+    public StaticFieldInfo getStaticFields() {
+        return staticFields;
+    }
+
     public boolean isAbstract() {
         return isAbstract;
     }

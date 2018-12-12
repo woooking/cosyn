@@ -4,6 +4,7 @@ import better.files.File.home
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body._
+import com.github.javaparser.ast.expr.ObjectCreationExpr
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedType
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations._
@@ -57,17 +58,19 @@ object GraphBuilder extends Logging {
         cus.flatMap(_.findAll(classOf[MethodDeclaration]).asScala)
             .foreach(decl => {
                 try {
-                    val resolvedMethod = decl.resolve()
-                    if (!resolvedMethod.declaringType().isInstanceOf[JavaParserAnonymousClassDeclaration]) {
-                        val qualifiedSignature = resolvedMethod.getQualifiedSignature
-                        val methodEntity = EntityManager.getMethodEntity(qualifiedSignature)
-                        val typeEntity = methodEntity.getDeclareType
-                        methodEntity.addExtendedMethods(
-                            typeEntity.getExtendedTypes.asScala
-                                .flatMap(_.getHasMethods.asScala)
-                                .filter(_.getSignature == methodEntity.getSignature)
-                                .asJava
-                        )
+                    val resolvedMethod = decl.resolve().asInstanceOf[JavaParserMethodDeclaration]
+                    resolvedMethod.getWrappedNode.getParentNode.get() match {
+                        case _: ObjectCreationExpr => // AnonymousClass, ignore
+                        case _ =>
+                            val qualifiedSignature = resolvedMethod.getQualifiedSignature
+                            val methodEntity = EntityManager.getMethodEntity(qualifiedSignature)
+                            val typeEntity = methodEntity.getDeclareType
+                            methodEntity.addExtendedMethods(
+                                typeEntity.getExtendedTypes.asScala
+                                    .flatMap(_.getHasMethods.asScala)
+                                    .filter(_.getSignature == methodEntity.getSignature)
+                                    .asJava
+                            )
                     }
                 } catch {
                     case e: Throwable =>
