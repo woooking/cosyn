@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.pattern.hole_resolver
 import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.pattern._
-import com.github.woooking.cosyn.pattern.model.ty.{BasicType, Type}
+import com.github.woooking.cosyn.pattern.model.ty.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.pattern.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
 import com.github.woooking.cosyn.util.CodeUtil
 
@@ -47,6 +47,8 @@ object QAHelper {
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
                 ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
+            case at @ ArrayType(BasicType(t)) =>
+                ???
             case _ =>
                 ???
         }

@@ -86,20 +86,25 @@ object KnowledgeGraph {
         methodEntity.getAccessSpecifier == AccessSpecifier.PUBLIC
     }
 
-    private def producers(context: Context, typeEntity: TypeEntity): Set[MethodEntity] = {
+    private def producers(context: Context, typeEntity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
         val entity = session.load(classOf[TypeEntity], typeEntity.getQualifiedName)
-        val methods = entity.getProducers.asScala.filter(isAccessible(context, _))
-        (methods.toSet /: entity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType))
+        val methods = (if (multiple) entity.getMultipleProducers else entity.getProducers).asScala.filter(isAccessible(context, _))
+        (methods.toSet /: entity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType, multiple))
     }
 
     def producers(context: Context, ty: Type): Set[MethodEntity] = {
         ty match {
             case BasicType(t) =>
                 val typeEntity = session.load(classOf[TypeEntity], t)
-                producers(context, typeEntity)
+                producers(context, typeEntity, multiple = false)
                     .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
                     .filter(!_.isDeprecated)
-            case ArrayType(_) => ???
+            case ArrayType(BasicType(t)) =>
+                val typeEntity = session.load(classOf[TypeEntity], t)
+                producers(context, typeEntity, multiple = true)
+                    .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                    .filter(!_.isDeprecated)
+            case _ => ???
         }
 
     }

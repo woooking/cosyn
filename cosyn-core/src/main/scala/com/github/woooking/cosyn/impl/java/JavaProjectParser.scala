@@ -25,9 +25,10 @@ import scala.collection.mutable
 class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
     private val parserConfiguration = new ParserConfiguration
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
-        new JavaParserTypeSolver(home / "lab" / "poi-3.14" / "src" / "java" path),
-        new JavaParserTypeSolver(home / "lab" / "poi-3.14" / "src" / "ooxml" / "java" path),
-        new ReflectionTypeSolver(false)
+        new JavaParserTypeSolver(home / "lab" / "poi-4.0.0" / "src" / "java" path),
+        new JavaParserTypeSolver(home / "lab" / "poi-4.0.0" / "src" / "ooxml" / "java" path),
+        new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path),
+//        new ReflectionTypeSolver(false)
     )))
 
     JavaParser.setStaticConfiguration(parserConfiguration)

@@ -42,7 +42,6 @@ object DFGNode {
 
         val Op: NodeType.Value = Value("#OP")
         val Data: NodeType.Value = Value("#DATA")
-        val Arg: NodeType.Value = Value("#ARG")
         val MethodInvocation: NodeType.Value = Value("#METHOD_INVOCATION")
         val Reference: NodeType.Value = Value("#REFERENCE")
         val Binary: NodeType.Value = Value("#BINARY")
@@ -54,7 +53,7 @@ object DFGNode {
     }
 
     def expression2node(expression: IRExpression): DFGNode = expression match {
-        case s: IRArg => DFGNode(NodeType.Arg, s.ty)
+        case s: IRArg => new DFGDataNode(s.ty)
         case _ => new DFGDataNode(expression.toString)
     }
 

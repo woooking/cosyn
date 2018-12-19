@@ -39,9 +39,9 @@ object Pattern {
 
     @tailrec
     def qa(context: Context, pattern: Pattern): Pattern = {
-//        println("-----")
-//        println(pattern.stmts.generateCode(""))
-//        println("-----")
+        println("-----")
+        println(pattern.stmts.generateCode(""))
+        println("-----")
         pattern.holes.toList match {
             case Nil => pattern
             case hole :: tails =>
@@ -56,17 +56,17 @@ object Pattern {
 
     def main(args: Array[String]): Unit = {
         //        ---- case 1 ----
-                val context = new Context(Seq("java.lang.Object"))
-//                context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-                val pattern = FillCellColor.pattern
+        val context = new Context(Seq("java.lang.Object"))
+        context.variables += "wb" -> BasicType("org.apache.poi.hssf.usermodel.HSSFWorkbook")
+        val pattern = FillCellColor.pattern
         //        ---- case 2 ----
         //        val context = new Context(Seq("java.lang.Object"))
         //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
         //        val pattern = CreateHyperlink.pattern
         //         ---- case 3 ----
-//        val context = new Context(Seq("java.lang.Object"))
-//        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
-//        val pattern = CreateConditionalFormatting.pattern
+        //        val context = new Context(Seq("java.lang.Object"))
+        //        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
+        //        val pattern = CreateConditionalFormatting.pattern
 
         context.update(pattern)
         println(qa(context, pattern).stmts.generateCode(""))

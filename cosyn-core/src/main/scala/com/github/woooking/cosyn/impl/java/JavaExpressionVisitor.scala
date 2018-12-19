@@ -5,7 +5,10 @@ import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
+import com.github.javaparser.symbolsolver.reflectionmodel.{ReflectionConstructorDeclaration, ReflectionFieldDeclaration}
 import com.github.woooking.cosyn.dfgprocessor.cfg.{CFGImpl, CFGStatements}
+import com.github.woooking.cosyn.dfgprocessor.ir
 import com.github.woooking.cosyn.dfgprocessor.ir._
 import com.github.woooking.cosyn.dfgprocessor.ir.statements._
 import com.github.woooking.cosyn.util.OptionConverters._
@@ -31,9 +34,9 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
 
     private def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = {
         try {
-//            println("-----")
-//            println(methodCallExpr.getName.asString())
-//            println(methodCallExpr.resolve().getQualifiedSignature)
+            //            println("-----")
+            //            println(methodCallExpr.getName.asString())
+            //            println(methodCallExpr.resolve().getQualifiedSignature)
             methodCallExpr.resolve().getQualifiedSignature
         } catch {
             case e: UnsolvedSymbolException =>
@@ -51,7 +54,27 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
         }
     }
 
-    private def resolveObjectCreationExpr(objectCreationExpr: ObjectCreationExpr): String = s"${objectCreationExpr.getType}::init"
+    private def resolveObjectCreationExpr(objectCreationExpr: ObjectCreationExpr): String = {
+        try {
+            objectCreationExpr.resolve() match {
+                case d: JavaParserConstructorDeclaration[_] =>
+                    d.getQualifiedSignature
+            }
+        } catch {
+            case e: UnsolvedSymbolException =>
+                //                println("-----")
+                //                println(methodCallExpr.getName.asString())
+                //                println(cfg.decl)
+                //                e.printStackTrace()
+                objectCreationExpr.getType.asString()
+            case e: Throwable =>
+                //                println("-----")
+                //                println(methodCallExpr.getName.asString())
+                //                println(cfg.decl)
+                //                e.printStackTrace()
+                objectCreationExpr.getType.asString()
+        }
+    }
 
     override def defaultAction(n: Node, arg: CFGStatements): IRExpression = ???
 
@@ -133,9 +156,32 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
     }
 
     override def visit(n: FieldAccessExpr, block: CFGStatements): IRExpression = {
-        val receiver = n.getScope.accept(this, block)
-        val name = n.getName.asString()
-        block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(n))).target
+        try {
+            n.resolve() match {
+                case d: ReflectionFieldDeclaration if d.isStatic =>
+                    val receiver = IRTypeObject(n.getScope.asNameExpr().resolve().asType().getQualifiedName, n.getScope)
+                    val name = n.getName.asString()
+                    block.addStatement(new IRStaticFieldAccess(cfg, receiver, name, Set(n))).target
+                case d: JavaParserFieldDeclaration if d.isStatic =>
+                    val receiver = IRTypeObject(n.getScope.asNameExpr().resolve().asType().getQualifiedName, n.getScope)
+                    val name = n.getName.asString()
+                    block.addStatement(new IRStaticFieldAccess(cfg, receiver, name, Set(n))).target
+                case d: JavaParserEnumConstantDeclaration =>
+                    val value = IREnum(d.getType.asReferenceType().getQualifiedName, d.getName)
+                    block.addStatement(new IRAssignment(cfg, value, Set(n))).target
+                case _ =>
+                    val receiver = n.getScope.accept(this, block)
+                    val name = n.getName.asString()
+                    block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(n))).target
+            }
+        } catch {
+            case e: Throwable =>
+//                e.printStackTrace()
+                val receiver = n.getScope.accept(this, block)
+                val name = n.getName.asString()
+                block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(n))).target
+        }
+
     }
 
     override def visit(n: InstanceOfExpr, block: CFGStatements): IRExpression = {
