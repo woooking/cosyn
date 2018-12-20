@@ -2,8 +2,8 @@ package com.github.woooking.cosyn.knowledge_graph
 
 import com.github.javaparser.ast.AccessSpecifier
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
-import com.github.woooking.cosyn.pattern.Context
-import com.github.woooking.cosyn.pattern.model.ty.{ArrayType, BasicType, Type}
+import com.github.woooking.cosyn.code.Context
+import com.github.woooking.cosyn.code.model.ty.{ArrayType, BasicType, Type}
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.{Session, SessionFactory}
 
