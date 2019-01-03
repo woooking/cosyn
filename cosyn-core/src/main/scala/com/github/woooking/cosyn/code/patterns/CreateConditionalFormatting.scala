@@ -2,67 +2,67 @@ package com.github.woooking.cosyn.code.patterns
 
 import com.github.woooking.cosyn.code.Pattern
 import com.github.woooking.cosyn.code.model.expr._
-import com.github.woooking.cosyn.code.model.expr.NameExpr._
 import com.github.woooking.cosyn.code.model.ty.{ArrayType, BasicType}
 import com.github.woooking.cosyn.code.model.CodeBuilder._
+import com.github.woooking.cosyn.code.model.HoleExpr
 
 object CreateConditionalFormatting {
     val holes = Seq.fill(7)(HoleExpr())
     val stmt = block(
-        VariableDeclaration(
+        v(
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "sheetCF",
-            MethodCallExpr(
+            call(
                 holes(0),
                 "org.apache.poi.ss.usermodel.Sheet",
                 "getSheetConditionalFormatting",
             )
         ),
-        VariableDeclaration(
+        v(
             "org.apache.poi.ss.usermodel.ConditionalFormattingRule",
             "rule",
-            MethodCallExpr(
+            call(
                 "sheetCF",
                 "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
                 "createConditionalFormattingRule",
-                MethodCallArgs(
+                arg(
                     "byte",
-                    StaticFieldAccessExpr(
+                    field(
                         "org.apache.poi.ss.usermodel.ComparisonOperator",
                         "byte",
                         holes(1)
                     ),
                 ),
-                MethodCallArgs(
+                arg(
                     "java.lang.String",
                     holes(2)
                 )
             )
         ),
-        VariableDeclaration(
+        v(
             "org.apache.poi.ss.usermodel.FontFormatting",
             "fontFmt",
-            MethodCallExpr(
+            call(
                 "rule",
                 "org.apache.poi.ss.usermodel.ConditionalFormattingRule",
                 "createFontFormatting",
             )
         ),
-        MethodCallExpr(
+        call(
             "fontFmt",
             "org.apache.poi.ss.usermodel.FontFormatting",
             "setFontStyle",
-            MethodCallArgs("boolean", holes(3)),
-            MethodCallArgs("boolean", holes(4)),
+            arg("boolean", holes(3)),
+            arg("boolean", holes(4)),
         ),
-        MethodCallExpr(
+        call(
             "fontFmt",
             "org.apache.poi.ss.usermodel.FontFormatting",
             "setFontColorIndex",
-            MethodCallArgs(
+            arg(
                 "short",
-                MethodCallExpr(
-                    EnumConstantExpr(
+                call(
+                    enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
                         holes(5)
                     ),
@@ -71,7 +71,7 @@ object CreateConditionalFormatting {
                 )
             ),
         ),
-        MethodCallExpr(
+        call(
             "sheetCF",
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "addConditionalFormatting",

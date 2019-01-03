@@ -1,33 +1,29 @@
 package com.github.woooking.cosyn.code.patterns
 
 import com.github.woooking.cosyn.code.Pattern
-import com.github.woooking.cosyn.code.model.expr._
-import com.github.woooking.cosyn.code.model.stmt.ExprStmt._
-import com.github.woooking.cosyn.code.model.expr.NameExpr._
-import com.github.woooking.cosyn.code.model.expr.MethodCallExpr
-import com.github.woooking.cosyn.code.model.stmt.BlockStmt
 import com.github.woooking.cosyn.code.model.CodeBuilder._
+import com.github.woooking.cosyn.code.model.{BlockStmt, HoleExpr}
 
 object FillCellColor {
-    val holes = Seq.fill(3)(HoleExpr())
-    val stmt = block(
-        VariableDeclaration(
+    val holes: Seq[HoleExpr] = Seq.fill(3)(HoleExpr())
+    val stmt: BlockStmt = block(
+        v(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
-            MethodCallExpr(
-                holes(0),
+            call(
+                holes.head,
                 "org.apache.poi.ss.usermodel.Workbook",
                 "createCellStyle",
             )
         ),
-        MethodCallExpr(
+        call(
             "style",
             "org.apache.poi.ss.usermodel.CellStyle",
             "setFillForegroundColor",
-            MethodCallArgs(
+            arg(
                 "short",
-                MethodCallExpr(
-                    EnumConstantExpr(
+                call(
+                    enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
                         holes(1)
                     ),
@@ -36,23 +32,23 @@ object FillCellColor {
                 )
             ),
         ),
-        MethodCallExpr(
+        call(
             "style",
             "org.apache.poi.ss.usermodel.CellStyle",
             "setFillPattern",
-            MethodCallArgs(
+            arg(
                 "org.apache.poi.ss.usermodel.FillPatternType",
-                EnumConstantExpr(
+                enum(
                     "org.apache.poi.ss.usermodel.FillPatternType",
                     "SOLID_FOREGROUND",
                 ),
             )
         ),
-        MethodCallExpr(
+        call(
             holes(2),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle",
-            MethodCallArgs(
+            arg(
                 "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
                 "style",
             )

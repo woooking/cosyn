@@ -1,8 +1,8 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
-import com.github.woooking.cosyn.code.{Context, HoleResolver, PrimitiveQA, QA}
+import com.github.woooking.cosyn.code.{Context, HoleResolver, PrimitiveQuestion, Question}
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.code.model.expr.{HoleExpr, MethodCallExpr}
+import com.github.woooking.cosyn.code.model.expr.HoleExpr
 import com.github.woooking.cosyn.code.model.stmt.BlockStmt
 import com.github.woooking.cosyn.code.model.ty.Type.PrimitiveOrString
 
@@ -18,7 +18,7 @@ class ArgumentHoleResolver extends HoleResolver {
 
     private case object OtherType extends MethodType
 
-    override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[QA] = {
+    override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[Question] = {
         hole.parent match {
             case p: MethodCallExpr =>
                 p.args.indexWhere(_.value == hole) match {
@@ -27,7 +27,7 @@ class ArgumentHoleResolver extends HoleResolver {
                         val vars = context.findVariables(arg.ty)
                         arg.ty match {
                             case PrimitiveOrString(ty) =>
-                                Some(PrimitiveQA(
+                                Some(PrimitiveQuestion(
                                     KnowledgeGraph.getMethodJavadoc(p.getQualifiedSignature).map(JavadocUtil.extractParamInfoFromJavadoc(index)),
                                     ty
                                 ))

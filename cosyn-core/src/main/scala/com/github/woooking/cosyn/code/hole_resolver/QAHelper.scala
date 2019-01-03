@@ -20,7 +20,7 @@ object QAHelper {
 
     private final case object OtherType extends MethodCategory(_ => "Unknown")
 
-    def choiceQAForType(context: Context, ty: Type): QA = {
+    def choiceQAForType(context: Context, ty: Type): Question = {
         ty match {
             case bt @ BasicType(t) =>
                 val vars = context.findVariables(bt)
@@ -46,7 +46,7 @@ object QAHelper {
                 }
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
-                ChoiceQA(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
+                ChoiceQuestion(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
             case at @ ArrayType(BasicType(t)) =>
                 ???
             case _ =>

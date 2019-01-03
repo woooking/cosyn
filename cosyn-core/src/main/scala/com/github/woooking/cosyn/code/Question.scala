@@ -1,28 +1,28 @@
 package com.github.woooking.cosyn.code
 
+import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.code.model.expr._
 import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 
-sealed trait QA {
-    def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]]
+sealed trait Question {
+    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]]
 }
 
-case class ChoiceQA(question: String, choices: Seq[Choice]) extends QA {
+case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Question {
     override def toString: String = {
         val choiceString = choices.zipWithIndex.map(p => s"#${p._2 + 1}. ${p._1}").mkString("\n")
         s"$question\n$choiceString"
     }
 
-    override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
         val pattern = """#(\d)+""".r
         pattern.findFirstMatchIn(input) match {
             case None =>
                 println("Error Format!")
                 Left(this)
             case Some(m) =>
-                choices(m.group(1).toInt - 1).action(context, hole) match {
+                choices(m.group(1).toInt - 1).action(context, pattern, hole) match {
                     case NewQA(qa) => Left(qa)
                     case Resolved(newHoles) => Right(newHoles)
                     case UnImplemented =>
@@ -33,17 +33,17 @@ case class ChoiceQA(question: String, choices: Seq[Choice]) extends QA {
     }
 }
 
-case class EnumConstantQA(ty: BasicType) extends QA {
+case class EnumConstantQuestion(ty: BasicType) extends Question {
     override def toString: String = {
         val simpleName = CodeUtil.qualifiedClassName2Simple(ty.ty).toLowerCase
         s"Which $simpleName?"
     }
 
-    override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
         val constants = KnowledgeGraph.enumConstants(ty)
         constants.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                hole.fill = NameExpr(c)
+                hole.fill = c
                 Right(Seq())
             case None =>
                 println(s"Could not understand $input!")
@@ -53,16 +53,16 @@ case class EnumConstantQA(ty: BasicType) extends QA {
     }
 }
 
-case class StaticFieldAccessQA(receiverType: BasicType, targetType: Type) extends QA {
+case class StaticFieldAccessQuestion(receiverType: BasicType, targetType: Type) extends Question {
     override def toString: String = {
         s"Which field?"
     }
 
-    override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
         val fields = KnowledgeGraph.staticFields(receiverType, targetType)
         fields.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                hole.fill = NameExpr(c)
+                hole.fill = c
                 Right(Seq())
             case None =>
                 println(s"Could not understand $input!")
@@ -72,7 +72,7 @@ case class StaticFieldAccessQA(receiverType: BasicType, targetType: Type) extend
     }
 }
 
-case class PrimitiveQA(hint: Option[String], ty: String) extends QA {
+case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question {
     override def toString: String = hint match {
         case Some(h) if ty == "java.lang.String" => s"Please input $h:"
         case Some(h) => s"Please input a $ty($h):"
@@ -80,7 +80,7 @@ case class PrimitiveQA(hint: Option[String], ty: String) extends QA {
         case None => s"Please input a $ty:"
     }
 
-    override def processInput(context: Context, hole: HoleExpr, input: String): Either[QA, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
         try {
             ty match {
                 case "boolean" =>
