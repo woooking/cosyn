@@ -1,43 +1,41 @@
 package com.github.woooking.cosyn.qa
 
-import akka.actor.{ActorRef, FSM, Terminated}
-import akka.util
+import akka.actor.Scheduler
+import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
-import com.github.woooking.cosyn.code.{Context, Pattern, Question}
-import com.github.woooking.cosyn.qa.QAServer.{Running, State}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-
-class QAServer extends FSM[State, (Long, Map[Long, ActorRef])] {
-    import akka.pattern.{ask, pipe}
-    implicit val timeout: util.Timeout = Timeout(1 minute)
-    implicit val ec: ExecutionContext = context.dispatcher
-
-    startWith(Running, 0L -> Map())
-
-    when(Running) {
-        case Event(m: StartSession, (next, mapping)) =>
-            val session = context.actorOf(QASession.props(self), next.toString)
-            val result = for {
-                (ctx, pattern, question) <- (session ? m).mapTo[(Context, Pattern, Question)]
-            } yield (ctx, pattern, next, question)
-            result pipeTo sender()
-            stay using (next + 1, mapping + (next -> session))
-        case Event(m @ Answer(sessionId, _), (_, mapping)) =>
-            val session = mapping(sessionId)
-            (session ? m) pipeTo sender()
-            stay
-        case Event(Terminated(a), (next, mapping)) =>
-            val id = a.path.name.toLong
-            stay using (next, mapping - id)
-    }
-
-    initialize()
-}
+import scala.util.{Failure, Success}
 
 object QAServer {
-    sealed trait State
-    case object Running extends State
+    implicit val timeout: Timeout = 1 minute
 
+    def running(next: Long, mapping: Map[Long, ActorRef[QASessionMessage]]): Behavior[QAServerMessage] = Behaviors.receive { (context, message) =>
+        implicit val schedular: Scheduler = context.system.scheduler
+
+        message match {
+            case StartSessionRequest(ref, reqCtx, description) =>
+                val session = context.spawn(QASession.initializing, next.toString)
+                context.watchWith(session, SessionEnded(next))
+                session ? ((r: ActorRef[NextQuestion]) => Start(r, reqCtx, description)) onComplete {
+                    case Success(QuestionFromSession(ctx, pattern, q)) => ref ! StartSessionResponseWithQuestion(next, ctx, pattern, q)
+                    case Success(Finished) => ref ! Finished
+                    case Failure(_) => ref ! Finished
+                }
+                running(next + 1, mapping + (next -> session))
+            case AnswerRequest(ref, sessionId, answer) =>
+                val session = mapping(sessionId)
+                session ? ((r: ActorRef[NextQuestion]) => ProcessAnswer(r, answer)) onComplete {
+                    case Success(m: NextQuestion) => ref ! m
+                    case Failure(_) => ref ! Finished
+                }
+                Behaviors.same
+            case SessionEnded(id) =>
+                running(next, mapping - id)
+        }
+    }
 }
+
