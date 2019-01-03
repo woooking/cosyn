@@ -18,7 +18,3 @@ case class BlockStmt(var statements: Seq[Statement]) extends Statement {
 
     override def children: Seq[Node] = statements
 }
-
-object BlockStmt {
-    def of(statements: Statement*): BlockStmt = new BlockStmt(statements.toSeq)
-}

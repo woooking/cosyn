@@ -3,13 +3,12 @@ package com.github.woooking.cosyn.code.patterns
 import com.github.woooking.cosyn.code.Pattern
 import com.github.woooking.cosyn.code.model.expr._
 import com.github.woooking.cosyn.code.model.expr.NameExpr._
-import com.github.woooking.cosyn.code.model.stmt.BlockStmt
-import com.github.woooking.cosyn.code.model.stmt.ExprStmt._
 import com.github.woooking.cosyn.code.model.ty.{ArrayType, BasicType}
+import com.github.woooking.cosyn.code.model.CodeBuilder._
 
 object CreateConditionalFormatting {
     val holes = Seq.fill(7)(HoleExpr())
-    val stmt = BlockStmt.of(
+    val stmt = block(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "sheetCF",

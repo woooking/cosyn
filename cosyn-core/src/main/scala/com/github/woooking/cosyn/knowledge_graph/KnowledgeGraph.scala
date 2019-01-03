@@ -81,9 +81,11 @@ object KnowledgeGraph {
 
     }
 
-    private def isAccessible(context: Context, methodEntity: MethodEntity): Boolean = {
+    private def isAccessible(context: Context, entity: MethodEntity): Boolean = {
+        val methodEntity = session.load(classOf[MethodEntity], entity.getQualifiedSignature)
         // TODO: 考虑继承和protected
-        methodEntity.getAccessSpecifier == AccessSpecifier.PUBLIC
+        methodEntity.getAccessSpecifier == AccessSpecifier.PUBLIC ||
+            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == AccessSpecifier.DEFAULT
     }
 
     private def producers(context: Context, typeEntity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {

@@ -2,12 +2,11 @@ package com.github.woooking.cosyn.code.patterns
 
 import com.github.woooking.cosyn.code.Pattern
 import com.github.woooking.cosyn.code.model.expr._
-import com.github.woooking.cosyn.code.model.stmt.ExprStmt._
-import com.github.woooking.cosyn.code.model.stmt.BlockStmt
+import com.github.woooking.cosyn.code.model.CodeBuilder._
 
 object CreateHyperlink {
     val holes = Seq.fill(4)(HoleExpr())
-    val stmt = BlockStmt.of(
+    val stmt = block(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CreationHelper",
             "creationHelper",

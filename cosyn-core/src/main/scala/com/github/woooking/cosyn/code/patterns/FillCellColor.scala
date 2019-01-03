@@ -6,10 +6,11 @@ import com.github.woooking.cosyn.code.model.stmt.ExprStmt._
 import com.github.woooking.cosyn.code.model.expr.NameExpr._
 import com.github.woooking.cosyn.code.model.expr.MethodCallExpr
 import com.github.woooking.cosyn.code.model.stmt.BlockStmt
+import com.github.woooking.cosyn.code.model.CodeBuilder._
 
 object FillCellColor {
     val holes = Seq.fill(3)(HoleExpr())
-    val stmt = BlockStmt.of(
+    val stmt = block(
         VariableDeclaration(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",

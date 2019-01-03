@@ -10,10 +10,3 @@ case class ExprStmt(expr: Expression) extends Statement {
     override def children: Seq[Node] = Seq(expr)
 }
 
-object ExprStmt {
-    implicit def expr2stmt(expr: Expression): ExprStmt = ExprStmt(expr)
-
-    def apply(expr: Expression): ExprStmt = new ExprStmt(expr)
-}
-
-

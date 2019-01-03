@@ -41,7 +41,13 @@ object CodeUtil {
     def methodParams(signature: String): Seq[Type] = {
         val pattern = """.*\(([a-zA-Z., ]*)\)""".r
         pattern.findFirstMatchIn(signature) match {
-            case Some(m) => m.group(1).split(", ").map(Type.fromString)
+            case Some(m) =>
+                val g = m.group(1)
+                if (g != "") {
+                    g.split(", ").map(Type.fromString)
+                } else {
+                    Seq()
+                }
             case None => Seq()
         }
     }

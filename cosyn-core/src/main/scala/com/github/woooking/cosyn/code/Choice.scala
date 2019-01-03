@@ -3,12 +3,12 @@ package com.github.woooking.cosyn.code
 import com.github.woooking.cosyn.code.hole_resolver.QAHelper
 import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.code.model.ASTUtil
+import com.github.woooking.cosyn.code.model.{ASTUtil, CodeBuilder}
 import com.github.woooking.cosyn.code.model.expr._
 import com.github.woooking.cosyn.code.model.stmt.{BlockStmt, ForEachStmt}
 import com.github.woooking.cosyn.util.CodeUtil
-import com.github.woooking.cosyn.code.model.stmt.ExprStmt._
 import com.github.woooking.cosyn.code.model.ty.BasicType
+import CodeBuilder._
 
 sealed trait ChoiceResult
 
@@ -39,7 +39,13 @@ case class MethodCategoryChoice(ty: BasicType, category: QAHelper.MethodCategory
 }
 
 case class MethodChoice(method: MethodEntity) extends Choice {
-    override def toString: String = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
+    override def toString: String = {
+        val javadoc = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
+        s"""
+          |${method.getQualifiedSignature}
+          |$javadoc
+        """.stripMargin
+    }
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = method match {
         case _ if method.isConstructor =>
@@ -52,6 +58,7 @@ case class MethodChoice(method: MethodEntity) extends Choice {
         case _ =>
             val receiverType = method.getDeclareType.getQualifiedName
             val receiver = HoleExpr()
+            println(CodeUtil.methodParams(method.getSignature))
             val args = CodeUtil.methodParams(method.getSignature).map(ty => MethodCallArgs(ty, HoleExpr()))
             hole.fill = MethodCallExpr(receiver, receiverType, method.getSimpleName, args: _*)
             Resolved(args.map(_.value.asInstanceOf[HoleExpr]) :+ receiver)
@@ -69,13 +76,13 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
             case Nil =>
                 val iterableName = outer.getSimpleName.toLowerCase()
                 val varName = inner.getSimpleName.toLowerCase()
-                val forEachStmt = ForEachStmt(inner.getQualifiedName, varName, NameExpr(iterableName), BlockStmt.of(ASTUtil.getParentStmt(hole)))
+                val forEachStmt = ForEachStmt(inner.getQualifiedName, varName, NameExpr(iterableName), block(ASTUtil.getParentStmt(hole)))
                 hole.fill = NameExpr(varName)
                 (forEachStmt, iterableName)
             case head :: tail =>
                 val (innerForEach, innerName) = buildForEachStmt(context, hole, inner, head, tail)
                 val iterableName = outer.getSimpleName.toLowerCase()
-                val forEachStmt = ForEachStmt(inner.getQualifiedName, innerName, NameExpr(iterableName), BlockStmt.of(innerForEach))
+                val forEachStmt = ForEachStmt(inner.getQualifiedName, innerName, NameExpr(iterableName), block(innerForEach))
                 (forEachStmt, iterableName)
         }
     }

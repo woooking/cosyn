@@ -21,9 +21,6 @@ case class ForEachStmt(ty: String, variable: String, iterable: Expression, block
     override def children: Seq[Node] = Seq(iterable, block)
 }
 
-object ForEachStmt {
-    def apply(ty: String, variable: String, iterable: Expression, block: BlockStmt): ForEachStmt = new ForEachStmt(ty, variable, iterable, block)
-}
 
 
 

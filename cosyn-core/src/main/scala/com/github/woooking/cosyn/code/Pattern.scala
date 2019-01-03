@@ -10,9 +10,7 @@ import com.github.woooking.cosyn.code.patterns.FillCellColor
 import scala.annotation.tailrec
 import scala.io.StdIn
 
-case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
-
-}
+case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr])
 
 object Pattern {
     val resolver = CombineHoleResolver(
@@ -57,7 +55,8 @@ object Pattern {
     def main(args: Array[String]): Unit = {
         //        ---- case 1 ----
         val context = new Context(Seq("java.lang.Object"))
-        context.variables += "wb" -> BasicType("org.apache.poi.hssf.usermodel.HSSFWorkbook")
+//        context.variables += "wb" -> BasicType("org.apache.poi.hssf.usermodel.HSSFWorkbook")
+        context.variables += "sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")
         val pattern = FillCellColor.pattern
         //        ---- case 2 ----
         //        val context = new Context(Seq("java.lang.Object"))
