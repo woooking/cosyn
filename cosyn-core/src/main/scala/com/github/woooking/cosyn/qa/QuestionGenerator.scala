@@ -16,17 +16,17 @@ object QuestionGenerator {
     )
 
     @tailrec
-    private def generate(context: Context, pattern: Pattern, holes: List[HoleExpr]): Option[Question] = {
+    private def generate(context: Context, pattern: Pattern, holes: List[HoleExpr]): Option[(HoleExpr, Question)] = {
         holes match {
             case Nil => None
             case hole :: tails =>
                 resolver.resolve(pattern.stmts, hole, context) match {
-                    case q @ Some(_) => q
+                    case Some(q) => Some((hole, q))
                     case None => generate(context, pattern, tails)
                 }
         }
     }
 
-    def generate(context: Context, pattern: Pattern): Option[Question] = generate(context, pattern, pattern.holes.toList)
+    def generate(context: Context, pattern: Pattern): Option[(HoleExpr, Question)] = generate(context, pattern, pattern.holes.toList)
 
 }

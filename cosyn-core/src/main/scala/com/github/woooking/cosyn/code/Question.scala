@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 
 sealed trait Question {
-    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]]
+    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, (Context, Pattern)]
 }
 
 case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Question {

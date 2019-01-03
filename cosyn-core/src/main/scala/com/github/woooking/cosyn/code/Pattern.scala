@@ -31,24 +31,6 @@ object Pattern {
         }
     }
 
-    @tailrec
-    def qa(context: Context, pattern: Pattern): Pattern = {
-        if (Config.printCodeEachStep) {
-            println("-----")
-            println(pattern.stmts.generateCode(""))
-            println("-----")
-        }
-        pattern.holes.toList match {
-            case Nil => pattern
-            case hole :: tails =>
-                resolver.resolve(FillCellColor.pattern.stmts, hole, context) match {
-                    case Some(q) =>
-                        val newHoles = processQA(context, hole, q)
-                        qa(context, Pattern(pattern.stmts, newHoles ++ tails))
-                    case None => ???
-                }
-        }
-    }
 
     def main(args: Array[String]): Unit = {
         //        ---- case 1 ----

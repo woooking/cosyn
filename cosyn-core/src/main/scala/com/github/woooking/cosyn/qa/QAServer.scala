@@ -1,12 +1,12 @@
 package com.github.woooking.cosyn.qa
 
-import akka.actor.{ActorRef, FSM}
+import akka.actor.{ActorRef, FSM, Terminated}
 import akka.util
 import akka.util.Timeout
 import com.github.woooking.cosyn.code.{Context, Pattern, Question}
 import com.github.woooking.cosyn.qa.QAServer.{Running, State}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class QAServer extends FSM[State, (Long, Map[Long, ActorRef])] {
@@ -18,7 +18,7 @@ class QAServer extends FSM[State, (Long, Map[Long, ActorRef])] {
 
     when(Running) {
         case Event(m: StartSession, (next, mapping)) =>
-            val session = context.actorOf(QASession.props(self))
+            val session = context.actorOf(QASession.props(self), next.toString)
             val result = for {
                 (ctx, pattern, question) <- (session ? m).mapTo[(Context, Pattern, Question)]
             } yield (ctx, pattern, next, question)
@@ -28,6 +28,9 @@ class QAServer extends FSM[State, (Long, Map[Long, ActorRef])] {
             val session = mapping(sessionId)
             (session ? m) pipeTo sender()
             stay
+        case Event(Terminated(a), (next, mapping)) =>
+            val id = a.path.name.toLong
+            stay using (next, mapping - id)
     }
 
     initialize()
