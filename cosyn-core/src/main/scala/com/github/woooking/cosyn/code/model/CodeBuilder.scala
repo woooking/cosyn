@@ -13,8 +13,7 @@ trait CodeBuilder {
 
     def arg(ty: Type, value: Expression): MethodCallArgs = MethodCallArgs(ty, value)
 
-    def call(receiver: Expression, receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr =
-        new MethodCallExpr(Some(receiver), receiverType, simpleName, args)
+    def call(receiver: Expression, receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr = MethodCallExpr(Some(receiver), receiverType, simpleName, args)
 
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 

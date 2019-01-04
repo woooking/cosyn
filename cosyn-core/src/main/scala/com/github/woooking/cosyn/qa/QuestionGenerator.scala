@@ -20,7 +20,7 @@ object QuestionGenerator {
         holes match {
             case Nil => None
             case hole :: tails =>
-                resolver.resolve(pattern.stmts, hole, context) match {
+                resolver.resolve(pattern, hole, context) match {
                     case Some(q) => Some((hole, q))
                     case None => generate(context, pattern, tails)
                 }

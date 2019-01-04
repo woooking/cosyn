@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.qa
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
+import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.code.model.HoleExpr
 import com.github.woooking.cosyn.code.{Context, Pattern, Question}
 
@@ -10,40 +11,57 @@ object QASession {
     val initializing: Behavior[QASessionMessage] = Behaviors.receiveMessagePartial { case Start(ref, ctx, description) =>
         val pattern = Pattern.patterns(description)
         val newCtx = ctx.update(pattern)
-        question(ref, SessionData(newCtx, pattern, Nil))
+        generate(ref, QuestionData(newCtx, pattern, Nil))
     }
 
-    def question(ref: ActorRef[QuestionFromSession], data: SessionData): Behavior[QASessionMessage] = data match {
-        case SessionData(ctx, pattern, history) => Behaviors.setup { _ =>
+    def generate(ref: ActorRef[StartResponse with ProcessAnswerResponse], data: QuestionData): Behavior[QASessionMessage] = data match {
+        case QuestionData(ctx, pattern, history) => Behaviors.setup { _ =>
             QuestionGenerator.generate(ctx, pattern) match {
                 case Some((hole, q)) =>
                     ref ! QuestionFromSession(ctx, pattern, q)
-                    waiting(SessionData(ctx, pattern, (hole, q, ctx, pattern) :: history))
+                    waiting(WaitingData(ctx, pattern, hole, q, history))
                 case None =>
+                    ref ! Finished
                     Behaviors.stopped
             }
         }
     }
 
-    def waiting(data: SessionData): Behavior[QASessionMessage] = {
-        val history = data.history
-        history.head match {
-            case (hole, question, ctx, pattern) => Behaviors.receiveMessagePartial { case ProcessAnswer(ref, input) =>
-                val behavior: Behavior[QASessionMessage] = question.processInput(ctx, pattern, hole, input) match {
-                    case Right((newCtx, newPattern)) =>
-                        question(ref, SessionData(newCtx, newPattern, history))
-                    case Left(q) =>
-                        ref ! QuestionFromSession(ctx, pattern, q)
-                        waiting(SessionData(ctx, pattern, (hole, q, ctx, pattern) :: history))
-                }
-                behavior
+    def waiting(data: WaitingData): Behavior[QASessionMessage] = data match {
+        case WaitingData(ctx, pattern, hole, question, history) =>
+            Behaviors.receiveMessagePartial {
+                case ProcessAnswer(ref, input) =>
+                    question.processInput(ctx, pattern, hole, input) match {
+                        case Filled(newCtx, newPattern) =>
+                            generate(ref, QuestionData(newCtx, newPattern, (ctx, pattern, hole, question) :: history))
+                        case NewQuestion(q) =>
+                            ref ! QuestionFromSession(ctx, pattern, q)
+                            waiting(WaitingData(ctx, pattern, hole, q, (ctx, pattern, hole, question) :: history))
+                        case ErrorInput(message) =>
+                            ref ! ErrorAnswer(ctx, pattern, question, message)
+                            Behaviors.same
+                    }
+                case ProcessUndo(ref) =>
+                    history match {
+                        case (lastCtx, lastPattern, lastHole, lastQuestion) :: rest =>
+                            ref ! QuestionFromSession(lastCtx, lastPattern, lastQuestion)
+                            waiting(WaitingData(lastCtx, lastPattern, lastHole, lastQuestion, rest))
+                        case Nil =>
+                            ref ! CannotUndo
+                            Behaviors.same
+                    }
             }
-        }
     }
 
-    case class SessionData(context: Context,
+    case class QuestionData(context: Context,
+                            pattern: Pattern,
+                            history: List[(Context, Pattern, HoleExpr, Question)])
+
+    case class WaitingData(context: Context,
                            pattern: Pattern,
-                           history: List[(HoleExpr, Question, Context, Pattern)])
+                           hole: HoleExpr,
+                           question: Question,
+                           history: List[(Context, Pattern, HoleExpr, Question)])
 
 }
 

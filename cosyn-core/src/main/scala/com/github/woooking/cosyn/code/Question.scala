@@ -1,12 +1,26 @@
 package com.github.woooking.cosyn.code
 
+import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion, Result}
 import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
+import CodeBuilder._
 
 sealed trait Question {
-    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, (Context, Pattern)]
+    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result
+}
+
+object Question {
+
+    sealed trait Result
+
+    final case class ErrorInput(message: String) extends Result
+
+    final case class NewQuestion(question: Question) extends Result
+
+    final case class Filled(context: Context, pattern: Pattern) extends Result
+
 }
 
 case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Question {
@@ -15,19 +29,17 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
         s"$question\n$choiceString"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
-        val pattern = """#(\d)+""".r
-        pattern.findFirstMatchIn(input) match {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
+        val regex = """#(\d)+""".r
+        regex.findFirstMatchIn(input) match {
             case None =>
-                println("Error Format!")
-                Left(this)
+                ErrorInput("Error Format!")
             case Some(m) =>
                 choices(m.group(1).toInt - 1).action(context, pattern, hole) match {
-                    case NewQA(qa) => Left(qa)
-                    case Resolved(newHoles) => Right(newHoles)
+                    case NewQA(qa) => NewQuestion(qa)
+                    case Resolved(newContext, newPattern) => Filled(newContext, newPattern)
                     case UnImplemented =>
-                        println("Not Implemented! Please try other choices.")
-                        Left(this)
+                        ErrorInput("Not Implemented! Please try other choices.")
                 }
         }
     }
@@ -39,16 +51,13 @@ case class EnumConstantQuestion(ty: BasicType) extends Question {
         s"Which $simpleName?"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
         val constants = KnowledgeGraph.enumConstants(ty)
         constants.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                hole.fill = c
-                Right(Seq())
+                Filled(context, pattern.fillHole(hole, c))
             case None =>
-                println(s"Could not understand $input!")
-                println(s"Valid inputs are ${constants.map(_.toLowerCase).mkString("/")}.")
-                Left(this)
+                ErrorInput(s"Valid inputs are ${constants.map(_.toLowerCase).mkString("/")}.")
         }
     }
 }
@@ -58,16 +67,13 @@ case class StaticFieldAccessQuestion(receiverType: BasicType, targetType: Type) 
         s"Which field?"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
         val fields = KnowledgeGraph.staticFields(receiverType, targetType)
         fields.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                hole.fill = c
-                Right(Seq())
+                Filled(context, pattern.fillHole(hole, c))
             case None =>
-                println(s"Could not understand $input!")
-                println(s"Valid inputs are ${fields.map(_.toLowerCase).mkString("/")}.")
-                Left(this)
+                ErrorInput(s"Valid inputs are ${fields.map(_.toLowerCase).mkString("/")}.")
         }
     }
 }
@@ -80,42 +86,23 @@ case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question 
         case None => s"Please input a $ty:"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Either[Question, Seq[HoleExpr]] = {
+    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
         try {
-            ty match {
-                case "boolean" =>
-                    hole.fill = BooleanLiteral(input.toBoolean)
-                    Right(Seq())
-                case "byte" =>
-                    hole.fill = ByteLiteral(input.toByte)
-                    Right(Seq())
-                case "short" =>
-                    hole.fill = ShortLiteral(input.toShort)
-                    Right(Seq())
-                case "int" =>
-                    hole.fill = IntLiteral(input.toInt)
-                    Right(Seq())
-                case "long" =>
-                    hole.fill = LongLiteral(input.toLong)
-                    Right(Seq())
-                case "float" =>
-                    hole.fill = FloatLiteral(input.toFloat)
-                    Right(Seq())
-                case "double" =>
-                    hole.fill = DoubleLiteral(input.toDouble)
-                    Right(Seq())
-                case "char" =>
-                    hole.fill = CharLiteral(input(0))
-                    Right(Seq())
-                case "java.lang.String" =>
-                    hole.fill = StringLiteral(input)
-                    Right(Seq())
+            val expr = ty match {
+                case "boolean" => BooleanLiteral(input.toBoolean)
+                case "byte" => ByteLiteral(input.toByte)
+                case "short" => ShortLiteral(input.toShort)
+                case "int" => IntLiteral(input.toInt)
+                case "long" => LongLiteral(input.toLong)
+                case "float" => FloatLiteral(input.toFloat)
+                case "double" => DoubleLiteral(input.toDouble)
+                case "char" => CharLiteral(input(0))
+                case "java.lang.String" => StringLiteral(input)
             }
+            Filled(context, pattern.fillHole(hole, expr))
         } catch {
             case _: NumberFormatException =>
-                println("Error Format!")
-                Left(this)
+                ErrorInput("Error Format!")
         }
-
     }
 }

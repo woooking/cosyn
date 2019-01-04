@@ -13,7 +13,8 @@ case class Context(variables: Seq[(String, Type)], extendedTypes: Seq[String]) {
     }
 
     def update(pattern: Pattern): Context = {
-        val decls = new ASTCollector().collect[VariableDeclaration](pattern.stmts)
-        decls.foreach(decl => variables += decl.name -> decl.ty)
+        ???
+//        val decls = new ASTCollector().collect[VariableDeclaration](pattern.stmts)
+//        decls.foreach(decl => variables += decl.name -> decl.ty)
     }
 }

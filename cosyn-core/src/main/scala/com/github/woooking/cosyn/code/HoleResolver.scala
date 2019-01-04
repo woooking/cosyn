@@ -1,9 +1,9 @@
 package com.github.woooking.cosyn.code
 
-import com.github.woooking.cosyn.code.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.code.model.HoleExpr
 
 trait HoleResolver {
-    def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[Question]
+    def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question]
 }
 
 

@@ -1,15 +1,14 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
 import com.github.woooking.cosyn.code._
+import com.github.woooking.cosyn.code.model.{HoleExpr, MethodCallExpr}
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.code.model.expr.HoleExpr
-import com.github.woooking.cosyn.code.model.stmt.BlockStmt
 import com.github.woooking.cosyn.code.model.ty.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
 class ReceiverHoleResolver extends HoleResolver {
-    override def resolve(ast: BlockStmt, hole: HoleExpr, context: Context): Option[Question] = {
-        hole.parent match {
+    override def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question] = {
+        pattern.parentOf(hole) match {
             case p: MethodCallExpr if p.receiver.contains(hole) =>
                 val rawPaths = KnowledgeGraph.getIterablePaths(p.receiverType)
                 val paths = rawPaths.filter(p => !rawPaths.exists(p2 => p.head.getExtendedTypes.contains(p2.head)))

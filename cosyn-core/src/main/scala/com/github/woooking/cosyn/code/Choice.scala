@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.code
 import com.github.woooking.cosyn.code.hole_resolver.QAHelper
 import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.code.model.{ASTUtil, CodeBuilder, ForEachStmt, HoleExpr}
+import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.util.CodeUtil
 import com.github.woooking.cosyn.code.model.ty.BasicType
 import CodeBuilder._
@@ -12,7 +12,7 @@ sealed trait ChoiceResult
 
 case class NewQA(qa: Question) extends ChoiceResult
 
-case class Resolved(newPattern: Pattern, newHoles: Seq[HoleExpr]) extends ChoiceResult
+case class Resolved(newContext: Context, newPattern: Pattern) extends ChoiceResult
 
 case object UnImplemented extends ChoiceResult
 
@@ -24,7 +24,7 @@ case class VariableChoice(name: String) extends Choice {
     override def toString: String = name
 
     override def action(context: Context, pattern: Pattern, hole: HoleExpr): ChoiceResult = {
-        Resolved(pattern.fillHole(hole, name), Seq())
+        Resolved(context, pattern.fillHole(hole, name))
     }
 }
 
@@ -51,14 +51,14 @@ case class MethodChoice(method: MethodEntity) extends Choice {
             val receiverType = method.getDeclareType.getQualifiedName
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, HoleExpr()))
             val newPattern = pattern.fillHole(hole, call(CodeUtil.qualifiedClassName2Simple(receiverType), receiverType, method.getSimpleName, args: _*))
-            Resolved(newPattern, args.map(_.value.asInstanceOf[HoleExpr]))
+            Resolved(context, newPattern)
         case _ =>
             val receiverType = method.getDeclareType.getQualifiedName
             val receiver = HoleExpr()
             println(CodeUtil.methodParams(method.getSignature))
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, HoleExpr()))
             val newPattern = pattern.fillHole(hole, call(receiver, receiverType, method.getSimpleName, args: _*))
-            Resolved(newPattern, args.map(_.value.asInstanceOf[HoleExpr]) :+ receiver)
+            Resolved(context, newPattern)
     }
 }
 
@@ -68,33 +68,33 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
         if (path.size == 1) s"A $requireObject" else s"Some ${requireObject}s in a ${path.head.getSimpleName.toLowerCase()}"
     }
 
-    private def buildForEachStmt(context: Context, hole: HoleExpr, outer: TypeEntity, inner: TypeEntity, remains: List[TypeEntity]): (ForEachStmt, String) = {
+    private def buildForEachStmt(context: Context, pattern: Pattern, hole: HoleExpr, outer: TypeEntity, inner: TypeEntity, remains: List[TypeEntity]): (ForEachStmt, String) = {
         remains match {
             case Nil =>
                 val iterableName = outer.getSimpleName.toLowerCase()
                 val varName = inner.getSimpleName.toLowerCase()
-                val forEachStmt = foreach(inner.getQualifiedName, varName, iterableName, block(ASTUtil.getParentStmt(hole)))
-                hole.fill = varName
+                val forEachStmt = foreach(inner.getQualifiedName, varName, iterableName, block(pattern.parentStmtOf(hole)))
+                pattern.fillHole(hole, varName)
                 (forEachStmt, iterableName)
             case head :: tail =>
-                val (innerForEach, innerName) = buildForEachStmt(context, hole, inner, head, tail)
+                val (innerForEach, innerName) = buildForEachStmt(context, pattern, hole, inner, head, tail)
                 val iterableName = outer.getSimpleName.toLowerCase()
                 val forEachStmt = ForEachStmt(inner.getQualifiedName, innerName, iterableName, block(innerForEach))
                 (forEachStmt, iterableName)
         }
     }
 
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = {
+    override def action(context: Context, pattern: Pattern, hole: HoleExpr): ChoiceResult = {
         if (path.size == 1) {
             NewQA(QAHelper.choiceQAForType(context, BasicType(path.head.getQualifiedName)))
         } else {
-            val stmt = ASTUtil.getParentStmt(hole)
-            val blockStmt = stmt.parent.asInstanceOf[BlockStmt]
+            val stmt = pattern.parentStmtOf(hole)
+            val blockStmt = pattern.parentOf(stmt).asInstanceOf[BlockStmt]
             val init = HoleExpr()
-            val (innerForEach, innerName) = buildForEachStmt(context, hole, path.head, path.tail.head, path.tail.tail)
+            val (innerForEach, innerName) = buildForEachStmt(context, pattern, hole, path.head, path.tail.head, path.tail.tail)
             val varDecl = v(path.head.getQualifiedName, innerName, init)
-            blockStmt.replace(stmt, varDecl, innerForEach)
-            Resolved(Seq(init))
+            // TODO: update context
+            Resolved(context, pattern.replaceStmtInBlock(blockStmt, stmt, varDecl, innerForEach))
         }
     }
 }

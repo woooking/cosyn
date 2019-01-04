@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.code.patterns
 
 import com.github.woooking.cosyn.code.Pattern
-import com.github.woooking.cosyn.code.model.expr._
 import com.github.woooking.cosyn.code.model.ty.{ArrayType, BasicType}
 import com.github.woooking.cosyn.code.model.CodeBuilder._
 import com.github.woooking.cosyn.code.model.HoleExpr
@@ -75,8 +74,8 @@ object CreateConditionalFormatting {
             "sheetCF",
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "addConditionalFormatting",
-            MethodCallArgs(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holes(6)),
-            MethodCallArgs("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
+            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holes(6)),
+            arg("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
         ),
     )
     val pattern = new Pattern(stmt, holes)
