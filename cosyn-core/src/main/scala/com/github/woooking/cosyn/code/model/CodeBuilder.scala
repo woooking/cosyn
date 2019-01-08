@@ -15,6 +15,8 @@ trait CodeBuilder {
 
     def call(receiver: Expression, receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr = MethodCallExpr(Some(receiver), receiverType, simpleName, args)
 
+    def create(receiverType: BasicType, args: MethodCallArgs*): ObjectCreationExpr = ObjectCreationExpr(receiverType, args)
+
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 
     def v(ty: Type, name: String): VariableDeclaration = VariableDeclaration(ty, name, None)

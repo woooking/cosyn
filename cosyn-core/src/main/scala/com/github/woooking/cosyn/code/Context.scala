@@ -1,9 +1,8 @@
 package com.github.woooking.cosyn.code
 
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.code.model.ty.Type
-
-import scala.collection.mutable
+import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 
 case class Context(variables: Seq[(String, Type)], extendedTypes: Seq[String]) {
     def findVariables(ty: Type): Seq[String] = {
@@ -13,8 +12,6 @@ case class Context(variables: Seq[(String, Type)], extendedTypes: Seq[String]) {
     }
 
     def update(pattern: Pattern): Context = {
-        ???
-//        val decls = new ASTCollector().collect[VariableDeclaration](pattern.stmts)
-//        decls.foreach(decl => variables += decl.name -> decl.ty)
+        this.copy(variables = variables ++ VariableCollector[BlockStmt].collect(pattern.stmts))
     }
 }

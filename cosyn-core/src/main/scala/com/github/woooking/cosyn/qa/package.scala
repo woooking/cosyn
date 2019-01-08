@@ -25,7 +25,7 @@ package qa {
 
     final case class Reply[T <: QAClientMessage](replyTo: ActorRef[T], message: T) extends QAServerMessage
 
-    
+
 
     // QA Client -> QA Server
 

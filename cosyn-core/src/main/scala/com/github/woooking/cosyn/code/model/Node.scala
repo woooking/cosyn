@@ -36,9 +36,9 @@ sealed case class ForEachStmt(ty: String, variable: String, iterable: Expression
 
 sealed trait Expression extends Node
 
-trait NameOrHole extends Expression
+sealed trait NameOrHole extends Expression
 
-sealed case class HoleExpr private(id: Int) extends Expression with NameOrHole
+sealed case class HoleExpr private(id: Int) extends NameOrHole
 
 sealed case class EnumConstantExpr(enumType: BasicType, name: NameOrHole) extends Expression {
     override def toString: String = s"${qualifiedClassName2Simple(enumType.ty)}.$name"
@@ -54,7 +54,11 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
     def getQualifiedSignature = s"$receiverType.$simpleName(${args.map(_.ty).mkString(", ")})"
 }
 
-sealed case class NameExpr(name: String) extends Expression with NameOrHole {
+sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
+    override def toString: String = s"new $receiverType(${args.mkString(", ")})"
+}
+
+sealed case class NameExpr(name: String) extends NameOrHole {
     override def toString: String = name
 }
 
