@@ -11,6 +11,8 @@ package qa {
 
     sealed trait QAClientMessage
 
+    final case class NewTask(context: Context, description: String) extends QAClientMessage
+
     sealed trait StartSessionResponse extends QAClientMessage
 
     final case class StartSessionResponseWithQuestion(sessionId: Long, context: Context, pattern: Pattern, question: Question) extends StartSessionResponse
@@ -23,9 +25,7 @@ package qa {
 
     sealed trait QAServerMessage
 
-    final case class Reply[T <: QAClientMessage](replyTo: ActorRef[T], message: T) extends QAServerMessage
-
-
+    final case class ReplyToClient[T <: QAClientMessage](replyTo: ActorRef[T], message: T) extends QAServerMessage
 
     // QA Client -> QA Server
 
@@ -58,17 +58,14 @@ package qa {
     //
 
     final case class QuestionFromSession(context: Context, pattern: Pattern, question: Question) extends StartResponse
-        with StartSessionResponse with ProcessAnswerResponse with ProcessUndoResponse with AnswerResponse with UndoResponse
+        with ProcessAnswerResponse with ProcessUndoResponse with AnswerResponse with UndoResponse
 
     final case class ErrorAnswer(context: Context, pattern: Pattern, question: Question, message: String) extends ProcessAnswerResponse with AnswerResponse
 
-    case object Finished extends StartResponse with StartSessionResponse with ProcessAnswerResponse with AnswerResponse
+    final case class Finished(context: Context, pattern: Pattern) extends StartResponse with StartSessionResponse with ProcessAnswerResponse with AnswerResponse
 
     case object CannotUndo extends ProcessUndoResponse with UndoResponse
 
-
-
-    sealed trait NextQuestion
-
+    final case class ErrorOccured(message: String) extends StartSessionResponse with AnswerResponse with UndoResponse with StartResponse with ProcessAnswerResponse
 
 }

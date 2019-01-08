@@ -1,14 +1,20 @@
 package com.github.woooking.cosyn.code
 
 import com.github.woooking.cosyn.code.model._
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.code.model.ty.BasicType
-import com.github.woooking.cosyn.code.patterns.FillCellColor
+import com.github.woooking.cosyn.code.patterns.{ChangeFontFamily, FillCellColor}
+
+import scala.annotation.tailrec
 
 case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
-    def parentOf(node: Node): Node = ???
+    private val parentMap = ParentCollector[BlockStmt].collect(null, stmts)
 
-    def parentStmtOf(node: Node): Statement = ???
+    def parentOf(node: Node): Node = parentMap(node)
+
+    @tailrec
+    final def parentStmtOf(node: Node): Statement = parentOf(node) match {
+        case s: Statement => s
+        case n => parentStmtOf(n)
+    }
 
     def replaceStmtInBlock(block: BlockStmt, oldStmt: Statement, newStmts: Statement*): Pattern = ???
 
@@ -19,24 +25,16 @@ case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
 
 object Pattern {
     val patterns = Map(
-        "fill cell color" -> FillCellColor.pattern
+        "fill cell color" -> FillCellColor.pattern,
+        "change font family" -> ChangeFontFamily.pattern,
     )
 
-    def main(args: Array[String]): Unit = {
-        //        ---- case 1 ----
-        val context = new Context(Seq("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), Seq("java.lang.Object"))
-//        context.variables += "wb" -> BasicType("org.apache.poi.hssf.usermodel.HSSFWorkbook")
-        val pattern = FillCellColor.pattern
-        //        ---- case 2 ----
-        //        val context = new Context(Seq("java.lang.Object"))
-        //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-        //        val pattern = CreateHyperlink.pattern
-        //         ---- case 3 ----
-        //        val context = new Context(Seq("java.lang.Object"))
-        //        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
-        //        val pattern = CreateConditionalFormatting.pattern
-
-        context.update(pattern)
-        KnowledgeGraph.close()
-    }
+    //        ---- case 2 ----
+    //        val context = new Context(Seq("java.lang.Object"))
+    //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
+    //        val pattern = CreateHyperlink.pattern
+    //         ---- case 3 ----
+    //        val context = new Context(Seq("java.lang.Object"))
+    //        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
+    //        val pattern = CreateConditionalFormatting.pattern
 }

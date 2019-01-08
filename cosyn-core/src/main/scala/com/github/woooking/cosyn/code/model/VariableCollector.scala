@@ -38,7 +38,7 @@ object VariableCollector {
             hInstance.value.collect(h) ++ tInstance.collect(t)
     }
 
-    implicit def cNilInstance: VC[CNil] = instance(_ => Nil)
+    implicit def cNilInstance: VC[CNil] = nil
 
     implicit def coproductInstance[H, T <: Coproduct](implicit hInstance: Lazy[VC[H]], tInstance: VC[T]): VC[H :+: T] = instance {
         case Inl(h) => hInstance.value.collect(h)
@@ -49,5 +49,3 @@ object VariableCollector {
         rInstance.value.collect(generic.to(value))
     }
 }
-
-

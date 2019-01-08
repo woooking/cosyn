@@ -8,6 +8,8 @@ import com.github.woooking.cosyn.util.CodeUtil
 import CodeBuilder._
 
 sealed trait Question {
+    def description: String
+
     def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result
 }
 
@@ -24,7 +26,7 @@ object Question {
 }
 
 case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Question {
-    override def toString: String = {
+    override def description: String = {
         val choiceString = choices.zipWithIndex.map(p => s"#${p._2 + 1}. ${p._1}").mkString("\n")
         s"$question\n$choiceString"
     }
@@ -46,7 +48,7 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
 }
 
 case class EnumConstantQuestion(ty: BasicType) extends Question {
-    override def toString: String = {
+    override def description: String = {
         val simpleName = CodeUtil.qualifiedClassName2Simple(ty.ty).toLowerCase
         s"Which $simpleName?"
     }
@@ -63,7 +65,7 @@ case class EnumConstantQuestion(ty: BasicType) extends Question {
 }
 
 case class StaticFieldAccessQuestion(receiverType: BasicType, targetType: Type) extends Question {
-    override def toString: String = {
+    override def description: String = {
         s"Which field?"
     }
 
@@ -79,7 +81,7 @@ case class StaticFieldAccessQuestion(receiverType: BasicType, targetType: Type) 
 }
 
 case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question {
-    override def toString: String = hint match {
+    override def description: String = hint match {
         case Some(h) if ty == "java.lang.String" => s"Please input $h:"
         case Some(h) => s"Please input a $ty($h):"
         case None if ty == "java.lang.String" => "Please input a string:"

@@ -19,31 +19,33 @@ object QAServer {
                 val session = context.spawn(QASession.initializing, next.toString)
                 context.watchWith(session, SessionEnded(next))
                 context.ask[Start, StartResponse](session)(r => Start(r, reqCtx, description)) {
-                    case Success(m: QuestionFromSession) => Reply(ref, m)
-                    case Success(m: Finished.type) => Reply(ref, m)
-                    case Failure(_) => Reply(ref, Finished)
+                    case Success(QuestionFromSession(ctx, pattern, question)) => ReplyToClient(ref, StartSessionResponseWithQuestion(next, ctx, pattern, question))
+                    case Success(m: Finished) => ReplyToClient(ref, m)
+                    case Success(m: ErrorOccured) => ReplyToClient(ref, m)
+                    case Failure(_) => ReplyToClient(ref, ErrorOccured("Error in server"))
                 }
                 running(next + 1, mapping + (next -> session))
             case Answer(ref, id, answer) =>
                 val session = mapping(id)
                 context.ask[ProcessAnswer, ProcessAnswerResponse](session)(r => ProcessAnswer(r, answer)) {
-                    case Success(m: QuestionFromSession) => Reply(ref, m)
-                    case Success(m: ErrorAnswer) => Reply(ref, m)
-                    case Success(m: Finished.type) => Reply(ref, m)
-                    case Failure(_) => Reply(ref, Finished)
+                    case Success(m: QuestionFromSession) => ReplyToClient(ref, m)
+                    case Success(m: ErrorAnswer) => ReplyToClient(ref, m)
+                    case Success(m: Finished) => ReplyToClient(ref, m)
+                    case Success(m: ErrorOccured) => ReplyToClient(ref, m)
+                    case Failure(_) => ReplyToClient(ref, ErrorOccured("Error in server"))
                 }
                 Behaviors.same
             case Undo(ref, id) =>
                 val session = mapping(id)
                 context.ask[ProcessUndo, ProcessUndoResponse](session)(ProcessUndo) {
-                    case Success(m: QuestionFromSession) => Reply(ref, m)
-                    case Success(m: CannotUndo.type) => Reply(ref, m)
-                    case Failure(_) => Reply(ref, Finished)
+                    case Success(m: QuestionFromSession) => ReplyToClient(ref, m)
+                    case Success(m: CannotUndo.type) => ReplyToClient(ref, m)
+                    case Failure(_) => ReplyToClient(ref, ErrorOccured("Error in server"))
                 }
                 Behaviors.same
             case SessionEnded(id) =>
                 running(next, mapping - id)
-            case Reply(ref, m) =>
+            case ReplyToClient(ref, m) =>
                 ref ! m
                 Behaviors.same
         }
