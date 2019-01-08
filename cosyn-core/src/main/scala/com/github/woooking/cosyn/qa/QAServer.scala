@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.qa
 
 import akka.actor.Scheduler
-import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
