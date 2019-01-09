@@ -12,6 +12,6 @@ case class Context(variables: Seq[(String, Type)], extendedTypes: Seq[String]) {
     }
 
     def update(pattern: Pattern): Context = {
-        this.copy(variables = variables ++ VariableCollector[BlockStmt].collect(pattern.stmts))
+        this.copy(variables = variables ++ VariableCollector.instance[BlockStmt].collect(pattern.stmts))
     }
 }
