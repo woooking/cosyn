@@ -7,7 +7,7 @@ trait FillHoleVisitor[T] {
     def fill(node: T, hole: HoleExpr, expr: Expression): Option[T]
 }
 
-object ParentCollector {
+object FillHoleVisitor {
     type FV[T] = FillHoleVisitor[T]
 
     def apply[A](implicit enc: FV[A]): FV[A] = enc

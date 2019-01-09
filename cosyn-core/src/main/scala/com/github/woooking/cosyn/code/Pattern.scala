@@ -19,7 +19,10 @@ case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
     def replaceStmtInBlock(block: BlockStmt, oldStmt: Statement, newStmts: Statement*): Pattern = ???
 
     def fillHole(hole: HoleExpr, expr: Expression): Pattern = {
-        ???
+        FillHoleVisitor[BlockStmt].fill(stmts, hole, expr) match {
+            case None => this
+            case Some(b) => this.copy(stmts = b)
+        }
     }
 }
 
