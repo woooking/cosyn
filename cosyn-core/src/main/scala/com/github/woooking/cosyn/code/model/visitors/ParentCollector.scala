@@ -1,5 +1,6 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.code.model.visitors
 
+import com.github.woooking.cosyn.code.model.Node
 import com.github.woooking.cosyn.code.model.ty.Type
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 

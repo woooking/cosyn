@@ -1,7 +1,8 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.code.model.visitors
 
 import com.github.woooking.cosyn.code.model.ty.Type
-import shapeless.{:+:, ::, <:!<, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
+import com.github.woooking.cosyn.code.model.{Expression, HoleExpr}
+import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait FillHoleVisitor[T] {
     def fill(node: T, hole: HoleExpr, expr: Expression): Option[T]

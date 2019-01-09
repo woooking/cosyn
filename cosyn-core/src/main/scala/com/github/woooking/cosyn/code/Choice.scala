@@ -55,7 +55,6 @@ case class MethodChoice(method: MethodEntity) extends Choice {
         case _ =>
             val receiverType = method.getDeclareType.getQualifiedName
             val receiver = HoleExpr()
-            println(CodeUtil.methodParams(method.getSignature))
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, HoleExpr()))
             val newPattern = pattern.fillHole(hole, call(receiver, receiverType, method.getSimpleName, args: _*))
             Resolved(context, newPattern)

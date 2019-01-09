@@ -1,13 +1,15 @@
 package com.github.woooking.cosyn.code
 
+import com.github.woooking.cosyn.code.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector}
 import com.github.woooking.cosyn.code.model.{Expression, _}
 import com.github.woooking.cosyn.code.patterns.{ChangeFontFamily, FillCellColor}
-import shapeless._
 
 import scala.annotation.tailrec
 
-case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
+case class Pattern(stmts: BlockStmt) {
     private val parentMap = ParentCollector.instance[BlockStmt].collect(null, stmts)
+
+    lazy val holes: List[HoleExpr] = HoleCollector.instance[BlockStmt].collect(stmts)
 
     def parentOf(node: Node): Node = parentMap(node)
 
@@ -20,7 +22,6 @@ case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
     def replaceStmtInBlock(block: BlockStmt, oldStmt: Statement, newStmts: Statement*): Pattern = ???
 
     def fillHole(hole: HoleExpr, expr: Expression): Pattern = {
-        FillHoleVisitor.instance[BlockStmt](FillHoleVisitor.genericInstance)
         FillHoleVisitor.instance[BlockStmt].fill(stmts, hole, expr) match {
             case None => this
             case Some(b) => this.copy(stmts = b)
@@ -29,7 +30,7 @@ case class Pattern(stmts: BlockStmt, holes: Seq[HoleExpr]) {
 }
 
 object Pattern {
-    val patterns = Map(
+    val patterns: Map[String, Pattern] = Map(
         "fill cell color" -> FillCellColor.pattern,
         "change font family" -> ChangeFontFamily.pattern,
     )

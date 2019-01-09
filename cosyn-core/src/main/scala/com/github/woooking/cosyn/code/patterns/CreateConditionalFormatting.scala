@@ -6,13 +6,12 @@ import com.github.woooking.cosyn.code.model.CodeBuilder._
 import com.github.woooking.cosyn.code.model.HoleExpr
 
 object CreateConditionalFormatting {
-    val holes = Seq.fill(7)(HoleExpr())
     val stmt = block(
         v(
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "sheetCF",
             call(
-                holes(0),
+                HoleExpr(),
                 "org.apache.poi.ss.usermodel.Sheet",
                 "getSheetConditionalFormatting",
             )
@@ -29,12 +28,12 @@ object CreateConditionalFormatting {
                     field(
                         "org.apache.poi.ss.usermodel.ComparisonOperator",
                         "byte",
-                        holes(1)
+                        HoleExpr()
                     ),
                 ),
                 arg(
                     "java.lang.String",
-                    holes(2)
+                    HoleExpr()
                 )
             )
         ),
@@ -51,8 +50,8 @@ object CreateConditionalFormatting {
             "fontFmt",
             "org.apache.poi.ss.usermodel.FontFormatting",
             "setFontStyle",
-            arg("boolean", holes(3)),
-            arg("boolean", holes(4)),
+            arg("boolean", HoleExpr()),
+            arg("boolean", HoleExpr()),
         ),
         call(
             "fontFmt",
@@ -63,7 +62,7 @@ object CreateConditionalFormatting {
                 call(
                     enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
-                        holes(5)
+                        HoleExpr()
                     ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
                     "getIndex",
@@ -74,9 +73,9 @@ object CreateConditionalFormatting {
             "sheetCF",
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "addConditionalFormatting",
-            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holes(6)),
+            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), HoleExpr()),
             arg("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
         ),
     )
-    val pattern = new Pattern(stmt, holes)
+    val pattern = Pattern(stmt)
 }

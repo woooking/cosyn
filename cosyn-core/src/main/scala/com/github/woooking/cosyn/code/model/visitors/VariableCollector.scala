@@ -1,5 +1,6 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.code.model.visitors
 
+import com.github.woooking.cosyn.code.model.VariableDeclaration
 import com.github.woooking.cosyn.code.model.ty.Type
 import shapeless._
 
@@ -45,7 +46,10 @@ object VariableCollector {
         case Inr(t) => tInstance.collect(t)
     }
 
-    implicit def genericInstance[A, R](implicit generic: Generic.Aux[A, R], rInstance: Lazy[VC[R]]): VC[A] = create { value =>
-        rInstance.value.collect(generic.to(value))
+    implicit def genericInstance[A, R](implicit generic: Generic.Aux[A, R], rInstance: Lazy[VC[R]]): VC[A] = create {
+        case d: VariableDeclaration =>
+            d.name -> d.ty :: Nil
+        case value =>
+            rInstance.value.collect(generic.to(value))
     }
 }

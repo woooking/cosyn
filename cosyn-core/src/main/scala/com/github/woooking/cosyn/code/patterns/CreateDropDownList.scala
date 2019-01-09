@@ -6,29 +6,16 @@ import com.github.woooking.cosyn.code.model.ty.ArrayType
 import com.github.woooking.cosyn.code.model.{BlockStmt, BooleanLiteral, HoleExpr}
 
 object CreateDropDownList {
-    """
-      |HSSFWorkbook workbook = new HSSFWorkbook();
-      |  HSSFSheet sheet = workbook.createSheet("Data Validation");
-      |  CellRangeAddressList addressList = new CellRangeAddressList(
-      |    0, 0, 0, 0);
-      |  DVConstraint dvConstraint = DVConstraint.createExplicitListConstraint(
-      |    new String[]{"10", "20", "30"});
-      |  DataValidation dataValidation = new HSSFDataValidation
-      |    (addressList, dvConstraint);
-      |  dataValidation.setSuppressDropDownArrow(false);
-      |  sheet.addValidationData(dataValidation);
-    """.stripMargin
-    val holes: Seq[HoleExpr] = Seq.fill(3)(HoleExpr())
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.util.CellRangeAddressList",
             "address",
             create(
                 "org.apache.poi.ss.util.CellRangeAddressList",
-                arg("int", holes.head),
-                arg("int", holes(1)),
-                arg("int", holes(2)),
-                arg("int", holes(3)),
+                arg("int", HoleExpr()),
+                arg("int", HoleExpr()),
+                arg("int", HoleExpr()),
+                arg("int", HoleExpr()),
             ),
         ),
         v(
@@ -40,7 +27,7 @@ object CreateDropDownList {
                 "createExplicitListConstraint",
                 arg(
                     ArrayType("java.lang.string"),
-                    holes(4)
+                    HoleExpr()
                 )
             )
         ),
@@ -60,11 +47,11 @@ object CreateDropDownList {
             arg("boolean", BooleanLiteral(false))
         ),
         call(
-            holes(5),
+            HoleExpr(),
             "org.apache.poi.ss.usermodel.Sheet",
             "addValidationData",
             arg("org.apache.poi.ss.usermodel.DataValidation", "dataValidation")
         )
     )
-    val pattern = new Pattern(stmt, holes)
+    val pattern = Pattern(stmt)
 }

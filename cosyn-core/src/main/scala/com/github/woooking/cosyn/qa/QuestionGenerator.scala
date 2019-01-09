@@ -27,6 +27,6 @@ object QuestionGenerator {
         }
     }
 
-    def generate(context: Context, pattern: Pattern): Option[(HoleExpr, Question)] = generate(context, pattern, pattern.holes.toList)
+    def generate(context: Context, pattern: Pattern): Option[(HoleExpr, Question)] = generate(context, pattern, pattern.holes)
 
 }

@@ -40,7 +40,7 @@ sealed trait NameOrHole extends Expression
 
 sealed case class HoleExpr private(id: Int) extends NameOrHole
 
-sealed case class EnumConstantExpr(enumType: BasicType, name: NameOrHole) extends Expression {
+sealed case class EnumConstantExpr(enumType: BasicType, name: Expression) extends Expression {
     override def toString: String = s"${qualifiedClassName2Simple(enumType.ty)}.$name"
 }
 

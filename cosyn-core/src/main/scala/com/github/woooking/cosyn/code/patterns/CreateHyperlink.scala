@@ -11,7 +11,7 @@ object CreateHyperlink {
             "org.apache.poi.ss.usermodel.CreationHelper",
             "creationHelper",
             call(
-                holes.head,
+                HoleExpr(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "getCreationHelper",
             )
@@ -27,7 +27,7 @@ object CreateHyperlink {
                     "org.apache.poi.common.usermodel.HyperlinkType",
                     enum(
                         "org.apache.poi.common.usermodel.HyperlinkType",
-                        holes(1)
+                        HoleExpr()
                     ),
                 )
             )
@@ -38,11 +38,11 @@ object CreateHyperlink {
             "setAddress",
             arg(
                 "java.lang.String",
-                holes(2)
+                HoleExpr()
             )
         ),
         call(
-            holes(3),
+            HoleExpr(),
             "org.apache.poi.ss.usermodel.Cell",
             "setHyperlink",
             arg(
@@ -51,5 +51,5 @@ object CreateHyperlink {
             )
         ),
     )
-    val pattern = new Pattern(stmt, holes)
+    val pattern = Pattern(stmt)
 }

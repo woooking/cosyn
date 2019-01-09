@@ -5,13 +5,12 @@ import com.github.woooking.cosyn.code.model.CodeBuilder._
 import com.github.woooking.cosyn.code.model.{BlockStmt, HoleExpr}
 
 object FillCellColor {
-    val holes: Seq[HoleExpr] = Seq.fill(3)(HoleExpr())
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
             call(
-                holes.head,
+                HoleExpr(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "createCellStyle",
             )
@@ -25,7 +24,7 @@ object FillCellColor {
                 call(
                     enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
-                        holes(1)
+                        HoleExpr()
                     ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
                     "getIndex",
@@ -45,7 +44,7 @@ object FillCellColor {
             )
         ),
         call(
-            holes(2),
+            HoleExpr(),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle",
             arg(
@@ -54,5 +53,5 @@ object FillCellColor {
             )
         )
     )
-    val pattern = new Pattern(stmt, holes)
+    val pattern = Pattern(stmt)
 }

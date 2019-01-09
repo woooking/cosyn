@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior}
 import com.github.woooking.cosyn.code.{Context, Pattern, Question}
 import com.github.woooking.cosyn.code.model.ty.BasicType
+import com.github.woooking.cosyn.config.Config
 
 import scala.io.StdIn
 
@@ -40,6 +41,11 @@ object CmdQAClient {
     }
 
     def waiting(id: Long, ctx: Context, pattern: Pattern, question: Question): Behavior[QAClientMessage] = Behaviors.setup { _ =>
+        if (Config.printCodeEachStep) {
+            println("----- code -----")
+            println(pattern.stmts.generateCode(""))
+            println("----- end -----")
+        }
         println(question.description)
         val answer = StdIn.readLine()
         running(id, answer)
