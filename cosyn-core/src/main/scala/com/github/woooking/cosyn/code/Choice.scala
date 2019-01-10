@@ -7,6 +7,7 @@ import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.util.CodeUtil
 import com.github.woooking.cosyn.code.model.ty.BasicType
 import CodeBuilder._
+import com.github.woooking.cosyn.code.model.visitors.FillHoleVisitor
 
 sealed trait ChoiceResult
 
@@ -73,8 +74,7 @@ case class IterableChoice(path: List[TypeEntity]) extends Choice {
                 val iterableName = outer.getSimpleName.toLowerCase()
                 val varName = inner.getSimpleName.toLowerCase()
                 val forEachStmt = foreach(inner.getQualifiedName, varName, iterableName, block(pattern.parentStmtOf(hole)))
-                pattern.fillHole(hole, varName)
-                (forEachStmt, iterableName)
+                (FillHoleVisitor.fillHole(forEachStmt, hole, varName), iterableName)
             case head :: tail =>
                 val (innerForEach, innerName) = buildForEachStmt(context, pattern, hole, inner, head, tail)
                 val iterableName = outer.getSimpleName.toLowerCase()

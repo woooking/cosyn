@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.code
 
-import com.github.woooking.cosyn.code.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector}
+import com.github.woooking.cosyn.code.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
 import com.github.woooking.cosyn.code.model.{Expression, _}
 import com.github.woooking.cosyn.code.patterns.{ChangeFontFamily, FillCellColor}
 
@@ -19,13 +19,15 @@ case class Pattern(stmts: BlockStmt) {
         case n => parentStmtOf(n)
     }
 
-    def replaceStmtInBlock(block: BlockStmt, oldStmt: Statement, newStmts: Statement*): Pattern = ???
-
-    def fillHole(hole: HoleExpr, expr: Expression): Pattern = {
-        FillHoleVisitor.instance[BlockStmt].fill(stmts, hole, expr) match {
+    def replaceStmtInBlock(block: BlockStmt, oldStmt: Statement, newStmts: Statement*): Pattern = {
+        ReplaceStmtVisitor.instance[BlockStmt].replace(stmts, block, oldStmt, newStmts) match {
             case None => this
             case Some(b) => this.copy(stmts = b)
         }
+    }
+
+    def fillHole(hole: HoleExpr, expr: Expression): Pattern = {
+        copy(stmts = FillHoleVisitor.fillHole(stmts, hole, expr))
     }
 }
 

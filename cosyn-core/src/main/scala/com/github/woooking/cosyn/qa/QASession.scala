@@ -21,7 +21,7 @@ object QASession {
                     ref ! QuestionFromSession(ctx, pattern, q)
                     waiting(WaitingData(ctx, pattern, hole, q, history))
                 case None =>
-                    ref ! ErrorOccured("No hole resolver can resolve hole")
+                    ref ! Finished(ctx, pattern)
                     Behaviors.stopped
             }
         }
