@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.code.model.visitors
 
-import com.github.woooking.cosyn.code.model.HoleExpr
-import com.github.woooking.cosyn.code.model.Type
+import com.github.woooking.cosyn.code.model.{HoleExpr, Node, Type}
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait HoleCollector[T] {
@@ -17,26 +16,30 @@ object HoleCollector {
 
     def nil[A]: HC[A] = create(_ => Nil)
 
-    implicit def valInstance[V <: AnyVal]: HC[V] = nil
-
-    implicit def stringInstance: HC[String] = nil
-
-    implicit def seqInstance[V](implicit vInstance: Lazy[HC[V]]): HC[Seq[V]] = create { seq =>
-        (List.empty[HoleExpr] /: seq) ((l, v) => l ++ vInstance.value.collect(v))
-    }
-
     implicit def typeInstance[T <: Type]: HC[T] = nil
-
-    implicit def optionInstance[V](implicit vInstance: Lazy[HC[V]]): HC[Option[V]] = create {
-        case None => Nil
-        case Some(v) => vInstance.value.collect(v)
-    }
 
     implicit def hNilInstance: HC[HNil] = nil
 
-    implicit def hListInstance[H, T <: HList](implicit hInstance: Lazy[HC[H]], tInstance: HC[T]): HC[H :: T] = create {
+    implicit def hListNodeInstance[H <: Node, T <: HList](implicit hInstance: Lazy[HC[H]], tInstance: HC[T]): HC[H :: T] = create {
         case h :: t =>
             hInstance.value.collect(h) ++ tInstance.collect(t)
+    }
+
+    implicit def hListSeqInstance[V, S <: Seq[V], T <: HList](implicit vInstance: Lazy[HC[V]], tInstance: HC[T]): HC[S :: T] = create {
+        case s :: t =>
+            s.flatMap(vInstance.value.collect).toList ++ tInstance.collect(t)
+    }
+
+    implicit def hListOptionInstance[V, T <: HList](implicit vInstance: Lazy[HC[V]], tInstance: HC[T]): HC[Option[V] :: T] = create {
+        case None :: t =>
+            tInstance.collect(t)
+        case Some(v) :: t =>
+            vInstance.value.collect(v) ++ tInstance.collect(t)
+    }
+
+    implicit def hListInstance[H, T <: HList](implicit tInstance: HC[T]): HC[H :: T] = create {
+        case _ :: t =>
+            tInstance.collect(t)
     }
 
     implicit def cNilInstance: HC[CNil] = nil
