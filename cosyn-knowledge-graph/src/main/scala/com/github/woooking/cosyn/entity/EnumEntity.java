@@ -4,6 +4,7 @@ import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedEnumConstantDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedEnumDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserEnumDeclaration;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 import java.util.stream.Collectors;
@@ -14,10 +15,14 @@ public class EnumEntity extends TypeEntity {
 
     private String constants;
 
-    public EnumEntity() {
+    public static EnumEntity fromDeclaration(JavaParserEnumDeclaration decl) {
+        return new EnumEntity(decl, decl.getWrappedNode().getJavadocComment().orElse(null));
     }
 
-    public EnumEntity(ResolvedEnumDeclaration resolved, JavadocComment javadocComment) {
+    protected EnumEntity() {
+    }
+
+    protected EnumEntity(ResolvedEnumDeclaration resolved, JavadocComment javadocComment) {
         super(resolved, false, false, javadocComment);
         this.constants = resolved.getEnumConstants().stream().map(ResolvedEnumConstantDeclaration::getName).collect(Collectors.joining(","));
     }

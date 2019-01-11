@@ -1,23 +1,30 @@
 package com.github.woooking.cosyn.entity;
 
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserInterfaceDeclaration;
+import com.github.woooking.cosyn.StaticFieldInfoConverter;
 import com.google.common.collect.ImmutableSet;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.typeconversion.Convert;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @NodeEntity
 public class TypeEntity {
-    transient private ResolvedReferenceTypeDeclaration resolved;
     @Id
     private String qualifiedName;
+    private String simpleName;
     private boolean isInterface;
     private boolean isAbstract;
     private String javadoc;
+    @Convert(StaticFieldInfoConverter.class)
+    private StaticFieldInfo staticFields;
 
     @Relationship(type = "HAS_METHOD")
     private Set<MethodEntity> hasMethods = new HashSet<>();
@@ -25,20 +32,46 @@ public class TypeEntity {
     @Relationship(type = "EXTENDS")
     private Set<TypeEntity> extendedTypes = new HashSet<>();
 
+    @Relationship(type = "ITERABLE")
+    private TypeEntity iterableType;
+
+    @Relationship(type = "ITERABLE", direction = Relationship.INCOMING)
+    private Set<TypeEntity> iterables = new HashSet<>();
+
     @Relationship(type = "EXTENDS", direction = Relationship.INCOMING)
     private Set<TypeEntity> subTypes = new HashSet<>();
 
     @Relationship(type = "PRODUCES", direction = Relationship.INCOMING)
     private Set<MethodEntity> producers = new HashSet<>();
 
-    public TypeEntity() {
+    @Relationship(type = "PRODUCES_MULTIPLE", direction = Relationship.INCOMING)
+    private Set<MethodEntity> multipleProducers = new HashSet<>();
+
+    public static TypeEntity fromDeclaration(JavaParserClassDeclaration resolved) {
+        ClassOrInterfaceDeclaration decl = resolved.getWrappedNode();
+        return new TypeEntity(resolved, decl.isInterface(), decl.isAbstract(), decl.getJavadocComment().orElse(null));
     }
 
-    public TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
-        this.resolved = resolved;
+    public static TypeEntity fromDeclaration(JavaParserInterfaceDeclaration resolved) {
+        ClassOrInterfaceDeclaration decl = resolved.getWrappedNode();
+        return new TypeEntity(resolved, decl.isInterface(), decl.isAbstract(), decl.getJavadocComment().orElse(null));
+    }
+
+    public static TypeEntity fake(String qualifiedName) {
+        var typeEntity = new TypeEntity();
+        typeEntity.qualifiedName = qualifiedName;
+        return typeEntity;
+    }
+
+    protected TypeEntity() {
+    }
+
+    protected TypeEntity(ResolvedReferenceTypeDeclaration resolved, boolean isInterface, boolean isAbstract, JavadocComment javadocComment) {
         this.qualifiedName = resolved.getQualifiedName();
+        this.simpleName = resolved.getName();
         this.isInterface = isInterface;
         this.isAbstract = isAbstract;
+        this.staticFields = StaticFieldInfo.from(resolved);
         this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
     }
 
@@ -59,12 +92,20 @@ public class TypeEntity {
         this.producers.add(producer);
     }
 
-    public ResolvedReferenceTypeDeclaration getResolved() {
-        return resolved;
+    public void addMultipleProducer(MethodEntity producer) {
+        this.multipleProducers.add(producer);
+    }
+
+    public void setIterableType(TypeEntity iterableType) {
+        this.iterableType = iterableType;
     }
 
     public String getQualifiedName() {
         return qualifiedName;
+    }
+
+    public String getSimpleName() {
+        return simpleName;
     }
 
     public Set<MethodEntity> getHasMethods() {
@@ -81,6 +122,18 @@ public class TypeEntity {
 
     public Set<MethodEntity> getProducers() {
         return ImmutableSet.copyOf(producers);
+    }
+
+    public Set<MethodEntity> getMultipleProducers() {
+        return ImmutableSet.copyOf(multipleProducers);
+    }
+
+    public Set<TypeEntity> getIterables() {
+        return ImmutableSet.copyOf(iterables);
+    }
+
+    public StaticFieldInfo getStaticFields() {
+        return staticFields;
     }
 
     public boolean isAbstract() {
