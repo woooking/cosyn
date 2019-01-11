@@ -106,9 +106,7 @@ object KnowledgeGraph {
                 producers(context, typeEntity, multiple = true)
                     .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
                     .filter(!_.isDeprecated)
-            case _ => ???
         }
-
     }
 
     def enumConstants(ty: BasicType): Set[String] = {

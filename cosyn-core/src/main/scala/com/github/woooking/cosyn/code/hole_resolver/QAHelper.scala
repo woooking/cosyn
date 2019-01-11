@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code.hole_resolver
 
 import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.entity.MethodEntity
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.knowledge_graph.{KnowledgeGraph, Recommendation}
 import com.github.woooking.cosyn.code.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.code.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
 import com.github.woooking.cosyn.util.CodeUtil
@@ -25,6 +25,8 @@ object QAHelper {
             case bt @ BasicType(t) =>
                 val vars = context.findVariables(bt)
                 val producers = KnowledgeGraph.producers(context, bt)
+
+                val recommendations = Recommendation.recommend(context, bt)
 
                 val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
                     case m if CreateMethodJudger.judge(m) => MethodCategory.Create
