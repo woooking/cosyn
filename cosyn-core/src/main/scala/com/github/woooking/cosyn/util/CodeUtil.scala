@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.util
 
-import com.github.woooking.cosyn.code.model.ty.Type
+import com.github.woooking.cosyn.code.model.Type
 
 object CodeUtil {
     /**

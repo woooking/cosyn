@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
 import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.util.CodeUtil
-import com.github.woooking.cosyn.code.model.ty.BasicType
+import com.github.woooking.cosyn.code.model.BasicType
 import CodeBuilder._
 import com.github.woooking.cosyn.code.model.visitors.FillHoleVisitor
 

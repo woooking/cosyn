@@ -1,6 +1,5 @@
 package com.github.woooking.cosyn.code.model
 
-import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 import com.github.woooking.cosyn.util.CodeUtil.qualifiedClassName2Simple
 

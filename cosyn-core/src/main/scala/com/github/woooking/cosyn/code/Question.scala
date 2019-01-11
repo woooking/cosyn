@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.code
 import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion, Result}
 import com.github.woooking.cosyn.code.model._
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
+import com.github.woooking.cosyn.code.model.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 import CodeBuilder._
 

@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.code.model.visitors
 
 import com.github.woooking.cosyn.code.model.VariableDeclaration
-import com.github.woooking.cosyn.code.model.ty.Type
+import com.github.woooking.cosyn.code.model.Type
 import shapeless._
 
 trait VariableCollector[T] {

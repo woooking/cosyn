@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code.patterns
 
 import com.github.woooking.cosyn.code.Pattern
 import com.github.woooking.cosyn.code.model.CodeBuilder._
-import com.github.woooking.cosyn.code.model.ty.ArrayType
+import com.github.woooking.cosyn.code.model.ArrayType
 import com.github.woooking.cosyn.code.model.{BlockStmt, BooleanLiteral, HoleExpr}
 
 object CreateDropDownList {

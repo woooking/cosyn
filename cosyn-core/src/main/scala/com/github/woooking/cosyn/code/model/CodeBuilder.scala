@@ -1,7 +1,5 @@
 package com.github.woooking.cosyn.code.model
 
-import com.github.woooking.cosyn.code.model.ty.{BasicType, Type}
-
 trait CodeBuilder {
     def block(statements: Statement*): BlockStmt = {
         BlockStmt(statements.toSeq)

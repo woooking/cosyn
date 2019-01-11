@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code
 
 import com.github.woooking.cosyn.code.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
 import com.github.woooking.cosyn.code.model.{Expression, _}
-import com.github.woooking.cosyn.code.patterns.{ChangeFontFamily, FillCellColor}
+import com.github.woooking.cosyn.code.patterns._
 
 import scala.annotation.tailrec
 
@@ -35,14 +35,8 @@ object Pattern {
     val patterns: Map[String, Pattern] = Map(
         "fill cell color" -> FillCellColor.pattern,
         "change font family" -> ChangeFontFamily.pattern,
+        "create conditional formatting" -> CreateConditionalFormatting.pattern,
+        "create drop down list" -> CreateDropDownList.pattern,
+        "create hyper link" -> CreateHyperlink.pattern,
     )
-
-    //        ---- case 2 ----
-    //        val context = new Context(Seq("java.lang.Object"))
-    //        context.variables += "wb" -> "org.apache.poi.hssf.usermodel.HSSFWorkbook"
-    //        val pattern = CreateHyperlink.pattern
-    //         ---- case 3 ----
-    //        val context = new Context(Seq("java.lang.Object"))
-    //        context.variables += "sheet" -> BasicType("org.apache.poi.hssf.usermodel.HSSFSheet")
-    //        val pattern = CreateConditionalFormatting.pattern
 }
