@@ -1,26 +1,20 @@
 package com.github.woooking.cosyn.qa
 
-import com.github.woooking.cosyn.code.{Context, Pattern, Question}
-import com.github.woooking.cosyn.code.hole_resolver._
+import com.github.woooking.cosyn.code.{Context, HoleResolver, Pattern, Question}
 import com.github.woooking.cosyn.code.model.HoleExpr
+import com.github.woooking.cosyn.config.Config
 
 import scala.annotation.tailrec
 
 object QuestionGenerator {
-    val resolver = CombineHoleResolver(
-        new EnumConstantHoleResolver,
-        new StaticFieldAccessHoleResolver,
-        new ReceiverHoleResolver,
-        new ArgumentHoleResolver,
-        new VariableInitializationHoleResolver,
-    )
+    val resolver: HoleResolver = Config.holeResolver
 
     @tailrec
     private def generate(context: Context, pattern: Pattern, holes: List[HoleExpr]): Option[(HoleExpr, Question)] = {
         holes match {
             case Nil => None
             case hole :: tails =>
-                resolver.resolve(pattern, hole, context) match {
+                resolver.resolve(context, pattern, hole) match {
                     case Some(q) => Some((hole, q))
                     case None => generate(context, pattern, tails)
                 }

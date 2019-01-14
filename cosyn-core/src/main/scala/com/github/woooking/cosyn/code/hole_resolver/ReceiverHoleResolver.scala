@@ -7,7 +7,7 @@ import com.github.woooking.cosyn.code.model.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
 class ReceiverHoleResolver extends HoleResolver {
-    override def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question] = {
+    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
         pattern.parentOf(hole) match {
             case p: MethodCallExpr if p.receiver.contains(hole) =>
                 val rawPaths = KnowledgeGraph.getIterablePaths(p.receiverType)
@@ -26,4 +26,6 @@ class ReceiverHoleResolver extends HoleResolver {
                 None
         }
     }
+
+    override def recommend(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = ???
 }

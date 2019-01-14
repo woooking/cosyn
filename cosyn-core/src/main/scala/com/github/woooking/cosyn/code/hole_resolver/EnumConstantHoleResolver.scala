@@ -4,7 +4,7 @@ import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.code.model.{EnumConstantExpr, HoleExpr}
 
 class EnumConstantHoleResolver extends HoleResolver {
-    override def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question] = {
+    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
         pattern.parentOf(hole) match {
             case p: EnumConstantExpr =>
                 Some(EnumConstantQuestion(p.enumType))
@@ -12,4 +12,6 @@ class EnumConstantHoleResolver extends HoleResolver {
                 None
         }
     }
+
+    override def recommend(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = ???
 }

@@ -4,7 +4,7 @@ import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.code.model.{HoleExpr, StaticFieldAccessExpr}
 
 class StaticFieldAccessHoleResolver extends HoleResolver {
-    override def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question] = {
+    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
         pattern.parentOf(hole) match {
             case p: StaticFieldAccessExpr =>
                 Some(StaticFieldAccessQuestion(p.receiverType, p.targetType))
@@ -12,4 +12,6 @@ class StaticFieldAccessHoleResolver extends HoleResolver {
                 None
         }
     }
+
+    override def recommend(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = ???
 }

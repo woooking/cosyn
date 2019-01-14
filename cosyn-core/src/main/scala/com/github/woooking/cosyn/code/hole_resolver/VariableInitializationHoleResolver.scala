@@ -4,7 +4,7 @@ import com.github.woooking.cosyn.code.model.{HoleExpr, VariableDeclaration}
 import com.github.woooking.cosyn.code.{Context, HoleResolver, Pattern, Question}
 
 class VariableInitializationHoleResolver extends HoleResolver {
-    override def resolve(pattern: Pattern, hole: HoleExpr, context: Context): Option[Question] = {
+    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
         pattern.parentOf(hole) match {
             case p: VariableDeclaration =>
                 Some(QAHelper.choiceQAForType(context, p.ty))
@@ -12,4 +12,6 @@ class VariableInitializationHoleResolver extends HoleResolver {
                 None
         }
     }
+
+    override def recommend(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = ???
 }
