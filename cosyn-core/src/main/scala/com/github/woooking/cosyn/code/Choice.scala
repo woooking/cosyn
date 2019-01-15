@@ -21,8 +21,10 @@ sealed trait Choice {
     def action(context: Context, pattern: Pattern, hole: HoleExpr): ChoiceResult
 }
 
-case class RecommendChoice(node: Node) extends Choice {
-    override def action(context: Context, pattern: Pattern, hole: HoleExpr): ChoiceResult = ???
+case class RecommendChoice(newContext: Context, newPattern: Pattern, score: Double) extends Choice {
+    override def toString: String = s"${newPattern.stmts.generateCode("")} ($score)"
+
+    override def action(context: Context, pattern: Pattern, hole: HoleExpr): ChoiceResult = Resolved(newContext, newPattern)
 }
 
 case class VariableChoice(name: String) extends Choice {

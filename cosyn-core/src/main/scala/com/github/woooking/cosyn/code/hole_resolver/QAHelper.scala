@@ -20,13 +20,11 @@ object QAHelper {
 
     private final case object OtherType extends MethodCategory(_ => "Unknown")
 
-    def choiceQAForType(context: Context, ty: Type): Question = {
+    def choiceQAForType(context: Context, ty: Type): ChoiceQuestion = {
         ty match {
             case bt @ BasicType(t) =>
                 val vars = context.findVariables(bt)
                 val producers = KnowledgeGraph.producers(context, bt)
-
-                val recommendations = Recommendation.recommend(context, bt)
 
                 val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
                     case m if CreateMethodJudger.judge(m) => MethodCategory.Create

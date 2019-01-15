@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code.hole_resolver
 
 import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.code.model.{HoleExpr, MethodCallExpr}
-import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.knowledge_graph.{KnowledgeGraph, Recommendation}
 import com.github.woooking.cosyn.code.model.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
@@ -27,5 +27,4 @@ class ReceiverHoleResolver extends HoleResolver {
         }
     }
 
-    override def recommend(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = ???
 }
