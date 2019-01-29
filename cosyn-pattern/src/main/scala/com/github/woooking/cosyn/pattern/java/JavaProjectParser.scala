@@ -3,32 +3,29 @@ package com.github.woooking.cosyn.pattern.java
 import java.nio.file.Path
 
 import better.files.File
-import better.files.File.home
-import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, Parameter}
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
-import com.github.javaparser.symbolsolver.resolution.typesolvers.{CombinedTypeSolver, JavaParserTypeSolver, ReflectionTypeSolver}
+import com.github.javaparser.symbolsolver.resolution.typesolvers.{CombinedTypeSolver, JavaParserTypeSolver}
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.javaparser.utils.SourceRoot
+import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
+import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.Pipeline
 import com.github.woooking.cosyn.pattern.api.Pipeline.Filter
 import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFGImpl
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.SimpleDFG
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.IRArg
 
-import reflect.runtime.universe._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.reflect.runtime.universe._
 
 class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
     private val parserConfiguration = new ParserConfiguration
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
-        new JavaParserTypeSolver(home / "lab" / "poi-4.0.0" / "src" / "java" path),
-        new JavaParserTypeSolver(home / "lab" / "poi-4.0.0" / "src" / "ooxml" / "java" path),
-        new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path),
-//        new ReflectionTypeSolver(false)
+        CosynConfig.srcCodeDirs.map(new JavaParserTypeSolver(_)): _*
     )))
 
     JavaParser.setStaticConfiguration(parserConfiguration)

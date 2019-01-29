@@ -80,9 +80,9 @@ object SimpleDFG {
             while (ite.hasNext) {
                 val edge = ite.next()
                 if (edge.getDirection() == Edge.INCOMING) {
-                    ps.println(edge.getNodeB.getLabel + " -> " + edge.getNodeA.getLabel)
+                    ps.println(s"${edge.getNodeB.getLabel} -- ${edge.getLabel} -> ${edge.getNodeA.getLabel}")
                 } else {
-                    ps.println(edge.getNodeA.getLabel + " -> " + edge.getNodeB.getLabel)
+                    ps.println(s"${edge.getNodeA.getLabel} -- ${edge.getLabel} -> ${edge.getNodeB.getLabel}")
                 }
             }
         }
