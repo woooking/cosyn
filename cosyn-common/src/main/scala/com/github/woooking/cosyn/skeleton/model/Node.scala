@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.skeleton.model
 
 import com.github.woooking.cosyn.util.CodeUtil
 import com.github.woooking.cosyn.util.CodeUtil.qualifiedClassName2Simple

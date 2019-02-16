@@ -57,11 +57,12 @@ val commonSettings = Seq(
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 
-lazy val root = (project in file(".")).aggregate(macros, core, pattern, knowledgeGraph)
+lazy val root = (project in file(".")).aggregate(macros, common, core, pattern, knowledgeGraph)
 lazy val macros = project.in(file("cosyn-macro")).settings(commonSettings: _*)
+lazy val common = project.in(file("cosyn-common")).settings(commonSettings: _*)
 lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*).dependsOn(macros)
 lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(commonSettings: _*).dependsOn(macros)
-lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(macros)
-lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros).dependsOn(knowledgeGraph)
+lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(macros, common)
+lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros, knowledgeGraph, common)
 
 

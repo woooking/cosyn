@@ -1,9 +1,9 @@
-package com.github.woooking.cosyn.code.patterns
+package com.github.woooking.cosyn.patterns
 
-import com.github.woooking.cosyn.code.Pattern
-import com.github.woooking.cosyn.code.model.{ArrayType, BasicType}
-import com.github.woooking.cosyn.code.model.CodeBuilder._
-import com.github.woooking.cosyn.code.model.HoleExpr
+import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType}
+import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.skeleton.model.HoleExpr
 
 object CreateConditionalFormatting {
     val stmt = block(

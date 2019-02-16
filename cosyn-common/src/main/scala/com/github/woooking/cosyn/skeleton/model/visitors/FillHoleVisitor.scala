@@ -1,7 +1,7 @@
-package com.github.woooking.cosyn.code.model.visitors
+package com.github.woooking.cosyn.skeleton.model.visitors
 
-import com.github.woooking.cosyn.code.model.Type
-import com.github.woooking.cosyn.code.model._
+import com.github.woooking.cosyn.skeleton.model.Type
+import com.github.woooking.cosyn.skeleton.model._
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy, the}
 
 trait FillHoleVisitor[T] {

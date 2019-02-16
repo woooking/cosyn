@@ -1,8 +1,8 @@
-package com.github.woooking.cosyn.code.patterns
+package com.github.woooking.cosyn.patterns
 
-import com.github.woooking.cosyn.code.Pattern
-import com.github.woooking.cosyn.code.model.CodeBuilder._
-import com.github.woooking.cosyn.code.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleExpr}
 
 object CreateHyperlink {
     val holes: Seq[HoleExpr] = Seq.fill(4)(HoleExpr())

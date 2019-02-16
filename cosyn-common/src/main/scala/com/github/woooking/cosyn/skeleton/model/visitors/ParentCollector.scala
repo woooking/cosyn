@@ -1,7 +1,7 @@
-package com.github.woooking.cosyn.code.model.visitors
+package com.github.woooking.cosyn.skeleton.model.visitors
 
-import com.github.woooking.cosyn.code.model.Node
-import com.github.woooking.cosyn.code.model.Type
+import com.github.woooking.cosyn.skeleton.model.Node
+import com.github.woooking.cosyn.skeleton.model.Type
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait ParentCollector[T] {

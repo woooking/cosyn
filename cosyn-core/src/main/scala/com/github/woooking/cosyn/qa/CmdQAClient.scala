@@ -2,8 +2,9 @@ package com.github.woooking.cosyn.qa
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior}
-import com.github.woooking.cosyn.code.model.BasicType
-import com.github.woooking.cosyn.code.{Context, Pattern, Question}
+import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.model.BasicType
+import com.github.woooking.cosyn.code.{Context, Question}
 import com.github.woooking.cosyn.config.Config
 
 import scala.io.StdIn

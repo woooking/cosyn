@@ -1,7 +1,7 @@
-package com.github.woooking.cosyn.code.model.visitors
+package com.github.woooking.cosyn.skeleton.model.visitors
 
-import com.github.woooking.cosyn.code.model.VariableDeclaration
-import com.github.woooking.cosyn.code.model.Type
+import com.github.woooking.cosyn.skeleton.model.VariableDeclaration
+import com.github.woooking.cosyn.skeleton.model.Type
 import shapeless._
 
 trait VariableCollector[T] {

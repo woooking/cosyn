@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
+import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
-import com.github.woooking.cosyn.code.model.{EnumConstantExpr, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model.{EnumConstantExpr, HoleExpr}
 import com.github.woooking.cosyn.knowledge_graph.Recommendation
 
 class EnumConstantHoleResolver extends HoleResolver {

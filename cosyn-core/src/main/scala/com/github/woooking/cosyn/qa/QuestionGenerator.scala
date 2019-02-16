@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn.qa
 
+import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
-import com.github.woooking.cosyn.code.model.HoleExpr
+import com.github.woooking.cosyn.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.config.Config
 import com.github.woooking.cosyn.knowledge_graph.Recommendation
 

@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.skeleton.model
 
 trait CodeBuilder {
     def block(statements: Statement*): BlockStmt = {

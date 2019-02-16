@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code.rules
 
 import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.code.model.BasicType
+import com.github.woooking.cosyn.skeleton.model.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
 object LoadMethodJudger extends PositiveJudger[MethodEntity] {

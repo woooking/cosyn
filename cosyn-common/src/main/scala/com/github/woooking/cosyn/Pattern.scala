@@ -1,8 +1,8 @@
-package com.github.woooking.cosyn.code
+package com.github.woooking.cosyn
 
-import com.github.woooking.cosyn.code.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
-import com.github.woooking.cosyn.code.model.{Expression, _}
-import com.github.woooking.cosyn.code.patterns._
+import com.github.woooking.cosyn.patterns._
+import com.github.woooking.cosyn.skeleton.model.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
+import com.github.woooking.cosyn.skeleton.model.{Expression, _}
 
 import scala.annotation.tailrec
 

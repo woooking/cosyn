@@ -1,6 +1,6 @@
-package com.github.woooking.cosyn.code.model.visitors
+package com.github.woooking.cosyn.skeleton.model.visitors
 
-import com.github.woooking.cosyn.code.model.{HoleExpr, Node, Type}
+import com.github.woooking.cosyn.skeleton.model.{HoleExpr, Node, Type}
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait HoleCollector[T] {

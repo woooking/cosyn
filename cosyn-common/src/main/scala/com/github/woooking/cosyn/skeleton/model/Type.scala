@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.code.model
+package com.github.woooking.cosyn.skeleton.model
 
 sealed trait Type
 
