@@ -30,6 +30,7 @@ object CmdQAClient {
             case QuestionFromSession(ctx, pattern, question) =>
                 waiting(id, ctx, pattern, question)
             case Finished(_, pattern) =>
+                println("----- Code Generated -----")
                 println(pattern.stmts)
                 Behaviors.stopped
             case ErrorAnswer(ctx, pattern, question, message) =>

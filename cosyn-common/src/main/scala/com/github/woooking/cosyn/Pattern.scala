@@ -33,6 +33,7 @@ case class Pattern(stmts: BlockStmt) {
 
 object Pattern {
     val patterns: Map[String, Pattern] = Map(
+        "" -> TestPattern.pattern,
         "fill cell color" -> FillCellColor.pattern,
         "change font family" -> ChangeFontFamily.pattern,
         "create conditional formatting" -> CreateConditionalFormatting.pattern,

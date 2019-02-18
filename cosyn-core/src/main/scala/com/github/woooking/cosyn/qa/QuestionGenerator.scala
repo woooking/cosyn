@@ -18,7 +18,7 @@ object QuestionGenerator {
             case hole :: tails =>
                 resolver.resolve(context, pattern, hole) match {
                     case Some(ChoiceQuestion(question, choices)) =>
-                        val recommendations = Recommendation.recommend(context, pattern, hole).sortBy(_.score)(Ordering.Double.reverse).take(3)
+                        val recommendations = Recommendation.recommend(context, pattern, hole).sortBy(_.score)(Ordering.Double.reverse).take(Config.recommendNumber)
                         Some((hole, ChoiceQuestion(question, recommendations ++ choices)))
                     case Some(q) => Some((hole, q))
                     case None => generate(context, pattern, tails)

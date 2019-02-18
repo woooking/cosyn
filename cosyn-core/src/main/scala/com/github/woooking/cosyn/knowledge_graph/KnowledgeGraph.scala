@@ -9,6 +9,7 @@ import org.neo4j.ogm.session.{Session, SessionFactory}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Queue
 
 object KnowledgeGraph {
     private val configuration = new Configuration.Builder()
@@ -66,6 +67,13 @@ object KnowledgeGraph {
         else sourceEntity.getExtendedTypes.asScala.exists(e => isAssignable(e, targetEntity))
     }
 
+    private def isExtend(source: MethodEntity, target: MethodEntity): Boolean = {
+        val sourceEntity = session.load(classOf[MethodEntity], source.getQualifiedSignature)
+        val targetEntity = session.load(classOf[MethodEntity], target.getQualifiedSignature)
+        if (sourceEntity == targetEntity) true
+        else sourceEntity.getExtendedMethods.asScala.exists(e => isExtend(e, targetEntity))
+    }
+
     @tailrec
     def isAssignable(source: Type, target: Type): Boolean = {
         (source, target) match {
@@ -88,19 +96,57 @@ object KnowledgeGraph {
             methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == AccessSpecifier.DEFAULT
     }
 
-    private def producers(context: Context, typeEntity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
-        val entity = session.load(classOf[TypeEntity], typeEntity.getQualifiedName)
-        val methods = (if (multiple) entity.getMultipleProducers else entity.getProducers).asScala.filter(isAccessible(context, _))
-        (methods.toSet /: entity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType, multiple))
+    private def producers(context: Context, entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
+        case class ProducerContext(deleteMap: Map[MethodEntity, List[MethodEntity]], visited: Set[MethodEntity], result: Set[MethodEntity])
+
+        object ProducerContext {
+            def init = ProducerContext(Map(), Set(), Set())
+        }
+
+        def processMethod(entity: MethodEntity, producerContext: ProducerContext): ProducerContext = {
+            val methodEntity = session.load(classOf[MethodEntity], entity.getQualifiedSignature)
+            val ProducerContext(deleteMap, visited, result) = producerContext
+            val extendedMethods = methodEntity.getExtendedMethods.asScala.filter(isAccessible(context, _))
+            if (extendedMethods.exists(visited.contains)) ProducerContext(deleteMap, visited + methodEntity, result)
+            else {
+                val newDeleteMap = (deleteMap /: extendedMethods) ((map, extendedMethod) => map.updated(extendedMethod, methodEntity :: map.getOrElse(extendedMethod, Nil)))
+                ProducerContext(newDeleteMap - methodEntity, visited + methodEntity, result + methodEntity -- deleteMap.getOrElse(methodEntity, Nil))
+            }
+        }
+
+        @tailrec
+        def process(queue: Queue[TypeEntity], processedType: Set[TypeEntity], producerContext: ProducerContext): Set[MethodEntity] = {
+            queue.dequeueOption match {
+                case Some((front, rest)) =>
+                    val frontEntity = session.load(classOf[TypeEntity], front.getQualifiedName)
+                    val methods = (if (multiple) frontEntity.getMultipleProducers else frontEntity.getProducers).asScala.filter(isAccessible(context, _))
+                    val newProducerContext = (producerContext /: methods) {
+                        case (c, m) => processMethod(m, c)
+                    }
+                    process(rest, processedType + frontEntity, newProducerContext)
+                case None =>
+                    producerContext.result
+            }
+        }
+
+        process(Queue(entity), Set(), ProducerContext.init)
     }
+
+//    private def producers(context: Context, entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
+//        val typeEntity = session.load(classOf[TypeEntity], entity.getQualifiedName)
+//        val methods = (if (multiple) typeEntity.getMultipleProducers else typeEntity.getProducers).asScala
+//            .filter(isAccessible(context, _))
+//        (methods.toSet /: typeEntity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType, multiple))
+//    }
 
     def producers(context: Context, ty: Type): Set[MethodEntity] = {
         ty match {
             case BasicType(t) =>
                 val typeEntity = session.load(classOf[TypeEntity], t)
-                producers(context, typeEntity, multiple = false)
+                val methods = producers(context, typeEntity, multiple = false)
                     .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
                     .filter(!_.isDeprecated)
+                methods
             case ArrayType(BasicType(t)) =>
                 val typeEntity = session.load(classOf[TypeEntity], t)
                 producers(context, typeEntity, multiple = true)

@@ -18,9 +18,9 @@ object Recommendation {
     }
 
     private def penaltyOfHole(pattern: Pattern, hole: HoleExpr): Double = pattern.parentOf(hole) match {
-        case statement: Statement =>
+        case _: Statement =>
             1.0
-        case expression: Expression =>
+        case _: Expression =>
             1.0
     }
 
@@ -36,7 +36,8 @@ object Recommendation {
                 case Resolved(newContext, newPattern) =>
                     val newScore = score + scoreOfChoice(choice)
                     newPattern.holes diff originHoles match {
-                        case Nil => RecommendChoice(newContext, newPattern, newScore) :: Nil
+                        case Nil =>
+                            RecommendChoice(newContext, newPattern, newScore) :: Nil
                         case head :: _ => recommend(newContext, newPattern, head, depth + 1, newScore, originHoles)
                     }
                 case UnImplemented => Nil
@@ -54,6 +55,6 @@ object Recommendation {
     }
 
     def recommend(context: Context, pattern: Pattern, hole: HoleExpr): List[RecommendChoice] = {
-        recommend(context, pattern, hole, 0, 0.0, pattern.holes)
+        recommend(context, pattern, hole, 0, 0.0, pattern.holes).distinct
     }
 }
