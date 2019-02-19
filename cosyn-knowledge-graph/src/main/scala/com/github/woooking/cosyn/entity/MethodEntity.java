@@ -23,6 +23,7 @@ public class MethodEntity {
     private boolean isDeprecated;
     private AccessSpecifier accessSpecifier;
     private String javadoc;
+    private String paramNames;
 
     @Relationship(type = "HAS_METHOD", direction = Relationship.INCOMING)
     private TypeEntity declareType;

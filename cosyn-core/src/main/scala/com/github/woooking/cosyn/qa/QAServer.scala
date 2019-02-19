@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object QAServer {
-    implicit val timeout: Timeout = 1 minute
+    implicit val timeout: Timeout = 5 minute
 
     def running(next: Long, mapping: Map[Long, ActorRef[QASessionMessage]]): Behavior[QAServerMessage] = Behaviors.receive { (context, message) =>
         implicit val scheduler: Scheduler = context.system.scheduler

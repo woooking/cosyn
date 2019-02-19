@@ -49,7 +49,7 @@ object QAHelper {
                 }
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
-                ChoiceQuestion(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
+                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ methodCategoryChoices)
             case at @ ArrayType(BasicType(t)) =>
                 ???
             case _ =>

@@ -8,13 +8,15 @@ import com.github.woooking.cosyn.qa.QuestionGenerator
 
 object Recommendation {
     val resolver: HoleResolver = Config.holeResolver
+    var num = 0
 
     private val scoreOfChoice: Choice => Double = {
         case _: RecommendChoice => ???
         case _: VariableChoice => 5.0
         case _: MethodCategoryChoice => 0.0
         case _: MethodChoice => 0.0
-        case _: IterableChoice => 0.0
+        case IterableChoice(path, Some(_)) =>  5.0 - (path.size - 1) * Config.iterablePenalty
+        case IterableChoice(path, None) => -Config.iterablePenalty * (path.size - 1)
     }
 
     private def penaltyOfHole(pattern: Pattern, hole: HoleExpr): Double = pattern.parentOf(hole) match {
@@ -32,7 +34,8 @@ object Recommendation {
             }
         case ChoiceQuestion(_, choices) =>
             choices.toList.flatMap(choice => choice.action(context, pattern, hole) match {
-                case NewQA(newQA) => recommend(context, pattern, newQA, hole, depth, score, originHoles)
+                case NewQA(newQA) =>
+                    recommend(context, pattern, newQA, hole, depth, score, originHoles)
                 case Resolved(newContext, newPattern) =>
                     val newScore = score + scoreOfChoice(choice)
                     newPattern.holes diff originHoles match {
@@ -46,6 +49,8 @@ object Recommendation {
 
     private def recommend(context: Context, pattern: Pattern, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr]): List[RecommendChoice] = {
         if (depth == Config.maxSearchStep) {
+            num += 1
+            println(num)
             val finalScore = (score /: (pattern.holes diff originHoles).map(penaltyOfHole(pattern, _))) (_ - _)
             RecommendChoice(context, pattern, finalScore) :: Nil
         } else QuestionGenerator.generateForHole(context, pattern, hole) match {

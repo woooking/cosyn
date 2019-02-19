@@ -56,7 +56,7 @@ object CmdQAClient {
 
     def main(args: Array[String]): Unit = {
         // ---- case 1 ----
-        val context = Context(Seq("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), Seq("java.lang.Object"))
+        val context = Context(Set("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), Seq("java.lang.Object"))
         val task = StdIn.readLine()
         client ! NewTask(context, task)
     }

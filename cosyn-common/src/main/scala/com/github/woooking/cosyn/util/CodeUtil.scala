@@ -1,6 +1,8 @@
 package com.github.woooking.cosyn.util
 
-import com.github.woooking.cosyn.skeleton.model.Type
+import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
+
+import scala.annotation.tailrec
 
 object CodeUtil {
     /**
@@ -69,4 +71,19 @@ object CodeUtil {
         }
     }
 
+    /**
+      * 获取一个类型的核心基本类型
+      * 例：
+      * int => int
+      * java.lang.String => java.lang.String
+      * float[] => float
+      * java.lang.Object[][][] => java.lang.Object
+      * @param ty 给定的类型
+      * @return 核心基本类型
+      */
+    @tailrec
+    def coreType(ty: Type): String = ty match {
+        case BasicType(t) => t
+        case ArrayType(componentType) => coreType(componentType)
+    }
 }
