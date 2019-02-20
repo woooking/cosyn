@@ -40,7 +40,7 @@ object QAHelper {
                             println("----- UnCategorised -----")
                             m.foreach(f => {
                                 println(f.getQualifiedSignature)
-                                println(KnowledgeGraph.getMethodJavadoc(f.getQualifiedSignature).getOrElse(""))
+                                println(Option(f.getJavadoc).getOrElse(""))
                             })
                             println("-------------------------")
                         }

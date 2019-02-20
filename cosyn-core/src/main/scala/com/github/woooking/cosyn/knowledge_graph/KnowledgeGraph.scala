@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.knowledge_graph
 
-import com.github.javaparser.ast.AccessSpecifier
+import com.github.javaparser.ast.Modifier
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.code.Context
 import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
@@ -29,20 +29,6 @@ object KnowledgeGraph {
 
     def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]] = {
         getIterablePaths(basicType.ty, Nil)
-    }
-
-    def getMethodJavadoc(qualifiedSignature: String): Option[String] = {
-        val methodEntity = session.load(classOf[MethodEntity], qualifiedSignature)
-        methodEntity.getJavadoc match {
-            case javadoc if javadoc == "" =>
-                methodEntity.getExtendedMethods.asScala.toStream
-                    .map(_.getQualifiedSignature)
-                    .map(getMethodJavadoc)
-                    .filter(_.isDefined)
-                    .map(_.get)
-                    .headOption
-            case javadoc => Some(javadoc)
-        }
     }
 
     def getMethodEntity(qualifiedSignature: String): MethodEntity = {
@@ -92,8 +78,8 @@ object KnowledgeGraph {
     private def isAccessible(context: Context, entity: MethodEntity): Boolean = {
         val methodEntity = session.load(classOf[MethodEntity], entity.getQualifiedSignature)
         // TODO: 考虑继承和protected
-        methodEntity.getAccessSpecifier == AccessSpecifier.PUBLIC ||
-            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == AccessSpecifier.DEFAULT
+        methodEntity.getAccessSpecifier == Modifier.Keyword.PUBLIC ||
+            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.PACKAGE_PRIVATE
     }
 
     private def producers(context: Context, entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
@@ -123,7 +109,7 @@ object KnowledgeGraph {
                     val newProducerContext = (producerContext /: methods) {
                         case (c, m) => processMethod(m, c)
                     }
-                    process(rest, processedType + frontEntity, newProducerContext)
+                    process(rest ++ frontEntity.getExtendedTypes.asScala, processedType + frontEntity, newProducerContext)
                 case None =>
                     producerContext.result
             }

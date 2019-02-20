@@ -29,7 +29,7 @@ public class StaticFieldInfo {
     public static StaticFieldInfo from(ResolvedReferenceTypeDeclaration decl) {
         try {
             return new StaticFieldInfo(decl);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             return null;
         }

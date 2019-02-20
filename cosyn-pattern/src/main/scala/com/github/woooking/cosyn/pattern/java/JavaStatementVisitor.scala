@@ -174,17 +174,17 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         context.block.setNext(switch)
         val exitBlock = cfg.createStatements()
         // TODO: fall through
-        n.getEntries.asScala.map(e => e.getLabel.asScala -> e.getStatements.asScala).foreach {
-            case (Some(l), s) =>
-                val label = l.accept(exprVisitor, context.block)
+        n.getEntries.asScala.map(e => e.getLabels.asScala.toList -> e.getStatements.asScala).foreach {
+            case (Nil, s) =>
                 val statements = cfg.createStatements()
-                switch(ExpressionLabel(label)) = statements
+                switch(DefaultLabel) = statements
                 val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFGImpl#Context] /: s) ((c, st) => st.accept(this, c))
                 newContext.block.seal()
                 newContext.block.setNext(exitBlock)
-            case (None, s) =>
+            case (ls, s) =>
+                val labels = ls.map(_.accept(exprVisitor, context.block))
                 val statements = cfg.createStatements()
-                switch(DefaultLabel) = statements
+                labels.map(ExpressionLabel.apply).foreach(switch(_) = statements)
                 val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFGImpl#Context] /: s) ((c, st) => st.accept(this, c))
                 newContext.block.seal()
                 newContext.block.setNext(exitBlock)

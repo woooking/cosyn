@@ -1,16 +1,13 @@
 package com.github.woooking.cosyn.entity;
 
-import com.github.javaparser.ast.AccessSpecifier;
-import com.github.javaparser.ast.comments.JavadocComment;
+import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.google.common.collect.ImmutableSet;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @NodeEntity
 public class MethodEntity {
@@ -21,8 +18,7 @@ public class MethodEntity {
     private boolean isStatic;
     private boolean isConstructor;
     private boolean isDeprecated;
-    private AccessSpecifier accessSpecifier;
-    private String javadoc;
+    private Modifier.Keyword accessSpecifier;
     private String paramNames;
 
     @Relationship(type = "HAS_METHOD", direction = Relationship.INCOMING)
@@ -37,10 +33,16 @@ public class MethodEntity {
     @Relationship(type = "PRODUCES_MULTIPLE")
     private TypeEntity produceMultiple;
 
+    @Relationship(type = "JAVADOC")
+    private JavadocEntity javadoc;
+
+    @Transient
+    private Map<String, String> paramJavadocs;
+
     public MethodEntity() {
     }
 
-    public MethodEntity(ResolvedConstructorDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocComment javadocComment) {
+    public MethodEntity(ResolvedConstructorDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocEntity javadoc) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
@@ -49,11 +51,18 @@ public class MethodEntity {
         this.isDeprecated = isDeprecated;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
-        this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
+        this.javadoc = javadoc;
+        var paramNames = new ArrayList<String>();
+        var paramNum = resolved.getNumberOfParams();
+        for (int i = 0; i < paramNum; ++i) {
+            var param = resolved.getParam(i);
+            paramNames.add(param.getName());
+        }
+        this.paramNames = String.join(",", paramNames);
         declareType.addHasMethod(this);
     }
 
-    public MethodEntity(ResolvedMethodDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocComment javadocComment) {
+    public MethodEntity(ResolvedMethodDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocEntity javadoc) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
@@ -62,8 +71,22 @@ public class MethodEntity {
         this.isDeprecated = isDeprecated;
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
-        this.javadoc = javadocComment == null ? "" : javadocComment.getContent();
+        this.javadoc = javadoc;
+        var paramNames = new ArrayList<String>();
+        var paramNum = resolved.getNumberOfParams();
+        for (int i = 0; i < paramNum; ++i) {
+            var param = resolved.getParam(i);
+            paramNames.add(param.getName());
+        }
+        this.paramNames = String.join(",", paramNames);
         declareType.addHasMethod(this);
+    }
+
+    @PostLoad
+    public void setup() {
+        this.paramJavadocs = javadoc == null ?
+            Map.of() :
+            javadoc.getParams().stream().collect(Collectors.toMap(JavadocParamEntity::getName, JavadocParamEntity::getDescription));
     }
 
     public void addExtendedMethods(Set<MethodEntity> extendedMethods) {
@@ -102,16 +125,24 @@ public class MethodEntity {
         return produce;
     }
 
-    public AccessSpecifier getAccessSpecifier() {
+    public Keyword getAccessSpecifier() {
         return accessSpecifier;
     }
 
-    public String getJavadoc() {
+    public String getParamNames() {
+        return paramNames;
+    }
+
+    public JavadocEntity getJavadoc() {
         return javadoc;
     }
 
+    public String getParamJavadoc(String param) {
+        return this.paramJavadocs.get(param);
+    }
+
     public Set<MethodEntity> getExtendedMethods() {
-        return ImmutableSet.copyOf(extendedMethods);
+        return Collections.unmodifiableSet(extendedMethods);
     }
 
     public boolean isConstructor() {

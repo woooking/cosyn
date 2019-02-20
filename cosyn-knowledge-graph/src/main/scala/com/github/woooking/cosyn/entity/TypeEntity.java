@@ -6,12 +6,12 @@ import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclar
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserInterfaceDeclaration;
 import com.github.woooking.cosyn.StaticFieldInfoConverter;
-import com.google.common.collect.ImmutableSet;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.neo4j.ogm.annotation.typeconversion.Convert;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -113,23 +113,23 @@ public class TypeEntity {
     }
 
     public Set<TypeEntity> getExtendedTypes() {
-        return ImmutableSet.copyOf(extendedTypes);
+        return Collections.unmodifiableSet(extendedTypes);
     }
 
     public Set<TypeEntity> getSubTypes() {
-        return ImmutableSet.copyOf(subTypes);
+        return Collections.unmodifiableSet(subTypes);
     }
 
     public Set<MethodEntity> getProducers() {
-        return ImmutableSet.copyOf(producers);
+        return Collections.unmodifiableSet(producers);
     }
 
     public Set<MethodEntity> getMultipleProducers() {
-        return ImmutableSet.copyOf(multipleProducers);
+        return Collections.unmodifiableSet(multipleProducers);
     }
 
     public Set<TypeEntity> getIterables() {
-        return ImmutableSet.copyOf(iterables);
+        return Collections.unmodifiableSet(iterables);
     }
 
     public StaticFieldInfo getStaticFields() {

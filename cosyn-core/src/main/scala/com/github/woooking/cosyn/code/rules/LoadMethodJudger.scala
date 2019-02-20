@@ -11,7 +11,7 @@ object LoadMethodJudger extends PositiveJudger[MethodEntity] {
 
     // javadoc的第一句话中包含load, read, open
     private val javadocRule: Rule = methodEntity => {
-        val javadoc = JavadocUtil.extractFirstSentence(methodEntity.getJavadoc).toLowerCase
+        val javadoc = Option(methodEntity.getJavadoc).map(_.getDescription).map(JavadocUtil.extractFirstSentence).getOrElse("").toLowerCase
         javadoc.contains("create") || javadoc.contains("read") || javadoc.contains("open")
     }
 

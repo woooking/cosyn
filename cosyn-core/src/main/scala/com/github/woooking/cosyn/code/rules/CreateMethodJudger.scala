@@ -8,7 +8,11 @@ object CreateMethodJudger extends PositiveJudger[MethodEntity] {
     private val nameRule: Rule = methodEntity => methodEntity.getSimpleName.matches("^(create|new)([A-Z].*|$)")
 
     // javadoc的第一句话中包含create
-    private val javadocRule: Rule = methodEntity => JavadocUtil.extractFirstSentence(methodEntity.getJavadoc).toLowerCase.contains("create")
+    private val javadocRule: Rule = methodEntity => Option(methodEntity.getJavadoc)
+        .map(_.getDescription)
+        .map(JavadocUtil.extractFirstSentence)
+        .getOrElse("")
+        .toLowerCase.contains("create")
 
     override def rules: Seq[Rule] = Seq(nameRule, javadocRule)
 }

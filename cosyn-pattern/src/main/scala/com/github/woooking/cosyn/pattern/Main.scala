@@ -3,6 +3,7 @@ package com.github.woooking.cosyn.pattern
 import better.files.File
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.pattern.api.Cosyn
+import com.github.woooking.cosyn.pattern.dfgprocessor.FromDFGGenerator
 //import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.java.JavaDFGGenerator
@@ -19,10 +20,10 @@ object Main {
 //        val clientCodeRoot = home / "lab" / "client-codes" / "commonmark-java"
         val clientCodeRoot = CosynConfig.clientCodeDir
         val graphGenerator = JavaDFGGenerator()
-        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, Pattern](
+        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, String](
             clientCodeRoot,
             graphGenerator,
-            new DFG2Pattern(),
+            new FromDFGGenerator(),
             filterSubGraph = true
         )
         val result = cosyn.process()

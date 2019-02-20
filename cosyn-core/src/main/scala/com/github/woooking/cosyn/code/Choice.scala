@@ -45,10 +45,13 @@ case class MethodCategoryChoice(ty: BasicType, category: QAHelper.MethodCategory
 
 case class MethodChoice(method: MethodEntity) extends Choice {
     override def toString: String = {
-        val javadoc = JavadocUtil.extractFirstSentence(KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).getOrElse(method.getQualifiedSignature))
+        val javadoc = Option(method.getJavadoc)
+        val sentence = javadoc.map(_.getDescription)
+            .map(JavadocUtil.extractFirstSentence)
+            .getOrElse(method.getQualifiedSignature)
         s"""
            |${method.getQualifiedSignature}
-           |$javadoc
+           |$sentence
         """.stripMargin
     }
 

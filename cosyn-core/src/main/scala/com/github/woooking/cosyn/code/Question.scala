@@ -33,7 +33,7 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
     }
 
     override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
-        val regex = """#(\d)+""".r
+        val regex = """#(\d+)""".r
         regex.findFirstMatchIn(input) match {
             case None =>
                 ErrorInput("Error Format!")
