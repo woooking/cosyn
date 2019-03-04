@@ -62,7 +62,7 @@ lazy val macros = project.in(file("cosyn-macro")).settings(commonSettings: _*)
 lazy val common = project.in(file("cosyn-common")).settings(commonSettings: _*)
 lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*).dependsOn(macros)
 lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(commonSettings: _*).dependsOn(macros)
-lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(macros, common)
+lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(macros, knowledgeGraph, common)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(macros, knowledgeGraph, common)
 
 

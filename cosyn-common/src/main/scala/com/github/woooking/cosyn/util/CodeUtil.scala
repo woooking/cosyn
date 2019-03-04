@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.util
 
 import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
+import com.github.javaparser.ast.{`type` => jptype}
 
 import scala.annotation.tailrec
 
@@ -85,5 +86,15 @@ object CodeUtil {
     def coreType(ty: Type): String = ty match {
         case BasicType(t) => t
         case ArrayType(componentType) => coreType(componentType)
+    }
+
+    def jpTypeToType(jpType: jptype.Type): Type = {
+        jpType match {
+            case t: jptype.PrimitiveType => BasicType(t.asString())
+            case t: jptype.ClassOrInterfaceType => BasicType(t.asString())
+            case t: jptype.ArrayType => ArrayType(jpTypeToType(t.getComponentType))
+            case _ =>
+                ???
+        }
     }
 }

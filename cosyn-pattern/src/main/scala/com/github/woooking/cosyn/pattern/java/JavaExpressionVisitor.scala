@@ -7,6 +7,7 @@ import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
 import com.github.javaparser.symbolsolver.reflectionmodel.{ReflectionConstructorDeclaration, ReflectionFieldDeclaration}
+import com.github.woooking.cosyn.pattern.KnowledgeGraph
 import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFGImpl, CFGStatements}
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir._
@@ -34,22 +35,12 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
 
     private def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = {
         try {
-            //            println("-----")
-            //            println(methodCallExpr.getName.asString())
-            //            println(methodCallExpr.resolve().getQualifiedSignature)
-            methodCallExpr.resolve().getQualifiedSignature
+            KnowledgeGraph.getMethodProto(methodCallExpr.resolve().getQualifiedSignature)
         } catch {
-            case e: UnsolvedSymbolException =>
-                //                println("-----")
-                //                println(methodCallExpr.getName.asString())
-                //                println(cfg.decl)
-                //                e.printStackTrace()
+            case _: UnsolvedSymbolException =>
                 methodCallExpr.getName.asString()
             case e: Throwable =>
-                //                println("-----")
-                //                println(methodCallExpr.getName.asString())
-                //                println(cfg.decl)
-                //                e.printStackTrace()
+                log.warn("Unexpected Exception!", e)
                 methodCallExpr.getName.asString()
         }
     }
@@ -74,6 +65,17 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                 //                e.printStackTrace()
                 objectCreationExpr.getType.asString()
         }
+    }
+
+    private def posInfo(n: Node) = {
+        n.getBegin.asScala match {
+            case Some(pos) => s"line: ${pos.line}, col: ${pos.column}"
+            case None => ""
+        }
+    }
+
+    private def unimplemented(msg: String, n: Node): Unit = {
+        log.warn(s"$msg not supported ${posInfo(n)}")
     }
 
     override def defaultAction(n: Node, arg: CFGStatements): IRExpression = ???
@@ -111,9 +113,21 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                         cfg.writeVar(nameExpr.getName.asString(), block, target)
                         target
                 }
+            case fieldAccessExpr: FieldAccessExpr if fieldAccessExpr.getScope.isThisExpr =>
+                val source = n.getValue.accept(this, block)
+                n.getOperator match {
+                    case AssignExpr.Operator.ASSIGN =>
+                        cfg.writeVar(fieldAccessExpr.getName.asString(), block, source)
+                        source
+                    case ope =>
+                        val value = cfg.readVar(fieldAccessExpr.getName.asString(), block)
+                        val target = block.addStatement(new IRBinaryOperation(cfg, assignOpe2BinaryOpe(ope), value, source, Set(n))).target
+                        cfg.writeVar(fieldAccessExpr.getName.asString(), block, target)
+                        target
+                }
             case _ =>
                 // TODO: left hand side
-                log.warn("AssignExpr with non NameExpr left hand not supported")
+                unimplemented("AssignExpr with non NameExpr left hand", n)
                 n.getValue.accept(this, block)
         }
     }
