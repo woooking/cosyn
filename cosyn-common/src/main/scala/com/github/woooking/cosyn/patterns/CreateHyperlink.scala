@@ -2,16 +2,16 @@ package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleFactory}
 
 object CreateHyperlink {
-    val holes: Seq[HoleExpr] = Seq.fill(4)(HoleExpr())
+    val holeFactory = new HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.CreationHelper",
             "creationHelper",
             call(
-                HoleExpr(),
+                holeFactory.newHole(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "getCreationHelper",
             )
@@ -27,7 +27,7 @@ object CreateHyperlink {
                     "org.apache.poi.common.usermodel.HyperlinkType",
                     enum(
                         "org.apache.poi.common.usermodel.HyperlinkType",
-                        HoleExpr()
+                        holeFactory.newHole()
                     ),
                 )
             )
@@ -38,11 +38,11 @@ object CreateHyperlink {
             "setAddress",
             arg(
                 "java.lang.String",
-                HoleExpr()
+                holeFactory.newHole()
             )
         ),
         call(
-            HoleExpr(),
+            holeFactory.newHole(),
             "org.apache.poi.ss.usermodel.Cell",
             "setHyperlink",
             arg(
@@ -51,5 +51,5 @@ object CreateHyperlink {
             )
         ),
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }

@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.pattern.java
+package com.github.woooking.cosyn.pattern.javaimpl
 
 import java.nio.file.Path
 
@@ -19,7 +19,7 @@ case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "render")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "IndexWriter::init")))
 //            .register(DFGSizeFilter(50))
-        if (CosynConfig.global.debug) {
+        if (CosynConfig.debug) {
             dfgs.foreach(d => {
                 println("---------")
                 println(d.cfg.decl)

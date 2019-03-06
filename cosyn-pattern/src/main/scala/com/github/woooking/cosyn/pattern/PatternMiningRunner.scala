@@ -1,17 +1,47 @@
 package com.github.woooking.cosyn.pattern
 
+import better.files.Dsl.SymbolicOperations
 import better.files.File
 import better.files.File.home
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.pattern.api.Cosyn
-import com.github.woooking.cosyn.pattern.dfgprocessor.{DFG2Pattern, FromDFGGenerator}
-//import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
+import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
-import com.github.woooking.cosyn.pattern.java.JavaDFGGenerator
+import com.github.woooking.cosyn.pattern.javaimpl.JavaDFGGenerator
 import com.github.woooking.cosyn.pattern.mine.Setting
 import de.parsemis.miner.environment.Settings
+import org.json4s._
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.write
 
-object Main {
+import scala.annotation.tailrec
+
+object PatternMiningRunner {
+    implicit val formats: Formats = Serialization.formats(NoTypeHints)
+
+    private def saveResult(result: List[Pattern]): Unit = {
+        val resultDir = CosynConfig.resultDir
+        val infoFile = resultDir / "info"
+        if (infoFile.notExists) {
+            infoFile.createFile()
+            infoFile < "0"
+        }
+
+        val graphNum = infoFile.contentAsString.toInt
+
+        @tailrec
+        def save(result: List[Pattern], nextId: Int): Unit = result match {
+            case Nil =>
+                infoFile < nextId.toString
+            case h :: t =>
+                val graphFile = resultDir / nextId.toString
+                graphFile < write(h)
+                println(h.stmts.generateCode(""))
+                save(t, nextId + 1)
+        }
+
+        save(result, graphNum)
+    }
 
     def main(args: Array[String]): Unit = {
         implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4, minNodes = 3)
@@ -38,10 +68,7 @@ object Main {
 //            println("----- Pattern -----")
 //            println(r)
 //        })
-        result.foreach(r => {
-            println("----- Pattern -----")
-            println(r.stmts.generateCode(""))
-        })
+        saveResult(result.toList)
         KnowledgeGraph.close()
     }
 }

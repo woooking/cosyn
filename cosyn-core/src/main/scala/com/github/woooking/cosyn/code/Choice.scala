@@ -1,14 +1,13 @@
 package com.github.woooking.cosyn.code
 
+import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code.hole_resolver.QAHelper
 import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
-import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.skeleton.model._
-import com.github.woooking.cosyn.util.CodeUtil
-import com.github.woooking.cosyn.skeleton.model.BasicType
-import CodeBuilder._
-import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.knowledge_graph.JavadocUtil
+import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.skeleton.model.{BasicType, _}
 import com.github.woooking.cosyn.skeleton.model.visitors.FillHoleVisitor
+import com.github.woooking.cosyn.util.CodeUtil
 
 sealed trait ChoiceResult
 
@@ -60,13 +59,13 @@ case class MethodChoice(method: MethodEntity) extends Choice {
             UnImplemented
         case _ if method.isStatic =>
             val receiverType = method.getDeclareType.getQualifiedName
-            val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, HoleExpr()))
+            val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
             val newPattern = pattern.fillHole(hole, call(CodeUtil.qualifiedClassName2Simple(receiverType), receiverType, method.getSimpleName, args: _*))
             Resolved(context, newPattern)
         case _ =>
             val receiverType = method.getDeclareType.getQualifiedName
-            val receiver = HoleExpr()
-            val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, HoleExpr()))
+            val receiver = pattern.holeFactory.newHole()
+            val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
             val newPattern = pattern.fillHole(hole, call(receiver, receiverType, method.getSimpleName, args: _*))
             Resolved(context, newPattern)
     }
@@ -107,7 +106,7 @@ case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String]) 
         } else {
             val stmt = pattern.parentStmtOf(hole)
             val blockStmt = pattern.parentOf(stmt).asInstanceOf[BlockStmt]
-            val init = HoleExpr()
+            val init = pattern.holeFactory.newHole()
             val (innerForEach, innerName) = buildForEachStmt(context, pattern, hole, path.head, path.tail.head, path.tail.tail)
             val varDecl = recommendVar match {
                 case Some(name) =>

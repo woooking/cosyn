@@ -2,20 +2,20 @@ package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.ArrayType
-import com.github.woooking.cosyn.skeleton.model.{BlockStmt, BooleanLiteral, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model._
 
 object CreateDropDownList {
+    val holeFactory = new HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.util.CellRangeAddressList",
             "address",
             create(
                 "org.apache.poi.ss.util.CellRangeAddressList",
-                arg("int", HoleExpr()),
-                arg("int", HoleExpr()),
-                arg("int", HoleExpr()),
-                arg("int", HoleExpr()),
+                arg("int", holeFactory.newHole()),
+                arg("int", holeFactory.newHole()),
+                arg("int", holeFactory.newHole()),
+                arg("int", holeFactory.newHole()),
             ),
         ),
         v(
@@ -27,7 +27,7 @@ object CreateDropDownList {
                 "createExplicitListConstraint",
                 arg(
                     ArrayType("java.lang.string"),
-                    HoleExpr()
+                    holeFactory.newHole()
                 )
             )
         ),
@@ -47,11 +47,11 @@ object CreateDropDownList {
             arg("boolean", BooleanLiteral(false))
         ),
         call(
-            HoleExpr(),
+            holeFactory.newHole(),
             "org.apache.poi.ss.usermodel.Sheet",
             "addValidationData",
             arg("org.apache.poi.ss.usermodel.DataValidation", "dataValidation")
         )
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }

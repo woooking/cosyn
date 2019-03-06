@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.skeleton.model.{Expression, _}
 
 import scala.annotation.tailrec
 
-case class Pattern(stmts: BlockStmt) {
+case class Pattern(holeFactory: HoleFactory, stmts: BlockStmt) {
     private val parentMap = ParentCollector.instance[BlockStmt].collect(null, stmts)
 
     lazy val holes: List[HoleExpr] = HoleCollector.instance[BlockStmt].collect(stmts)

@@ -1,17 +1,17 @@
 package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
-import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType}
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.HoleExpr
+import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, BlockStmt, HoleFactory}
 
 object CreateConditionalFormatting {
-    val stmt = block(
+    val holeFactory = new HoleFactory()
+    val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "sheetCF",
             call(
-                HoleExpr(),
+                holeFactory.newHole(),
                 "org.apache.poi.ss.usermodel.Sheet",
                 "getSheetConditionalFormatting",
             )
@@ -28,12 +28,12 @@ object CreateConditionalFormatting {
                     field(
                         "org.apache.poi.ss.usermodel.ComparisonOperator",
                         "byte",
-                        HoleExpr()
+                        holeFactory.newHole()
                     ),
                 ),
                 arg(
                     "java.lang.String",
-                    HoleExpr()
+                    holeFactory.newHole()
                 )
             )
         ),
@@ -50,8 +50,8 @@ object CreateConditionalFormatting {
             "fontFmt",
             "org.apache.poi.ss.usermodel.FontFormatting",
             "setFontStyle",
-            arg("boolean", HoleExpr()),
-            arg("boolean", HoleExpr()),
+            arg("boolean", holeFactory.newHole()),
+            arg("boolean", holeFactory.newHole()),
         ),
         call(
             "fontFmt",
@@ -62,7 +62,7 @@ object CreateConditionalFormatting {
                 call(
                     enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
-                        HoleExpr()
+                        holeFactory.newHole()
                     ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
                     "getIndex",
@@ -73,9 +73,9 @@ object CreateConditionalFormatting {
             "sheetCF",
             "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
             "addConditionalFormatting",
-            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), HoleExpr()),
+            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holeFactory.newHole()),
             arg("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
         ),
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }

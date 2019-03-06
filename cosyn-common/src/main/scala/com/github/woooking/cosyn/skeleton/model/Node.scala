@@ -44,7 +44,7 @@ sealed trait Expression extends Node
 
 sealed trait NameOrHole extends Expression
 
-sealed case class HoleExpr private(id: Int) extends NameOrHole {
+sealed case class HoleExpr (id: Int) extends NameOrHole {
     override def toString: String = "<HOLE>"
 }
 
@@ -133,12 +133,9 @@ sealed case class StringLiteral(value: String) extends LiteralExpr {
     override def toString: String = s"""\"$value\""""
 }
 
-
-object HoleExpr {
-    private var nextId = 0
-
-    def apply(): HoleExpr = {
-        val hole = new HoleExpr(nextId)
+case class HoleFactory(var nextId: Int = 0) {
+    def newHole(): HoleExpr = {
+        val hole = HoleExpr(nextId)
         nextId += 1
         hole
     }

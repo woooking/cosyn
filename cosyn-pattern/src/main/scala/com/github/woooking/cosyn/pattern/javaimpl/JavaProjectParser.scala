@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.pattern.java
+package com.github.woooking.cosyn.pattern.javaimpl
 
 import java.nio.file.Path
 

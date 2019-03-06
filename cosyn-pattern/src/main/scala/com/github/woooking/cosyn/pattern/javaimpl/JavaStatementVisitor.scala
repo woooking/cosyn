@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.pattern.java
+package com.github.woooking.cosyn.pattern.javaimpl
 
 import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults

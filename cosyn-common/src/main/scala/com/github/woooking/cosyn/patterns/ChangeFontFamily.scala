@@ -2,15 +2,16 @@ package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleFactory}
 
 object ChangeFontFamily {
+    val holeFactory = new HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.Font",
             "font",
             call(
-                HoleExpr(),
+                holeFactory.newHole(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "createFont",
             )
@@ -21,14 +22,14 @@ object ChangeFontFamily {
             "setFontName",
             arg(
                 "java.lang.String",
-                HoleExpr()
+                holeFactory.newHole()
             )
         ),
         v(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
             call(
-                HoleExpr(),
+                holeFactory.newHole(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "createCellStyle",
             )
@@ -43,7 +44,7 @@ object ChangeFontFamily {
             )
         ),
         call(
-            HoleExpr(),
+            holeFactory.newHole(),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle",
             arg(
@@ -52,5 +53,5 @@ object ChangeFontFamily {
             )
         )
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }

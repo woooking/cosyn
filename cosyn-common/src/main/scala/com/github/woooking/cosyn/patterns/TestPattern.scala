@@ -2,9 +2,10 @@ package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleFactory}
 
 object TestPattern {
+    val holeFactory = new HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.CellStyle",
@@ -44,7 +45,7 @@ object TestPattern {
             )
         ),
         call(
-            HoleExpr(),
+            holeFactory.newHole(),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle",
             arg(
@@ -53,5 +54,5 @@ object TestPattern {
             )
         )
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }

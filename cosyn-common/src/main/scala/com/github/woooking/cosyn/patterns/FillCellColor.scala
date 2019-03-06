@@ -2,15 +2,16 @@ package com.github.woooking.cosyn.patterns
 
 import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleExpr}
+import com.github.woooking.cosyn.skeleton.model.{BlockStmt, HoleFactory}
 
 object FillCellColor {
+    val holeFactory = new HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.usermodel.CellStyle",
             "style",
             call(
-                HoleExpr(),
+                holeFactory.newHole(),
                 "org.apache.poi.ss.usermodel.Workbook",
                 "createCellStyle",
             )
@@ -24,7 +25,7 @@ object FillCellColor {
                 call(
                     enum(
                         "org.apache.poi.ss.usermodel.IndexedColors",
-                        HoleExpr()
+                        holeFactory.newHole()
                     ),
                     "org.apache.poi.ss.usermodel.IndexedColors",
                     "getIndex",
@@ -44,7 +45,7 @@ object FillCellColor {
             )
         ),
         call(
-            HoleExpr(),
+            holeFactory.newHole(),
             "org.apache.poi.ss.usermodel.Cell",
             "setCellStyle",
             arg(
@@ -53,5 +54,5 @@ object FillCellColor {
             )
         )
     )
-    val pattern = Pattern(stmt)
+    val pattern = Pattern(holeFactory, stmt)
 }
