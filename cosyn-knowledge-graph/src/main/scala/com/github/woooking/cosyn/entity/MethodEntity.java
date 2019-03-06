@@ -34,7 +34,7 @@ public class MethodEntity {
     private TypeEntity produceMultiple;
 
     @Relationship(type = "JAVADOC")
-    private JavadocEntity javadoc;
+    private MethodJavadocEntity javadoc;
 
     @Transient
     private Map<String, String> paramJavadocs;
@@ -42,7 +42,7 @@ public class MethodEntity {
     public MethodEntity() {
     }
 
-    public MethodEntity(ResolvedConstructorDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocEntity javadoc) {
+    public MethodEntity(ResolvedConstructorDeclaration resolved, boolean isDeprecated, TypeEntity declareType, MethodJavadocEntity javadoc) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
@@ -62,7 +62,7 @@ public class MethodEntity {
         declareType.addHasMethod(this);
     }
 
-    public MethodEntity(ResolvedMethodDeclaration resolved, boolean isDeprecated, TypeEntity declareType, JavadocEntity javadoc) {
+    public MethodEntity(ResolvedMethodDeclaration resolved, boolean isDeprecated, TypeEntity declareType, MethodJavadocEntity javadoc) {
         this.qualifiedSignature = resolved.getQualifiedSignature();
         this.signature = resolved.getSignature();
         this.simpleName = resolved.getName();
@@ -86,7 +86,7 @@ public class MethodEntity {
     public void setup() {
         this.paramJavadocs = javadoc == null ?
             Map.of() :
-            javadoc.getParams().stream().collect(Collectors.toMap(JavadocParamEntity::getName, JavadocParamEntity::getDescription));
+            javadoc.getParams().stream().collect(Collectors.toMap(MethodParamJavadocEntity::getName, MethodParamJavadocEntity::getDescription));
     }
 
     public void addExtendedMethods(Set<MethodEntity> extendedMethods) {
@@ -133,7 +133,7 @@ public class MethodEntity {
         return paramNames;
     }
 
-    public JavadocEntity getJavadoc() {
+    public MethodJavadocEntity getJavadoc() {
         return javadoc;
     }
 

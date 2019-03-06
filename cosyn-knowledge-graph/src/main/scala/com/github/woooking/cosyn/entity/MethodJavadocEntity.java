@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @NodeEntity
-public class JavadocEntity {
+public class MethodJavadocEntity {
     @Id
     @GeneratedValue
     private Long id;
@@ -24,15 +24,15 @@ public class JavadocEntity {
     private String returnDescription;
 
     @Relationship(type = "PARAM")
-    private Set<JavadocParamEntity> params = new HashSet<>();
+    private Set<MethodParamJavadocEntity> params = new HashSet<>();
 
-    public JavadocEntity() {
+    public MethodJavadocEntity() {
     }
 
-    public JavadocEntity(Javadoc javadoc) {
+    public MethodJavadocEntity(Javadoc javadoc) {
         var groupedTags = javadoc.getBlockTags().stream().collect(Collectors.groupingBy(JavadocBlockTag::getType));
         this.params = groupedTags.getOrDefault(Type.PARAM, List.of()).stream()
-            .map(blockTag -> new JavadocParamEntity(blockTag.getName().get(), blockTag.getContent().toText()))
+            .map(blockTag -> new MethodParamJavadocEntity(blockTag.getName().get(), blockTag.getContent().toText()))
             .collect(Collectors.toSet());
         this.returnDescription = groupedTags.getOrDefault(Type.RETURN, List.of())
             .stream()
@@ -51,7 +51,7 @@ public class JavadocEntity {
         return returnDescription;
     }
 
-    public Set<JavadocParamEntity> getParams() {
+    public Set<MethodParamJavadocEntity> getParams() {
         return Collections.unmodifiableSet(params);
     }
 }

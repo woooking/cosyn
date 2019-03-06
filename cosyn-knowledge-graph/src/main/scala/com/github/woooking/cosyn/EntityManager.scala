@@ -4,7 +4,7 @@ import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations._
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
-import com.github.woooking.cosyn.entity.{EnumEntity, JavadocEntity, MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.entity.{EnumEntity, MethodJavadocEntity, MethodEntity, TypeEntity}
 import better.files.File.home
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.javadoc.Javadoc
@@ -18,12 +18,12 @@ import scala.compat.java8.OptionConverters._
 object EntityManager extends Logging {
     private val methodMapping = mutable.Map[String, MethodEntity]()
     private val typeMapping = mutable.Map[String, TypeEntity]()
-    private val javadocs = mutable.ArrayBuffer[JavadocEntity]()
+    private val javadocs = mutable.ArrayBuffer[MethodJavadocEntity]()
 
     private val jdkSolver = new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path)
 
-    private def createJavadocEntity(javadoc: Javadoc): JavadocEntity = {
-        val javadocEntity = new JavadocEntity(javadoc)
+    private def createJavadocEntity(javadoc: Javadoc): MethodJavadocEntity = {
+        val javadocEntity = new MethodJavadocEntity(javadoc)
         javadocs += javadocEntity
         javadocEntity
     }

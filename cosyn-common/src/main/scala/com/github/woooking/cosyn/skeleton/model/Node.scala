@@ -41,6 +41,10 @@ sealed case class HoleExpr private(id: Int) extends NameOrHole {
     override def toString: String = "<HOLE>"
 }
 
+sealed case class AssignExpr(name: NameExpr, target: Expression) extends Expression {
+    override def toString: String = s"$name = $target"
+}
+
 sealed case class EnumConstantExpr(enumType: BasicType, name: Expression) extends Expression {
     override def toString: String = s"${qualifiedClassName2Simple(enumType.ty)}.$name"
 }
@@ -59,7 +63,13 @@ sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq
     override def toString: String = s"new $receiverType(${args.mkString(", ")})"
 }
 
-sealed case class NameExpr(name: String) extends NameOrHole {
+sealed trait NameExpr extends NameOrHole
+
+sealed case class TyNameExpr(ty: Type, id: Int) extends NameExpr {
+    override def toString: String = s"$ty$id"
+}
+
+sealed case class SimpleNameExpr(name: String) extends NameExpr {
     override def toString: String = name
 }
 
@@ -67,7 +77,7 @@ sealed case class StaticFieldAccessExpr(receiverType: BasicType, targetType: Typ
     override def toString: String = s"${qualifiedClassName2Simple(receiverType.ty)}.$name"
 }
 
-sealed case class VariableDeclaration(ty: Type, name: String, init: Option[Expression]) extends Expression {
+sealed case class VariableDeclaration(ty: Type, name: NameExpr, init: Option[Expression]) extends Expression {
     override def toString: String = init match {
         case None => s"${CodeUtil.qualifiedClassName2Simple(ty.toString)} $name"
         case Some(i) => s"${CodeUtil.qualifiedClassName2Simple(ty.toString)} $name = $i"

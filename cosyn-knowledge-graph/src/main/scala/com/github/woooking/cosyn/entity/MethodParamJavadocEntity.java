@@ -5,17 +5,17 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 @NodeEntity
-public class JavadocParamEntity {
+public class MethodParamJavadocEntity {
     @Id
     @GeneratedValue
     private Long id;
     private String name;
     private String description;
 
-    public JavadocParamEntity() {
+    public MethodParamJavadocEntity() {
     }
 
-    public JavadocParamEntity(String name, String description) {
+    public MethodParamJavadocEntity(String name, String description) {
         this.name = name;
         this.description = description;
     }

@@ -48,7 +48,7 @@ object VariableCollector {
 
     implicit def genericInstance[A, R](implicit generic: Generic.Aux[A, R], rInstance: Lazy[VC[R]]): VC[A] = create {
         case d: VariableDeclaration =>
-            d.name -> d.ty :: Nil
+            d.name.toString -> d.ty :: Nil
         case value =>
             rInstance.value.collect(generic.to(value))
     }
