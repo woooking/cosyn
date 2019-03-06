@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.skeleton.model
 
-import com.github.woooking.cosyn.util.CodeUtil
+import com.github.woooking.cosyn.util.{CodeUtil, StringUtil}
 import com.github.woooking.cosyn.util.CodeUtil.qualifiedClassName2Simple
 
 sealed trait Node
@@ -21,16 +21,23 @@ sealed case class ExprStmt(expr: Expression) extends Statement {
     override def toString: String = s"$expr;"
 }
 
-sealed case class ForEachStmt(ty: String, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
+sealed case class ForEachStmt(ty: Type, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
     override def generateCode(indent: String): String =
-        s"""${indent}for (${CodeUtil.qualifiedClassName2Simple(ty)} $variable : $iterable) {
+        s"""${indent}for (${CodeUtil.qualifiedClassName2Simple(ty.toString)} $variable : $iterable) {
            |${block.generateCode(s"    $indent")}
            |$indent}""".stripMargin
 
     override def toString: String =
-        s"""for (${CodeUtil.qualifiedClassName2Simple(ty)} $variable : $iterable) {
+        s"""for (${CodeUtil.qualifiedClassName2Simple(ty.toString)} $variable : $iterable) {
            |    $block
            |}""".stripMargin
+}
+
+sealed case class ReturnStmt(expr: Option[Expression]) extends Statement {
+    override def toString: String = expr match {
+        case Some(value) => s"return $value;"
+        case None => "return;"
+    }
 }
 
 sealed trait Expression extends Node
@@ -63,10 +70,14 @@ sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq
     override def toString: String = s"new $receiverType(${args.mkString(", ")})"
 }
 
+sealed case class UnaryExpr(expr: Expression, ope: String, prefix: Boolean) extends Expression {
+    override def toString: String = if (prefix) s"$ope$expr" else s"$expr$ope"
+}
+
 sealed trait NameExpr extends NameOrHole
 
 sealed case class TyNameExpr(ty: Type, id: Int) extends NameExpr {
-    override def toString: String = s"$ty$id"
+    override def toString: String = s"${StringUtil.decapitalize(CodeUtil.qualifiedClassName2Simple(ty.toString))}$id"
 }
 
 sealed case class SimpleNameExpr(name: String) extends NameExpr {

@@ -181,8 +181,8 @@ class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults
                     val name = n.getName.asString()
                     block.addStatement(new IRStaticFieldAccess(cfg, receiver, name, Set(n))).target
                 case d: JavaParserEnumConstantDeclaration =>
-                    val value = IREnum(d.getType.asReferenceType().getQualifiedName, d.getName)
-                    block.addStatement(new IRAssignment(cfg, value, Set(n))).target
+                    val value = IREnum(d.getName, n.getName)
+                    block.addStatement(new IREnumAccess(cfg, d.getType.asReferenceType().getQualifiedName, value, Set(n))).target
                 case _ =>
                     val receiver = n.getScope.accept(this, block)
                     val name = n.getName.asString()

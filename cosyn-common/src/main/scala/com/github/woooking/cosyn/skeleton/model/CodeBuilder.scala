@@ -11,7 +11,7 @@ trait CodeBuilder {
 
     def assign(name: NameExpr, target: Expression): AssignExpr = AssignExpr(name, target)
 
-    def foreach(ty: String, variable: String, iterable: Expression, block: BlockStmt): ForEachStmt = ForEachStmt(ty, variable, iterable, block)
+    def foreach(ty: Type, variable: String, iterable: Expression, block: BlockStmt): ForEachStmt = ForEachStmt(ty, variable, iterable, block)
 
     def enum(enumType: BasicType, name: NameOrHole): EnumConstantExpr = EnumConstantExpr(enumType, name)
 
@@ -24,6 +24,12 @@ trait CodeBuilder {
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 
     def name(ty: Type)(implicit ctx: FindNameContext): NameExpr = TyNameExpr(ty, ctx.nextIdForType(ty))
+
+    def ret(): ReturnStmt = ReturnStmt(None)
+
+    def ret(expr: Expression): ReturnStmt = ReturnStmt(Some(expr))
+
+    def unary(expr: Expression, ope: String, prefix: Boolean) = UnaryExpr(expr, ope, prefix)
 
     def v(ty: Type, name: NameExpr): VariableDeclaration = VariableDeclaration(ty, name, None)
 

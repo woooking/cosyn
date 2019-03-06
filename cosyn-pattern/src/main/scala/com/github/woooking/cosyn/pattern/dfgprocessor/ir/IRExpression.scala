@@ -40,8 +40,8 @@ object IRTemp {
     }.toOption
 }
 
-case class IREnum(ty: String, value: String) extends IRExpression(Set.empty) {
-    override def toString: String = s"$ty.$value"
+case class IREnum(constant: String, fromNode: Node) extends IRExpression(Set(fromNode)) {
+    override def toString: String = constant
 }
 
 case object IRUndef extends IRExpression(Set.empty) {

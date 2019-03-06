@@ -88,7 +88,7 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         val condition = conditionBlock.addStatement(IRMethodInvocation(cfg, "java.util.Iterator.hasNext()", Some(tempIte), Seq(), Set(n))).target
         val thenBlock = cfg.createStatements()
         val next = thenBlock.addStatement(IRMethodInvocation(cfg, "java.util.Iterator.next()", Some(tempIte), Seq(), Set(n))).target
-        cfg.writeVar(n.getVariable.getVariables.get(0).getName.asString(), thenBlock, next)
+        cfg.writeVar(n.getVariableDeclarator.getName.asString(), thenBlock, next)
         val elseBlock = cfg.createStatements()
         val branch = cfg.createBranch(condition, thenBlock, elseBlock)
         branch.seal()

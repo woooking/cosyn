@@ -34,9 +34,14 @@ object Main {
             filterSubGraph = true
         )
         val result = cosyn.process()
+//        result.foreach(r => {
+//            println("----- Pattern -----")
+//            println(r)
+//        })
         result.foreach(r => {
             println("----- Pattern -----")
-            println(r)
+            println(r.stmts.generateCode(""))
         })
+        KnowledgeGraph.close()
     }
 }

@@ -101,8 +101,8 @@ object CodeUtil {
 
     def resolvedTypeToType(resolvedType: ResolvedType): Type = {
         resolvedType match {
-            case t: ResolvedPrimitiveType => BasicType(t.toString)
-            case t: ResolvedReferenceType => BasicType(t.toString())
+            case t: ResolvedPrimitiveType => BasicType(t.describe())
+            case t: ResolvedReferenceType => BasicType(t.getQualifiedName)
             case t: ResolvedArrayType => ArrayType(resolvedTypeToType(t.getComponentType))
             case _ =>
                 ???

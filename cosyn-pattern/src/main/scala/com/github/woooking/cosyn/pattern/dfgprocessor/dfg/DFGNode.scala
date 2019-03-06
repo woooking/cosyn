@@ -20,7 +20,7 @@ abstract class DFGNode(val op: NodeType.Type, val info: String) {
 }
 
 object DFGNode {
-    val parser = new LabelParser[DFGNode] {
+    val parser: LabelParser[DFGNode] = new LabelParser[DFGNode] {
         override def serialize(labelType: DFGNode): String = labelType.toString
 
         override def parse(s: String): DFGNode = apply(s)
@@ -47,6 +47,7 @@ object DFGNode {
         val Binary: NodeType.Value = Value("#BINARY")
         val Unary: NodeType.Value = Value("#UNARY")
         val FieldAccess: NodeType.Value = Value("#FIELD_ACCESS")
+        val EnumAccess: NodeType.Value = Value("#ENUM_ACCESS")
         val ArrayCreation: NodeType.Value = Value("#ARRAY_CREATION")
         val InstanceOf: NodeType.Value = Value("#INSTANCE_OF")
         val Extern: NodeType.Value = Value("#EXTERN")
@@ -60,6 +61,7 @@ object DFGNode {
     def statement2node(statement: IRStatement): DFGNode = statement match {
         case s: IRBinaryOperation => DFGNode(NodeType.Binary, s.ope.toString)
         case s: IRUnaryOperation => DFGNode(NodeType.Unary, s.ope.toString)
+        case s: IREnumAccess => DFGNode(NodeType.EnumAccess, s.ty)
         case s: IRFieldAccess => DFGNode(NodeType.FieldAccess, s.field)
         case s: IRMethodInvocation => DFGNode(NodeType.MethodInvocation, s.name)
         case s: IRInstanceOf => DFGNode(NodeType.InstanceOf, s.ty.toString)
