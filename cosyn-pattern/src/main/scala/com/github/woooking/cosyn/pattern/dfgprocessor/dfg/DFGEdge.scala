@@ -20,7 +20,7 @@ class DFGEdge(val op: EdgeType.Type, val info: String) {
 object DFGEdge {
     val singleton = new DFGEdge(EdgeType.Singleton, "empty")
 
-    val parser = new LabelParser[DFGEdge] {
+    val parser: LabelParser[DFGEdge] = new LabelParser[DFGEdge] {
         override def serialize(labelType: DFGEdge): String = labelType.toString
 
         override def parse(s: String): DFGEdge = apply(s)

@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.code.rules
 
 import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph}
-import com.github.woooking.cosyn.code.model.BasicType
+import com.github.woooking.cosyn.skeleton.model.BasicType
 import com.github.woooking.cosyn.util.CodeUtil
 
 object LoadMethodJudger extends PositiveJudger[MethodEntity] {
@@ -11,7 +11,7 @@ object LoadMethodJudger extends PositiveJudger[MethodEntity] {
 
     // javadoc的第一句话中包含load, read, open
     private val javadocRule: Rule = methodEntity => {
-        val javadoc = JavadocUtil.extractFirstSentence(methodEntity.getJavadoc).toLowerCase
+        val javadoc = Option(methodEntity.getJavadoc).map(_.getDescription).map(JavadocUtil.extractFirstSentence).getOrElse("").toLowerCase
         javadoc.contains("create") || javadoc.contains("read") || javadoc.contains("open")
     }
 

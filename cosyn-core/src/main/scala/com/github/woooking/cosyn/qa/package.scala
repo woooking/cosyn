@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.code.Context
 package qa {
 
     import akka.actor.typed.ActorRef
-    import com.github.woooking.cosyn.code.{Pattern, Question}
+    import com.github.woooking.cosyn.code.Question
 
     // QA Client 接受消息
 

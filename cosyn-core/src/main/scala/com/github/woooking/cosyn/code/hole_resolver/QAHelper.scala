@@ -1,10 +1,11 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
 import com.github.woooking.cosyn.code._
-import com.github.woooking.cosyn.entity.MethodEntity
-import com.github.woooking.cosyn.knowledge_graph.{KnowledgeGraph, Recommendation}
-import com.github.woooking.cosyn.code.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.code.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
+import com.github.woooking.cosyn.config.Config
+import com.github.woooking.cosyn.entity.MethodEntity
+import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 
 object QAHelper {
@@ -35,18 +36,20 @@ object QAHelper {
                 }
                 val methodCategoryChoices = cases.flatMap {
                     case (OtherType, m) =>
-                        println("-----")
-                        m.foreach(f => {
-                            println(f.getQualifiedSignature)
-                            println(KnowledgeGraph.getMethodJavadoc(f.getQualifiedSignature).getOrElse(""))
-                        })
-                        println("-----")
+                        if (Config.printUnCategorisedMethods) {
+                            println("----- UnCategorised -----")
+                            m.foreach(f => {
+                                println(f.getQualifiedSignature)
+                                println(Option(f.getJavadoc).getOrElse(""))
+                            })
+                            println("-------------------------")
+                        }
                         Seq()
                     case (category, ms) => Seq(MethodCategoryChoice(bt, category, ms))
                 }
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
-                ChoiceQuestion(q, vars.map(VariableChoice.apply) ++ methodCategoryChoices)
+                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ methodCategoryChoices)
             case at @ ArrayType(BasicType(t)) =>
                 ???
             case _ =>

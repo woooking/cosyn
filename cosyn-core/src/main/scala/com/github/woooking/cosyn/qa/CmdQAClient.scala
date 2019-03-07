@@ -2,8 +2,9 @@ package com.github.woooking.cosyn.qa
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorSystem, Behavior}
-import com.github.woooking.cosyn.code.model.BasicType
-import com.github.woooking.cosyn.code.{Context, Pattern, Question}
+import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.model.BasicType
+import com.github.woooking.cosyn.code.{Context, Question}
 import com.github.woooking.cosyn.config.Config
 
 import scala.io.StdIn
@@ -29,6 +30,7 @@ object CmdQAClient {
             case QuestionFromSession(ctx, pattern, question) =>
                 waiting(id, ctx, pattern, question)
             case Finished(_, pattern) =>
+                println("----- Code Generated -----")
                 println(pattern.stmts)
                 Behaviors.stopped
             case ErrorAnswer(ctx, pattern, question, message) =>
@@ -54,7 +56,7 @@ object CmdQAClient {
 
     def main(args: Array[String]): Unit = {
         // ---- case 1 ----
-        val context = Context(Seq("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), Seq("java.lang.Object"))
+        val context = Context(Set("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), Seq("java.lang.Object"))
         val task = StdIn.readLine()
         client ! NewTask(context, task)
     }

@@ -1,9 +1,10 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
+import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
-import com.github.woooking.cosyn.code.model.{HoleExpr, MethodCallArgs, MethodCallExpr}
-import com.github.woooking.cosyn.knowledge_graph.{JavadocUtil, KnowledgeGraph, Recommendation}
-import com.github.woooking.cosyn.code.model.Type.PrimitiveOrString
+import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.skeleton.model.Type.PrimitiveOrString
+import com.github.woooking.cosyn.skeleton.model.{HoleExpr, MethodCallArgs, MethodCallExpr}
 
 class ArgumentHoleResolver extends HoleResolver {
     override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
@@ -15,10 +16,10 @@ class ArgumentHoleResolver extends HoleResolver {
                         val arg = method.args(index)
                         arg.ty match {
                             case PrimitiveOrString(ty) =>
-                                Some(PrimitiveQuestion(
-                                    KnowledgeGraph.getMethodJavadoc(method.getQualifiedSignature).map(JavadocUtil.extractParamInfoFromJavadoc(index)),
-                                    ty
-                                ))
+                                val entity = KnowledgeGraph.getMethodEntity(method.getQualifiedSignature)
+                                val paramName = entity.getParamNames.split(",")(index)
+                                val paramJavadoc = entity.getParamJavadoc(paramName)
+                                Some(PrimitiveQuestion(Option(paramJavadoc), ty))
                             case _ =>
                                 Some(QAHelper.choiceQAForType(context, arg.ty))
                         }

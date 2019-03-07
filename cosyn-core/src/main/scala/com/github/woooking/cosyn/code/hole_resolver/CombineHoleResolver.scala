@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
+import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
-import com.github.woooking.cosyn.code.model.HoleExpr
+import com.github.woooking.cosyn.skeleton.model.HoleExpr
 
 class CombineHoleResolver(resolvers: Seq[HoleResolver]) extends HoleResolver {
     override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {

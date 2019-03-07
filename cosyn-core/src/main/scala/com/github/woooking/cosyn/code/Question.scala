@@ -1,11 +1,12 @@
 package com.github.woooking.cosyn.code
 
 import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion, Result}
-import com.github.woooking.cosyn.code.model._
+import com.github.woooking.cosyn.skeleton.model._
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
-import com.github.woooking.cosyn.code.model.{BasicType, Type}
+import com.github.woooking.cosyn.skeleton.model.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 import CodeBuilder._
+import com.github.woooking.cosyn.Pattern
 
 sealed trait Question {
     def description: String
@@ -32,7 +33,7 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
     }
 
     override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
-        val regex = """#(\d)+""".r
+        val regex = """#(\d+)""".r
         regex.findFirstMatchIn(input) match {
             case None =>
                 ErrorInput("Error Format!")
