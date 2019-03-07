@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.skeleton.model.visitors
+package com.github.woooking.cosyn.skeleton.visitors
 
 import com.github.woooking.cosyn.skeleton.model.Node
 import com.github.woooking.cosyn.skeleton.model.Type

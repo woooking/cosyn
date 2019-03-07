@@ -4,13 +4,13 @@ import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration
 import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.stmt._
-import com.github.woooking.cosyn.pattern.api.CodeGenerator
+import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
 
 import scala.collection.JavaConverters._
 
-case class FromDFGGenerator() extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
+case class FromDFGGenerator() extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
     override def generate(originalGraph: Seq[SimpleDFG])(graph: PGraph): String = {
         val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(graph)).filter(_._2._1).head
         generateCode(dfg, nodes)

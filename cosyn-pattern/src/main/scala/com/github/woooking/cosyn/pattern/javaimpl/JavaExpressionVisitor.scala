@@ -8,7 +8,7 @@ import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
 import com.github.javaparser.symbolsolver.reflectionmodel.{ReflectionConstructorDeclaration, ReflectionFieldDeclaration}
 import com.github.woooking.cosyn.pattern.KnowledgeGraph
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFGImpl, CFGStatements}
+import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir._
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements._
@@ -17,7 +17,7 @@ import org.slf4s.Logging
 
 import scala.collection.JavaConverters._
 
-class JavaExpressionVisitor(val cfg: CFGImpl) extends GenericVisitorWithDefaults[IRExpression, CFGStatements] with Logging {
+class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRExpression, CFGStatements] with Logging {
     private def assignOpe2BinaryOpe(ope: AssignExpr.Operator): BinaryExpr.Operator = ope match {
         case AssignExpr.Operator.PLUS => BinaryExpr.Operator.PLUS
         case AssignExpr.Operator.MINUS => BinaryExpr.Operator.MINUS

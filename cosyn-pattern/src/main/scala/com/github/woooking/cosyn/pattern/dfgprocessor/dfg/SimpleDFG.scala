@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.pattern.dfgprocessor.dfg
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFGImpl, CFGStatements}
+import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.IRExpression
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements.IRStatement
 import com.google.common.collect.{BiMap, HashBiMap}
@@ -13,7 +13,7 @@ import de.parsemis.graph._
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
-class SimpleDFG(val cfg: CFGImpl) extends ListGraph[DFGNode, DFGEdge] {
+class SimpleDFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] {
     type DNode = Node[DFGNode, DFGEdge]
     type DGraph = Graph[DFGNode, DFGEdge]
 
@@ -92,7 +92,7 @@ object SimpleDFG {
     type DEdge = Edge[DFGNode, DFGEdge]
 
 
-    def apply(cfg: CFGImpl): SimpleDFG = {
+    def apply(cfg: CFG): SimpleDFG = {
         val dfg = new SimpleDFG(cfg)
         val statements = cfg.blocks.filter(_.isInstanceOf[CFGStatements]).flatMap {
             case block: CFGStatements => block.irStatements ++ block.phis

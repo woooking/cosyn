@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.skeleton.model.visitors
+package com.github.woooking.cosyn.skeleton.visitors
 
 import com.github.woooking.cosyn.skeleton.model.Type
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}

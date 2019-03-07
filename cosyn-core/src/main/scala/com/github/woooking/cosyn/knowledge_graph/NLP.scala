@@ -17,7 +17,7 @@ object NLP {
         if (text.startsWith("of")) s"$param $text"
         else text
 
-    val preFilters = Seq(ofRule)
+    val preFilters: Seq[SpecialPreFilter] = Seq(ofRule)
 
     def getNounPhrase(param: String, text: String): String = {
         val filtered = (text /: preFilters) ((s, f) => f(param, s))

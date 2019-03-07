@@ -1,10 +1,10 @@
 package com.github.woooking.cosyn.code
 
-import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.skeleton.model._
 import com.github.woooking.cosyn.skeleton.model.Type
-import com.github.woooking.cosyn.skeleton.model.visitors.VariableCollector
+import com.github.woooking.cosyn.skeleton.visitors.VariableCollector
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.skeleton.Pattern
 import com.github.woooking.cosyn.util.CodeUtil
 
 case class Context(variables: Set[(String, Type)], extendedTypes: Seq[String]) {

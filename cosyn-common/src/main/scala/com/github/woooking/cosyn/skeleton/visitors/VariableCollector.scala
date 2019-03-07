@@ -1,4 +1,4 @@
-package com.github.woooking.cosyn.skeleton.model.visitors
+package com.github.woooking.cosyn.skeleton.visitors
 
 import com.github.woooking.cosyn.skeleton.model.VariableDeclaration
 import com.github.woooking.cosyn.skeleton.model.Type

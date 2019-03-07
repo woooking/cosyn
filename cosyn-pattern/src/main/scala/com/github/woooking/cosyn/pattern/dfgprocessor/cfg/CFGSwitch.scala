@@ -8,7 +8,7 @@ import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements.IRStatement
 
 import scala.collection.mutable
 
-class CFGSwitch(cfg: CFGImpl, selector: IRExpression) extends CFGBlock(cfg) {
+class CFGSwitch(cfg: CFG, selector: IRExpression) extends CFGBlock(cfg) {
     val blocks = mutable.Map[SwitchLabel, CFGBlock]()
 
     def update(label: SwitchLabel, block: CFGBlock) = blocks(label) = block

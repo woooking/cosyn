@@ -9,7 +9,7 @@ import com.github.woooking.cosyn.pattern.util.Printable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-abstract class CFGBlock(val cfg: CFGImpl) {
+abstract class CFGBlock(val cfg: CFG) {
     val defs: mutable.Map[String, IRExpression] = mutable.Map()
     val id: Int = cfg.blocks.length
     cfg.blocks += this

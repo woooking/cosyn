@@ -6,6 +6,7 @@ package qa {
 
     import akka.actor.typed.ActorRef
     import com.github.woooking.cosyn.code.Question
+    import com.github.woooking.cosyn.skeleton.Pattern
 
     // QA Client 接受消息
 

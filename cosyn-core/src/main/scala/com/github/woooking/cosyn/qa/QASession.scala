@@ -2,10 +2,10 @@ package com.github.woooking.cosyn.qa
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
-import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.code.{Context, Question}
+import com.github.woooking.cosyn.skeleton.Pattern
 
 object QASession {
 

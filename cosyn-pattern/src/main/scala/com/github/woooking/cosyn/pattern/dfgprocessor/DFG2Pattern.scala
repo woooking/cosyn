@@ -4,12 +4,11 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{MethodDeclaration, VariableDeclarator}
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.stmt._
-import com.github.woooking.cosyn.Pattern
-import com.github.woooking.cosyn.pattern.api.CodeGenerator
+import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
 import com.github.woooking.cosyn.pattern.util.OptionConverters._
-import com.github.woooking.cosyn.skeleton.model
+import com.github.woooking.cosyn.skeleton.{Pattern, model}
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
 import com.github.woooking.cosyn.skeleton.model.{BasicType, FindNameContext, HoleExpr, HoleFactory, NameOrHole, Type}
 import com.github.woooking.cosyn.util.CodeUtil
@@ -18,7 +17,7 @@ import org.slf4s.Logging
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
-class DFG2Pattern extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] with GraphTypeDef[DFGNode, DFGEdge] with Logging {
+class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] with GraphTypeDef[DFGNode, DFGEdge] with Logging {
     val holeFactory = HoleFactory()
 
     class SimpleFindNameContext extends FindNameContext {

@@ -12,9 +12,9 @@ import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import com.github.javaparser.utils.SourceRoot
 import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
 import com.github.woooking.cosyn.pattern.CosynConfig
-import com.github.woooking.cosyn.pattern.api.Pipeline
-import com.github.woooking.cosyn.pattern.api.Pipeline.Filter
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFGImpl
+import com.github.woooking.cosyn.pattern.api.Pipe
+import com.github.woooking.cosyn.pattern.api.Pipe.Filter
+import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFG
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.SimpleDFG
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.IRArg
 
@@ -22,7 +22,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
-class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
+class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
     private val parserConfiguration = new ParserConfiguration
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
         CosynConfig.srcCodeDirs.map(new JavaParserTypeSolver(_)): _*
@@ -33,7 +33,7 @@ class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
     type SourceRoots = Seq[SourceRoot]
     type CUResult = ParseResult[CompilationUnit]
     type CUs = Seq[CompilationUnit]
-    type CFGs = Seq[CFGImpl]
+    type CFGs = Seq[CFG]
     type DFGs = Seq[SimpleDFG]
 
     private[this] val sourceRootFilters = mutable.ArrayBuffer[Filter[SourceRoots]]()
@@ -53,31 +53,31 @@ class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
 
     private def resolveParameterType(p: Parameter): String = p.getType.asString()
 
-    private def sourceFilesGenerator: Pipeline[Path, Seq[CompilationUnit]] =
+    private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => File(path).listRecursively
             .filter(_.extension.contains(".java"))
             .map(_.toJava)
             .map(JavaParser.parse)
             .toSeq
 
-    private def sourceRootsGenerator: Pipeline[Path, SourceRoots] =
+    private def sourceRootsGenerator: Pipe[Path, SourceRoots] =
         (path: Path) => new SymbolSolverCollectionStrategy().collect(path).getSourceRoots.asScala
 
-    private def sourceRootFilter: Filter[SourceRoots] = (Pipeline.id[SourceRoots] /: sourceRootFilters) (_ | _)
+    private def sourceRootFilter: Filter[SourceRoots] = (Pipe.id[SourceRoots] /: sourceRootFilters) (_ | _)
 
-    private def javaParser: Pipeline[SourceRoots, CUs] =
+    private def javaParser: Pipe[SourceRoots, CUs] =
         (sourceRoots: Seq[SourceRoot]) => sourceRoots
             .flatMap(_.tryToParseParallelized().asScala)
             .filter(_.isSuccessful)
             .map(_.getResult.get())
 
-    private def cuResultFilter: Filter[CUs] = (Pipeline.id[CUs] /: cuFilters) (_ | _)
+    private def cuResultFilter: Filter[CUs] = (Pipe.id[CUs] /: cuFilters) (_ | _)
 
-    private def cuResult2cfg: Pipeline[CUs, Seq[CFGImpl]] =
+    private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
         (cus: CUs) => cus
             .flatMap(cu => cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala)
             .map(method => {
-                val cfg = new CFGImpl("", s"${method.getSignature.asString()}", method)
+                val cfg = new CFG(s"${method.getSignature.asString()}", method)
                 val statementVisitor = new JavaStatementVisitor(cfg)
 
                 val body = method match {
@@ -93,11 +93,11 @@ class JavaProjectParser extends Pipeline[Path, Seq[SimpleDFG]] {
                 cfg
             })
 
-    private def cfgFilter: Filter[CFGs] = (Pipeline.id[CFGs] /: cfgFilters) (_ | _)
+    private def cfgFilter: Filter[CFGs] = (Pipe.id[CFGs] /: cfgFilters) (_ | _)
 
-    private def cfg2dfg: Pipeline[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
+    private def cfg2dfg: Pipe[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
 
-    private def dfgFilter: Filter[DFGs] = (Pipeline.id[DFGs] /: dfgFilters) (_ | _)
+    private def dfgFilter: Filter[DFGs] = (Pipe.id[DFGs] /: dfgFilters) (_ | _)
 
     override def >>:(input: Path): DFGs =
     //        input >>: (sourceRootsGenerator | sourceRootFilter | javaParser | cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)

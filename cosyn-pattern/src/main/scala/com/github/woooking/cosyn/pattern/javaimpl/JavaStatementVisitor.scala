@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.pattern.javaimpl
 import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFGImpl
+import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFG
 import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements.{IRAssert, IRMethodInvocation, IRReturn, IRThrow}
 import com.github.woooking.cosyn.pattern.util.OptionConverters._
@@ -11,37 +11,37 @@ import org.slf4s.Logging
 
 import scala.collection.JavaConverters._
 
-class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithDefaults[CFGImpl#Context, CFGImpl#Context] with Logging {
+class JavaStatementVisitor(private val cfg: CFG) extends GenericVisitorWithDefaults[CFG#Context, CFG#Context] with Logging {
     private val exprVisitor = new JavaExpressionVisitor(cfg)
 
-    override def defaultAction(n: Node, context: CFGImpl#Context): CFGImpl#Context = ???
+    override def defaultAction(n: Node, context: CFG#Context): CFG#Context = ???
 
-    override def defaultAction(n: NodeList[_ <: Node], arg: CFGImpl#Context): CFGImpl#Context = ???
+    override def defaultAction(n: NodeList[_ <: Node], arg: CFG#Context): CFG#Context = ???
 
-    override def visit(n: AssertStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: AssertStmt, context: CFG#Context): CFG#Context = {
         val check = n.getCheck.accept(exprVisitor, context.block)
         val message = n.getMessage.asScala.map(_.accept(exprVisitor, context.block))
         context.block.addStatement(new IRAssert(check, message, Set(n)))
         context
     }
 
-    override def visit(blockStmt: BlockStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(blockStmt: BlockStmt, context: CFG#Context): CFG#Context = {
         (context /: blockStmt.getStatements.asScala) ((c, n) => n.accept(this, c))
     }
 
-    override def visit(n: BreakStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: BreakStmt, context: CFG#Context): CFG#Context = {
         // TODO: change control flow
         log.warn("BreakStmt needs to be enhanced")
         context
     }
 
-    override def visit(n: ContinueStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ContinueStmt, context: CFG#Context): CFG#Context = {
         // TODO: change control flow
         log.warn("ContinueStmt needs to be enhanced")
         context
     }
 
-    override def visit(n: DoStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: DoStmt, context: CFG#Context): CFG#Context = {
         context.block.seal()
         val entryBlock = cfg.createStatements()
         val bodyBlock = cfg.createStatements()
@@ -61,22 +61,22 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         cfg.createContext(exitBlock)
     }
 
-    override def visit(n: EmptyStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: EmptyStmt, context: CFG#Context): CFG#Context = {
         context
     }
 
-    override def visit(n: ExplicitConstructorInvocationStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ExplicitConstructorInvocationStmt, context: CFG#Context): CFG#Context = {
         // TODO: explicit constructor
         log.warn("ExplicitConstructorInvocationStmt not supported")
         context
     }
 
-    override def visit(n: ExpressionStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ExpressionStmt, context: CFG#Context): CFG#Context = {
         n.getExpression.accept(exprVisitor, context.block)
         context
     }
 
-    override def visit(n: ForEachStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ForEachStmt, context: CFG#Context): CFG#Context = {
         context.block.seal()
         val entryBlock = cfg.createStatements()
         context.block.setNext(entryBlock)
@@ -101,7 +101,7 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         cfg.createContext(elseBlock)
     }
 
-    override def visit(n: ForStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ForStmt, context: CFG#Context): CFG#Context = {
         context.block.seal()
         val entryBlock = cfg.createStatements()
         n.getInitialization.asScala.foreach(_.accept(exprVisitor, entryBlock))
@@ -131,7 +131,7 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         cfg.createContext(elseBlock)
     }
 
-    override def visit(n: IfStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: IfStmt, context: CFG#Context): CFG#Context = {
         val condition = n.getCondition.accept(exprVisitor, context.block)
         val thenBlock = cfg.createStatements()
         val elseBlock = cfg.createStatements()
@@ -155,19 +155,19 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         cfg.createContext(endBlock)
     }
 
-    override def visit(n: LabeledStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: LabeledStmt, context: CFG#Context): CFG#Context = {
         // TODO: label
         log.warn("Label of LabelStmt not supported")
         n.getStatement.accept(this, context)
     }
 
-    override def visit(n: ReturnStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ReturnStmt, context: CFG#Context): CFG#Context = {
         val expr = n.getExpression.asScala.map(_.accept(exprVisitor, context.block))
         context.block.addStatement(new IRReturn(expr, Set(n)))
         context
     }
 
-    override def visit(n: SwitchStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: SwitchStmt, context: CFG#Context): CFG#Context = {
         val selector = n.getSelector.accept(exprVisitor, context.block)
         context.block.seal()
         val switch = cfg.createSwitch(selector)
@@ -178,31 +178,31 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
             case (Nil, s) =>
                 val statements = cfg.createStatements()
                 switch(DefaultLabel) = statements
-                val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFGImpl#Context] /: s) ((c, st) => st.accept(this, c))
+                val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFG#Context] /: s) ((c, st) => st.accept(this, c))
                 newContext.block.seal()
                 newContext.block.setNext(exitBlock)
             case (ls, s) =>
                 val labels = ls.map(_.accept(exprVisitor, context.block))
                 val statements = cfg.createStatements()
                 labels.map(ExpressionLabel.apply).foreach(switch(_) = statements)
-                val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFGImpl#Context] /: s) ((c, st) => st.accept(this, c))
+                val newContext = (cfg.createContext(statements, Some(exitBlock), None).asInstanceOf[CFG#Context] /: s) ((c, st) => st.accept(this, c))
                 newContext.block.seal()
                 newContext.block.setNext(exitBlock)
         }
         context.copy(block = exitBlock)
     }
 
-    override def visit(n: SynchronizedStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: SynchronizedStmt, context: CFG#Context): CFG#Context = {
         n.getBody.accept(this, context)
     }
 
-    override def visit(n: ThrowStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: ThrowStmt, context: CFG#Context): CFG#Context = {
         val exception = n.getExpression.accept(exprVisitor, context.block)
         context.block.addStatement(new IRThrow(exception, Set(n)))
         context
     }
 
-    override def visit(n: TryStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: TryStmt, context: CFG#Context): CFG#Context = {
         n.getResources.asScala.foreach(_.accept(exprVisitor, context.block))
         var newContext = n.getTryBlock.accept(this, context)
         log.warn("Catch clause not supported")
@@ -212,13 +212,13 @@ class JavaStatementVisitor(private val cfg: CFGImpl) extends GenericVisitorWithD
         newContext
     }
 
-    override def visit(n: LocalClassDeclarationStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: LocalClassDeclarationStmt, context: CFG#Context): CFG#Context = {
         // TODO: Local class decl
         log.warn("LocalClassDeclarationStmt not supported")
         context
     }
 
-    override def visit(n: WhileStmt, context: CFGImpl#Context): CFGImpl#Context = {
+    override def visit(n: WhileStmt, context: CFG#Context): CFG#Context = {
         context.block.seal()
         val entryBlock = cfg.createStatements()
         context.block.setNext(entryBlock)

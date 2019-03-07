@@ -1,18 +1,17 @@
 package com.github.woooking.cosyn
 
+import better.files.File.home
+import com.github.javaparser.javadoc.Javadoc
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations._
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver
-import com.github.woooking.cosyn.entity.{EnumEntity, MethodJavadocEntity, MethodEntity, TypeEntity}
-import better.files.File.home
-import com.github.javaparser.ast.Modifier
-import com.github.javaparser.javadoc.Javadoc
+import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, MethodJavadocEntity, TypeEntity}
 import org.neo4j.ogm.session.Session
 import org.slf4s.Logging
 
-import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.compat.java8.OptionConverters._
 
 object EntityManager extends Logging {

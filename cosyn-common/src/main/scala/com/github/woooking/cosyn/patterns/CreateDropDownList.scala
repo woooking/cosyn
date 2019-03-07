@@ -1,11 +1,11 @@
 package com.github.woooking.cosyn.patterns
 
-import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.Pattern
 import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
 import com.github.woooking.cosyn.skeleton.model._
 
 object CreateDropDownList {
-    val holeFactory = new HoleFactory()
+    val holeFactory = HoleFactory()
     val stmt: BlockStmt = block(
         v(
             "org.apache.poi.ss.util.CellRangeAddressList",

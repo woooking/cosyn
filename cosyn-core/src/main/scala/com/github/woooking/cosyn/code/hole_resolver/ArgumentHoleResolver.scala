@@ -1,8 +1,8 @@
 package com.github.woooking.cosyn.code.hole_resolver
 
-import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
+import com.github.woooking.cosyn.skeleton.Pattern
 import com.github.woooking.cosyn.skeleton.model.Type.PrimitiveOrString
 import com.github.woooking.cosyn.skeleton.model.{HoleExpr, MethodCallArgs, MethodCallExpr}
 

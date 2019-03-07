@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.skeleton.model.{BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
 import CodeBuilder._
-import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.skeleton.Pattern
 
 sealed trait Question {
     def description: String

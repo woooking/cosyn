@@ -3,12 +3,12 @@ package com.github.woooking.cosyn.pattern
 import better.files.Dsl.SymbolicOperations
 import better.files.File
 import better.files.File.home
-import com.github.woooking.cosyn.{Pattern, PatternSaver}
-import com.github.woooking.cosyn.pattern.api.Cosyn
+import com.github.woooking.cosyn.PatternSaver
+import com.github.woooking.cosyn.pattern.api.{PatternMiner, Setting}
 import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.javaimpl.JavaDFGGenerator
-import com.github.woooking.cosyn.pattern.mine.Setting
+import com.github.woooking.cosyn.skeleton.Pattern
 import de.parsemis.miner.environment.Settings
 import org.json4s._
 import org.json4s.native.Serialization
@@ -33,7 +33,7 @@ object PatternMiningRunner {
 //            new FromDFGGenerator(),
 //            filterSubGraph = true
 //        )
-        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, Pattern](
+        val cosyn = new PatternMiner[File, DFGNode, DFGEdge, SimpleDFG, Pattern](
             clientCodeRoot,
             graphGenerator,
             new DFG2Pattern(),

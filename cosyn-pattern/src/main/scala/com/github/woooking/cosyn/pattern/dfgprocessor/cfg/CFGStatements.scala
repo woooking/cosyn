@@ -9,7 +9,7 @@ import de.parsemis.graph.Node
 
 import scala.collection.mutable.ArrayBuffer
 
-class CFGStatements(cfg: CFGImpl) extends CFGBlock(cfg) {
+class CFGStatements(cfg: CFG) extends CFGBlock(cfg) {
     var next: Option[CFGBlock] = None
 
     val irStatements: ArrayBuffer[IRStatement] = ArrayBuffer[IRStatement]()

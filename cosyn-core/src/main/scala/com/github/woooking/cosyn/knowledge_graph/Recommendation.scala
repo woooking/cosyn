@@ -1,10 +1,10 @@
 package com.github.woooking.cosyn.knowledge_graph
 
-import com.github.woooking.cosyn.Pattern
 import com.github.woooking.cosyn.code._
 import com.github.woooking.cosyn.skeleton.model._
 import com.github.woooking.cosyn.config.Config
 import com.github.woooking.cosyn.qa.QuestionGenerator
+import com.github.woooking.cosyn.skeleton.Pattern
 
 object Recommendation {
     val resolver: HoleResolver = Config.holeResolver

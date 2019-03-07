@@ -7,7 +7,7 @@ import com.github.woooking.cosyn.pattern.dfgprocessor.ir.IRExpression
 import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements.IRStatement
 import de.parsemis.graph.Node
 
-class CFGBranch(cfg: CFGImpl, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
+class CFGBranch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
     thenBlock.preds += this
     elseBlock.preds += this
 
