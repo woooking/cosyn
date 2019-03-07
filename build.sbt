@@ -60,7 +60,7 @@ val commonSettings = Seq(
 lazy val root = (project in file(".")).aggregate(common, core, pattern, knowledgeGraph)
 lazy val common = project.in(file("cosyn-common")).settings(commonSettings: _*)
 lazy val crawler = project.in(file("cosyn-crawler")).settings(commonSettings: _*)
-lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(commonSettings: _*)
+lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(commonSettings: _*).dependsOn(common)
 lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(knowledgeGraph, common)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(knowledgeGraph, common)
 

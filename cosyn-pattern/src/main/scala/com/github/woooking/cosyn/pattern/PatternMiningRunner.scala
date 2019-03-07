@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.pattern
 import better.files.Dsl.SymbolicOperations
 import better.files.File
 import better.files.File.home
-import com.github.woooking.cosyn.Pattern
+import com.github.woooking.cosyn.{Pattern, PatternSaver}
 import com.github.woooking.cosyn.pattern.api.Cosyn
 import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
@@ -17,31 +17,7 @@ import org.json4s.native.Serialization.write
 import scala.annotation.tailrec
 
 object PatternMiningRunner {
-    implicit val formats: Formats = Serialization.formats(NoTypeHints)
-
-    private def saveResult(result: List[Pattern]): Unit = {
-        val resultDir = CosynConfig.resultDir
-        val infoFile = resultDir / "info"
-        if (infoFile.notExists) {
-            infoFile.createFile()
-            infoFile < "0"
-        }
-
-        val graphNum = infoFile.contentAsString.toInt
-
-        @tailrec
-        def save(result: List[Pattern], nextId: Int): Unit = result match {
-            case Nil =>
-                infoFile < nextId.toString
-            case h :: t =>
-                val graphFile = resultDir / nextId.toString
-                graphFile < write(h)
-                println(h.stmts.generateCode(""))
-                save(t, nextId + 1)
-        }
-
-        save(result, graphNum)
-    }
+    private implicit val formats: Formats = Serialization.formats(NoTypeHints)
 
     def main(args: Array[String]): Unit = {
         implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4, minNodes = 3)
@@ -68,7 +44,7 @@ object PatternMiningRunner {
 //            println("----- Pattern -----")
 //            println(r)
 //        })
-        saveResult(result.toList)
+        PatternSaver.savePatterns(result)
         KnowledgeGraph.close()
     }
 }

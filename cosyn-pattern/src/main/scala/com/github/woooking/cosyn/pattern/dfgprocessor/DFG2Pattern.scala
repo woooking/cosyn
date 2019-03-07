@@ -60,7 +60,6 @@ class DFG2Pattern extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] wi
             ???
     }
 
-
     def generateCodeStmt(node: Statement, nodes: Set[Node], names: Ctx, noName: Boolean = false): (List[model.Statement], Ctx) = {
         node match {
             case n: BlockStmt =>
@@ -184,7 +183,8 @@ class DFG2Pattern extends CodeGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] wi
             //            case n: EnclosedExpr => generateCode(n.getInner, nodes, names, indent)
             case n: FieldAccessExpr if n.getScope.isNameExpr && n.getScope.asNameExpr().getName.asString().matches("^[A-Z].*") =>
                 val constant: NameOrHole = if (nodes.contains(n.getName)) n.getName.asString() else holeFactory.newHole()
-                rs0(enum(n.getScope.asNameExpr().getName.asString(), constant), names)
+                val ty = CodeUtil.resolvedTypeToType(n.getScope.asNameExpr().calculateResolvedType()).asInstanceOf[BasicType]
+                rs0(enum(ty, constant), names)
             //            case n: ForEachStmt =>
             //                val (code, ctx) = gc1(n.getBody, s"$indent    ")
             //                if (nodes.contains(node)) (s"${indent}for () {\n$code$indent}\n", ctx)
