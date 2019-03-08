@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.knowledge_graph
 
 import com.github.javaparser.ast.Modifier
-import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, PatternEntity, TypeEntity}
 import com.github.woooking.cosyn.code.Context
 import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
 import org.neo4j.ogm.config.Configuration
@@ -20,6 +20,10 @@ object KnowledgeGraph {
     val sessionFactory = new SessionFactory(configuration, "com.github.woooking.cosyn.entity")
 
     val session: Session = sessionFactory.openSession()
+
+    def getAllPatterns: List[PatternEntity] = {
+        session.loadAll(classOf[PatternEntity]).asScala.toList
+    }
 
     private def getIterablePaths(qualifiedName: String, path: List[TypeEntity]): Set[List[TypeEntity]] = {
         val entity = getTypeEntity(qualifiedName)
