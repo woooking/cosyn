@@ -51,6 +51,10 @@ public class PatternEntity {
         hasMethods.addAll(methodEntitys);
     }
 
+    public String getPattern() {
+        return pattern;
+    }
+
     public Set<TypeEntity> getHasTypes() {
         return Collections.unmodifiableSet(hasTypes);
     }

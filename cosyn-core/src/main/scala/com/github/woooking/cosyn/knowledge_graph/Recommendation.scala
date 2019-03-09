@@ -5,6 +5,7 @@ import com.github.woooking.cosyn.skeleton.model._
 import com.github.woooking.cosyn.config.Config
 import com.github.woooking.cosyn.qa.QuestionGenerator
 import com.github.woooking.cosyn.skeleton.Pattern
+import com.github.woooking.cosyn.util.TimeUtil.profile
 
 object Recommendation {
     val resolver: HoleResolver = Config.holeResolver
@@ -59,7 +60,8 @@ object Recommendation {
         }
     }
 
-    def recommend(context: Context, pattern: Pattern, hole: HoleExpr): List[RecommendChoice] = {
+    def recommend(context: Context, pattern: Pattern, hole: HoleExpr): List[RecommendChoice] = profile("recommend") {
+        num = 0
         recommend(context, pattern, hole, 0, 0.0, pattern.holes).distinct
     }
 }

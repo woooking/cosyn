@@ -5,12 +5,20 @@ import akka.actor.typed.{ActorRef, Behavior}
 import com.github.woooking.cosyn.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.code.{Context, Question}
+import com.github.woooking.cosyn.knowledge_graph.NLMatcher
 import com.github.woooking.cosyn.skeleton.Pattern
 
 object QASession {
 
     val initializing: Behavior[QASessionMessage] = Behaviors.receiveMessagePartial { case Start(ref, ctx, description) =>
-        val pattern = Pattern.patterns(description)
+        val matcher = new NLMatcher(description, 5)
+        val patterns = matcher.find()
+        patterns.foreach { case (p, s) =>
+            println(s"----- $s -----")
+            println(p.stmts.generateCode(""))
+            println(s"----------")
+        }
+        val pattern = patterns.head._1
         val newCtx = ctx.update(pattern)
         generate(ref, QuestionData(newCtx, pattern, Nil))
     }

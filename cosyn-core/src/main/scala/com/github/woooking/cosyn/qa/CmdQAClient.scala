@@ -5,7 +5,9 @@ import akka.actor.typed.{ActorSystem, Behavior}
 import com.github.woooking.cosyn.skeleton.model.BasicType
 import com.github.woooking.cosyn.code.{Context, Question}
 import com.github.woooking.cosyn.config.Config
+import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.skeleton.Pattern
+import com.github.woooking.cosyn.util.TimeUtil
 
 import scala.io.StdIn
 
@@ -32,6 +34,8 @@ object CmdQAClient {
             case Finished(_, pattern) =>
                 println("----- Code Generated -----")
                 println(pattern.stmts)
+                KnowledgeGraph.close()
+                TimeUtil.print()
                 Behaviors.stopped
             case ErrorAnswer(ctx, pattern, question, message) =>
                 println(message)

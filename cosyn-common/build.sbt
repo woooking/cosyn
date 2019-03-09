@@ -8,4 +8,3 @@ libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3"
 libraryDependencies += "org.slf4s" %% "slf4s-api" % "1.7.25"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.2"
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.5"
-

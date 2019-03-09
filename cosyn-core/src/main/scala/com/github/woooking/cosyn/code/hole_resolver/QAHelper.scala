@@ -7,6 +7,7 @@ import com.github.woooking.cosyn.entity.MethodEntity
 import com.github.woooking.cosyn.knowledge_graph.KnowledgeGraph
 import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.util.CodeUtil
+import com.github.woooking.cosyn.util.TimeUtil.profile
 
 object QAHelper {
     private sealed trait MethodType
@@ -21,7 +22,7 @@ object QAHelper {
 
     private final case object OtherType extends MethodCategory(_ => "Unknown")
 
-    def choiceQAForType(context: Context, ty: Type): ChoiceQuestion = {
+    def choiceQAForType(context: Context, ty: Type): ChoiceQuestion = profile("choice-for-type") {
         ty match {
             case bt @ BasicType(t) =>
                 val vars = context.findVariables(bt)
@@ -50,7 +51,7 @@ object QAHelper {
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
                 ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ methodCategoryChoices)
-            case at @ ArrayType(BasicType(t)) =>
+            case ArrayType(BasicType(_)) =>
                 ???
             case _ =>
                 ???

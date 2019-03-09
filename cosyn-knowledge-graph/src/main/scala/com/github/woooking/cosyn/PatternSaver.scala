@@ -5,17 +5,14 @@ import com.github.woooking.cosyn.skeleton.Pattern
 import com.github.woooking.cosyn.skeleton.model.BlockStmt
 import com.github.woooking.cosyn.skeleton.visitors.{MethodCallCollector, TypeCollector}
 import com.github.woooking.cosyn.util.CodeUtil
-import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{write, writePretty}
-import org.json4s.{Formats, NoTypeHints}
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.{Session, SessionFactory}
 
 import scala.collection.JavaConverters._
+import com.github.woooking.cosyn.config.JsonConfig._
 
 object PatternSaver {
-    private implicit val formats: Formats = Serialization.formats(NoTypeHints)
-
     def savePatterns(patterns: Seq[Pattern]): Unit = {
         val configuration = new Configuration.Builder()
             .uri("bolt://localhost")

@@ -4,14 +4,18 @@ import com.github.javaparser.ast.Modifier
 import com.github.woooking.cosyn.entity.{EnumEntity, MethodEntity, PatternEntity, TypeEntity}
 import com.github.woooking.cosyn.code.Context
 import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
+import com.github.woooking.cosyn.util.TimeUtil.profile
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.{Session, SessionFactory}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Queue
+import scala.collection.mutable
 
 object KnowledgeGraph {
+    private var producersCache = mutable.Map[Type, Set[MethodEntity]]()
+
     private val configuration = new Configuration.Builder()
         .uri("bolt://162.105.88.181")
         .credentials("neo4j", "poi")
@@ -31,7 +35,7 @@ object KnowledgeGraph {
         (Set(newPath) /: entity.getIterables.asScala) ((s, t) => s ++ getIterablePaths(t.getQualifiedName, newPath))
     }
 
-    def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]] = {
+    def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]] = profile("getIterablePaths") {
         getIterablePaths(basicType.ty, Nil)
     }
 
@@ -43,11 +47,15 @@ object KnowledgeGraph {
         session.load(classOf[TypeEntity], qualifiedName)
     }
 
-    def getAllNonAbstractSubTypes(typeEntity: TypeEntity): Set[TypeEntity] = {
+    private def getAllNonAbstractSubTypesImpl(typeEntity: TypeEntity): Set[TypeEntity] = {
         val entity = session.load(classOf[TypeEntity], typeEntity.getQualifiedName)
         val subTypes = entity.getSubTypes.asScala.toSet
         val initSet: Set[TypeEntity] = if (entity.isAbstract || entity.isInterface) Set() else Set(entity)
-        (initSet /: subTypes) ((ts, t) => ts ++ getAllNonAbstractSubTypes(t))
+        (initSet /: subTypes) ((ts, t) => ts ++ getAllNonAbstractSubTypesImpl(t))
+    }
+
+    def getAllNonAbstractSubTypes(typeEntity: TypeEntity): Set[TypeEntity] = profile("getAllNonAbstractSubTypes") {
+        getAllNonAbstractSubTypesImpl(typeEntity)
     }
 
     private def isAssignable(source: TypeEntity, target: TypeEntity): Boolean = {
@@ -65,9 +73,9 @@ object KnowledgeGraph {
     }
 
     @tailrec
-    def isAssignable(source: Type, target: Type): Boolean = {
+    private def isAssignableImpl(source: Type, target: Type): Boolean = {
         (source, target) match {
-            case (ArrayType(s), ArrayType(t)) => isAssignable(s, t)
+            case (ArrayType(s), ArrayType(t)) => isAssignableImpl(s, t)
             case (BasicType(s), BasicType(t)) =>
                 val sourceEntity = session.load(classOf[TypeEntity], s)
                 val targetEntity = session.load(classOf[TypeEntity], t)
@@ -77,6 +85,10 @@ object KnowledgeGraph {
                 false
         }
 
+    }
+
+    def isAssignable(source: Type, target: Type): Boolean = profile("isAssignable") {
+        isAssignableImpl(source, target)
     }
 
     private def isAccessible(context: Context, entity: MethodEntity): Boolean = {
@@ -122,37 +134,42 @@ object KnowledgeGraph {
         process(Queue(entity), Set(), ProducerContext.init)
     }
 
-//    private def producers(context: Context, entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
-//        val typeEntity = session.load(classOf[TypeEntity], entity.getQualifiedName)
-//        val methods = (if (multiple) typeEntity.getMultipleProducers else typeEntity.getProducers).asScala
-//            .filter(isAccessible(context, _))
-//        (methods.toSet /: typeEntity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType, multiple))
-//    }
+    //    private def producers(context: Context, entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
+    //        val typeEntity = session.load(classOf[TypeEntity], entity.getQualifiedName)
+    //        val methods = (if (multiple) typeEntity.getMultipleProducers else typeEntity.getProducers).asScala
+    //            .filter(isAccessible(context, _))
+    //        (methods.toSet /: typeEntity.getSubTypes.asScala) ((methods, subType) => methods ++ producers(context, subType, multiple))
+    //    }
 
-    def producers(context: Context, ty: Type): Set[MethodEntity] = {
-        ty match {
-            case BasicType(t) =>
-                val typeEntity = session.load(classOf[TypeEntity], t)
-                val methods = producers(context, typeEntity, multiple = false)
-                    .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
-                    .filter(!_.isDeprecated)
+    def producers(context: Context, ty: Type): Set[MethodEntity] = profile("producers") {
+        producersCache.get(ty) match {
+            case Some(value) => value
+            case None =>
+                val methods = ty match {
+                    case BasicType(t) =>
+                        val typeEntity = session.load(classOf[TypeEntity], t)
+                        producers(context, typeEntity, multiple = false)
+                            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                            .filter(!_.isDeprecated)
+                    case ArrayType(BasicType(t)) =>
+                        val typeEntity = session.load(classOf[TypeEntity], t)
+                        producers(context, typeEntity, multiple = true)
+                            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                            .filter(!_.isDeprecated)
+                    case _ =>
+                        ???
+                }
+                producersCache(ty) = methods
                 methods
-            case ArrayType(BasicType(t)) =>
-                val typeEntity = session.load(classOf[TypeEntity], t)
-                producers(context, typeEntity, multiple = true)
-                    .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
-                    .filter(!_.isDeprecated)
-            case _ =>
-                ???
         }
     }
 
-    def enumConstants(ty: BasicType): Set[String] = {
+    def enumConstants(ty: BasicType): Set[String] = profile("enumConstants") {
         val typeEntity = session.load(classOf[EnumEntity], ty.ty)
         typeEntity.getConstants.split(",").toSet
     }
 
-    def staticFields(receiverType: BasicType, targetType: Type): Set[String] = {
+    def staticFields(receiverType: BasicType, targetType: Type): Set[String] = profile("staticFields") {
         val typeEntity = session.load(classOf[TypeEntity], receiverType.ty)
         typeEntity.getStaticFields.getFieldsInfo.getOrDefault(targetType.toString, java.util.List.of()).asScala.toSet
     }
