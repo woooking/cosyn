@@ -16,3 +16,4 @@ libraryDependencies += "io.spray" %%  "spray-json" % "1.3.3"
 libraryDependencies += "edu.stanford.nlp" % "stanford-corenlp" % "3.9.2"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
+libraryDependencies += "com.softwaremill.macwire" %% "macros" % "2.3.2" % "provided"

@@ -8,10 +8,10 @@ import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
 import com.github.woooking.cosyn.pattern.util.OptionConverters._
-import com.github.woooking.cosyn.skeleton.{Pattern, model}
-import com.github.woooking.cosyn.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.skeleton.model.{BasicType, FindNameContext, HoleExpr, HoleFactory, NameOrHole, Type}
-import com.github.woooking.cosyn.util.CodeUtil
+import com.github.woooking.cosyn.comm.skeleton.{Pattern, model}
+import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, FindNameContext, HoleExpr, HoleFactory, NameOrHole, Type}
+import com.github.woooking.cosyn.comm.util.CodeUtil
 import org.slf4s.Logging
 
 import scala.annotation.tailrec

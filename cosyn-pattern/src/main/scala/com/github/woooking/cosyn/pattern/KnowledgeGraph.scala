@@ -1,8 +1,8 @@
 package com.github.woooking.cosyn.pattern
 
 import com.github.javaparser.ast.Modifier
-import com.github.woooking.cosyn.entity.{MethodEntity, TypeEntity}
-import com.github.woooking.cosyn.skeleton.model.{ArrayType, BasicType, Type}
+import com.github.woooking.cosyn.kg.entity.{MethodEntity, TypeEntity}
+import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.session.{Session, SessionFactory}
 
@@ -16,7 +16,7 @@ object KnowledgeGraph {
         .credentials("neo4j", "poi")
         .build()
 
-    val sessionFactory = new SessionFactory(configuration, "com.github.woooking.cosyn.entity")
+    val sessionFactory = new SessionFactory(configuration, "com.github.woooking.cosyn.kg.entity")
 
     val session: Session = sessionFactory.openSession()
 
