@@ -2,12 +2,11 @@ package com.github.woooking.cosyn.core.knowledge_graph
 
 import com.github.woooking.cosyn.kg.entity.{MethodEntity, PatternEntity, TypeEntity}
 import com.github.woooking.cosyn.comm.skeleton.Pattern
+import com.github.woooking.cosyn.core.Components
 import com.google.common.base.CaseFormat
-import org.json4s.native.Serialization.read
 
 import scala.collection.JavaConverters._
-import com.github.woooking.cosyn.comm.config.JsonConfig._
-import com.github.woooking.cosyn.core.Components
+import io.circe.parser.decode
 
 class NLMatcher(query: String, limit: Int) {
     private val patternRepository = Components.patternRepository
@@ -25,7 +24,7 @@ class NLMatcher(query: String, limit: Int) {
         val types = pattern.getHasTypes.asScala
         val typeScore = types.map(typeSim).sum / types.size
         val score = (methodScore + typeScore) / 2
-        (read[Pattern](pattern.getPattern), score)
+        (decode[Pattern](pattern.getPattern).getOrElse(???), score)
     }
 
     private def methodSim(method: MethodEntity): Double = {

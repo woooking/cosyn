@@ -8,7 +8,6 @@ import org.slf4s.Logging
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * 代码挖掘API类

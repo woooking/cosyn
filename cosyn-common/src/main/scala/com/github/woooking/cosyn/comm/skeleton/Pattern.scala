@@ -4,6 +4,9 @@ import com.github.woooking.cosyn.comm.patterns._
 import com.github.woooking.cosyn.comm.skeleton.model.{Expression, _}
 import com.github.woooking.cosyn.comm.skeleton.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
 import com.github.woooking.cosyn.comm.util.TimeUtil.profile
+import io.circe.generic.auto._
+import io.circe.{Decoder, Encoder}
+
 import scala.annotation.tailrec
 
 case class Pattern private(holeFactory: HoleFactory, stmts: BlockStmt, parentMap: Map[Node, Node], holes: List[HoleExpr]) {
@@ -20,18 +23,18 @@ case class Pattern private(holeFactory: HoleFactory, stmts: BlockStmt, parentMap
             case None => this
             case Some(b) =>
                 Pattern(holeFactory, b)
-//                this.copy(stmts = b)
+            //                this.copy(stmts = b)
         }
     }
 
-//    def fillHole(hole: HoleExpr, expr: Expression): Pattern = profile("fill-hole") {
-//        val newStmts = FillHoleVisitor.fillHole(stmts, hole, expr)
-//        val exprParentMap = ParentCollector.instance[Expression].collect(parentMap(hole), expr)
-//        val exprHoles = HoleCollector.instance[Expression].collect(expr)
-//        val newParentMap = parentMap - hole ++ exprParentMap
-//        val newHoles = exprHoles ++ holes diff (hole :: Nil)
-//        copy(stmts = newStmts, parentMap = newParentMap, holes = newHoles)
-//    }
+    //    def fillHole(hole: HoleExpr, expr: Expression): Pattern = profile("fill-hole") {
+    //        val newStmts = FillHoleVisitor.fillHole(stmts, hole, expr)
+    //        val exprParentMap = ParentCollector.instance[Expression].collect(parentMap(hole), expr)
+    //        val exprHoles = HoleCollector.instance[Expression].collect(expr)
+    //        val newParentMap = parentMap - hole ++ exprParentMap
+    //        val newHoles = exprHoles ++ holes diff (hole :: Nil)
+    //        copy(stmts = newStmts, parentMap = newParentMap, holes = newHoles)
+    //    }
 
     def fillHole(hole: HoleExpr, expr: Expression): Pattern = profile("fill-hole") {
         val newStmts = FillHoleVisitor.fillHole(stmts, hole, expr)
@@ -40,6 +43,12 @@ case class Pattern private(holeFactory: HoleFactory, stmts: BlockStmt, parentMap
 }
 
 object Pattern {
+    implicit val decodeUser: Decoder[Pattern] =
+        Decoder.forProduct2("holeFactory", "stmts")(Pattern.apply)
+
+    implicit val encodeUser: Encoder[Pattern] =
+        Encoder.forProduct2("holeFactory", "stmts")(u => (u.holeFactory, u.stmts))
+
     def apply(holeFactory: HoleFactory, stmts: BlockStmt): Pattern = {
         val parentMap = ParentCollector.instance[BlockStmt].collect(null, stmts)
 

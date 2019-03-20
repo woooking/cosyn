@@ -1,27 +1,26 @@
 package com.github.woooking.cosyn.pattern
 
-import java.nio.file.Path
-
 import better.files.File
-import better.files.File.home
+import pureconfig._
+import pureconfig.generic.auto._
+
+case class CosynConfig(
+                          clientCodeDir: File,
+                          srcCodeDirs: List[File],
+                          debug: Boolean = false,
+                      )
 
 object CosynConfig {
-    val debug: Boolean = false
+    implicit val fileReader: ConfigReader[File] = ConfigReader[String].map(s => File(s))
 
-    val clientCodeDir: File = home / "data" / "client-codes" / "fill-cell-color"
-
-//    val srcCodeDirs = Array(
-//        home / "data" / "poi-4.0.1" / "src" / "java" path,
-//        home / "data" / "poi-4.0.1" / "src" / "ooxml" / "java" path,
-//        home / "data" / "jdk-11" / "src" path,
-//    )
-
-    val srcCodeDirs: Array[Path] = Array(
-        home / "lab" / "poi-4.0.0" / "src" / "java" path,
-        home / "lab" / "jdk-11" / "src" path,
-    )
-
-    val resultDir: File = home / "lab" / "patterns"
+    val global: CosynConfig = pureconfig.loadConfig[CosynConfig] match {
+        case Left(failures) =>
+            failures.toList
+                .map(_.description)
+                .foreach(println)
+            ???
+        case Right(value) => value
+    }
 }
 
 

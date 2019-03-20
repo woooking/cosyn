@@ -11,7 +11,7 @@ import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
-import com.github.woooking.cosyn.pattern.util.OptionConverters._
+import scala.compat.java8.OptionConverters._
 import org.slf4s.Logging
 
 import scala.annotation.tailrec

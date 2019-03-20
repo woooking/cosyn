@@ -1,11 +1,9 @@
 package com.github.woooking.cosyn.pattern.javaimpl
 
-import java.nio.file.Path
-
 import better.files.File
 import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.GraphGenerator
-import com.github.woooking.cosyn.pattern.api.filter.{DFGNodeFilter, DFGSizeFilter}
+import com.github.woooking.cosyn.pattern.api.filter.DFGNodeFilter
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.DFGNode.NodeType
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphUtil
@@ -19,7 +17,7 @@ case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "render")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "IndexWriter::init")))
 //            .register(DFGSizeFilter(50))
-        if (CosynConfig.debug) {
+        if (CosynConfig.global.debug) {
             dfgs.foreach(d => {
                 println("---------")
                 println(d.cfg.decl)

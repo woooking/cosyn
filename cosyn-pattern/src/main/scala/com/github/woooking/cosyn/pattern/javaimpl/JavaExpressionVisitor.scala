@@ -6,15 +6,14 @@ import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
-import com.github.javaparser.symbolsolver.reflectionmodel.{ReflectionConstructorDeclaration, ReflectionFieldDeclaration}
-import com.github.woooking.cosyn.pattern.{Components, KnowledgeGraph}
+import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionFieldDeclaration
+import com.github.woooking.cosyn.pattern.Components
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
-import com.github.woooking.cosyn.pattern.javaimpl.ir
 import com.github.woooking.cosyn.pattern.javaimpl.ir._
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements._
-import com.github.woooking.cosyn.pattern.util.OptionConverters._
 import org.slf4s.Logging
 
+import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
 
 class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRExpression, CFGStatements] with Logging {

@@ -2,10 +2,7 @@ package com.github.woooking.cosyn.pattern.javaimpl.cfg
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode}
-import com.github.woooking.cosyn.pattern.javaimpl.ir.IRTemp
-import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.{IRAssignment, IRStatement}
-import de.parsemis.graph.Node
+import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.IRStatement
 
 import scala.collection.mutable.ArrayBuffer
 

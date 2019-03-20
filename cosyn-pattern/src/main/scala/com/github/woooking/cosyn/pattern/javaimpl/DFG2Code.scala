@@ -9,7 +9,7 @@ import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleD
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
 import scala.collection.JavaConverters._
 
-case class FromDFGGenerator() extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
+case class DFG2Code() extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, String] with GraphTypeDef[DFGNode, DFGEdge] {
     override def generate(originalGraph: Seq[SimpleDFG])(graph: PGraph): String = {
         val (dfg, (_, nodes)) = originalGraph.map(d => d -> d.isSuperGraph(graph)).filter(_._2._1).head
         generateCode(dfg, nodes)

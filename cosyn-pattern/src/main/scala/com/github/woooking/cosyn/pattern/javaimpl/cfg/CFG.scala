@@ -14,11 +14,17 @@ class CFG(val name: String, val decl: Node) {
     val entry = new CFGStatements(this)
     val exit: CFGExit = new CFGExit(this)
 
-    case class Context(block: CFGStatements, break: Option[CFGBlock], continue: Option[CFGBlock])
+    case class Context(block: CFGStatements, break: List[CFGBlock], continue: List[CFGBlock]) {
+        def change(b: CFGStatements): Context = copy(block = b)
 
-    def createContext(b: CFGStatements): Context = createContext(b, None, None)
+        def push(b: CFGStatements, br: CFGBlock, c: CFGBlock): Context = Context(b, br :: break, c :: continue)
 
-    def createContext(b: CFGStatements, br: Option[CFGBlock], c: Option[CFGBlock]): Context = Context(b, br, c)
+        def pop(b: CFGStatements): Context = Context(b, break.tail, continue.tail)
+    }
+
+    object Context {
+        def apply(block: CFGStatements): Context = Context(block, Nil, Nil)
+    }
 
     def createTempVar(definition: IRStatement): IRTemp = new IRTemp(tempID.next(), definition)
 

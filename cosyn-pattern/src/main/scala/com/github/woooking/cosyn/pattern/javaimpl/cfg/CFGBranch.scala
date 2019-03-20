@@ -2,10 +2,8 @@ package com.github.woooking.cosyn.pattern.javaimpl.cfg
 
 import java.io.PrintStream
 
-import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode}
 import com.github.woooking.cosyn.pattern.javaimpl.ir.IRExpression
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.IRStatement
-import de.parsemis.graph.Node
 
 class CFGBranch(cfg: CFG, condition: IRExpression, val thenBlock: CFGBlock, val elseBlock: CFGBlock) extends CFGBlock(cfg) {
     thenBlock.preds += this
