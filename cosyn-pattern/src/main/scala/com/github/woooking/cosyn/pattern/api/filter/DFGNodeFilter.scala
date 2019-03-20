@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.pattern.api.filter
 
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGNode, SimpleDFG}
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGNode, SimpleDFG}
 
 /**
   * 一个DFGNodeFilter是对一个<code>Seq[SimpleDFG]</code>过滤的Filter，只保留输入中包含给定[[DFGNode]]的[[SimpleDFG]]

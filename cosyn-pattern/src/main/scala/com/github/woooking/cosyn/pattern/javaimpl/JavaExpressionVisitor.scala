@@ -7,17 +7,18 @@ import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
 import com.github.javaparser.symbolsolver.reflectionmodel.{ReflectionConstructorDeclaration, ReflectionFieldDeclaration}
-import com.github.woooking.cosyn.pattern.KnowledgeGraph
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.{CFG, CFGStatements}
-import com.github.woooking.cosyn.pattern.dfgprocessor.ir
-import com.github.woooking.cosyn.pattern.dfgprocessor.ir._
-import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements._
+import com.github.woooking.cosyn.pattern.{Components, KnowledgeGraph}
+import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
+import com.github.woooking.cosyn.pattern.javaimpl.ir
+import com.github.woooking.cosyn.pattern.javaimpl.ir._
+import com.github.woooking.cosyn.pattern.javaimpl.ir.statements._
 import com.github.woooking.cosyn.pattern.util.OptionConverters._
 import org.slf4s.Logging
 
 import scala.collection.JavaConverters._
 
 class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRExpression, CFGStatements] with Logging {
+    private val methodEntityRepository = Components.methodEntityRepository
     private def assignOpe2BinaryOpe(ope: AssignExpr.Operator): BinaryExpr.Operator = ope match {
         case AssignExpr.Operator.PLUS => BinaryExpr.Operator.PLUS
         case AssignExpr.Operator.MINUS => BinaryExpr.Operator.MINUS
@@ -35,7 +36,7 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
 
     private def resolveMethodCallExpr(methodCallExpr: MethodCallExpr): String = {
         try {
-            KnowledgeGraph.getMethodProto(methodCallExpr.resolve().getQualifiedSignature)
+            methodEntityRepository.getMethodProto(methodCallExpr.resolve().getQualifiedSignature)
         } catch {
             case _: UnsolvedSymbolException =>
                 methodCallExpr.getName.asString()

@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.pattern.api.filter
 
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.SimpleDFG
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.SimpleDFG
 
 /**
   * 一个DFGSizeFilter是对一个<code>Seq[SimpleDFG]</code>过滤的Filter，只保留结点数不超过<code>maxSize</code>的[[SimpleDFG]]

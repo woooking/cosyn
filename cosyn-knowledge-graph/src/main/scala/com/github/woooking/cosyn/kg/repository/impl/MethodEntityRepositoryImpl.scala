@@ -85,4 +85,18 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
         }
     }
 
+    @tailrec
+    private def getMethodProtoRec(method: MethodEntity): String = {
+        val entity = get(method.getQualifiedSignature)
+        entity.getExtendedMethods.asScala.headOption match {
+            case Some(extended) => getMethodProtoRec(extended)
+            case None => entity.getQualifiedSignature
+        }
+    }
+
+    def getMethodProto(method: String): String = {
+        val entity = session.load(classOf[MethodEntity], method)
+        if (entity == null) method
+        else getMethodProtoRec(entity)
+    }
 }

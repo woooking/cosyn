@@ -14,9 +14,9 @@ import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
 import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.Pipe
 import com.github.woooking.cosyn.pattern.api.Pipe.Filter
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFG
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.SimpleDFG
-import com.github.woooking.cosyn.pattern.dfgprocessor.ir.IRArg
+import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.SimpleDFG
+import com.github.woooking.cosyn.pattern.javaimpl.ir.IRArg
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

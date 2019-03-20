@@ -6,8 +6,8 @@ import better.files.File
 import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.GraphGenerator
 import com.github.woooking.cosyn.pattern.api.filter.{DFGNodeFilter, DFGSizeFilter}
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.DFGNode.NodeType
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGNode, SimpleDFG}
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.DFGNode.NodeType
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphUtil
 
 case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {

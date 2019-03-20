@@ -3,9 +3,9 @@ package com.github.woooking.cosyn.pattern.javaimpl
 import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFG
-import com.github.woooking.cosyn.pattern.dfgprocessor.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
-import com.github.woooking.cosyn.pattern.dfgprocessor.ir.statements.{IRAssert, IRMethodInvocation, IRReturn, IRThrow}
+import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
+import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
+import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.{IRAssert, IRMethodInvocation, IRReturn, IRThrow}
 import com.github.woooking.cosyn.pattern.util.OptionConverters._
 import org.slf4s.Logging
 

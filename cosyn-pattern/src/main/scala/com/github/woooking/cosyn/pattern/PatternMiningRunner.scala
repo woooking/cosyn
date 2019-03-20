@@ -4,11 +4,10 @@ import better.files.Dsl.SymbolicOperations
 import better.files.File
 import better.files.File.home
 import com.github.woooking.cosyn.pattern.api.{PatternMiner, Setting}
-import com.github.woooking.cosyn.pattern.dfgprocessor.DFG2Pattern
-import com.github.woooking.cosyn.pattern.dfgprocessor.dfg.{DFGEdge, DFGNode, SimpleDFG}
-import com.github.woooking.cosyn.pattern.javaimpl.JavaDFGGenerator
+import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleDFG}
+import com.github.woooking.cosyn.pattern.javaimpl.{DFG2Pattern, JavaDFGGenerator}
 import com.github.woooking.cosyn.comm.skeleton.Pattern
-import com.github.woooking.cosyn.kg.PatternSaver
+import com.github.woooking.cosyn.kg.{KnowledgeGraph, PatternSaver}
 import de.parsemis.miner.environment.Settings
 import org.json4s._
 import org.json4s.native.Serialization
