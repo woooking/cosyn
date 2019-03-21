@@ -7,7 +7,7 @@ import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionFieldDeclaration
-import com.github.woooking.cosyn.pattern.Components
+import com.github.woooking.cosyn.pattern.{Components, CosynConfig}
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.javaimpl.ir._
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements._
@@ -40,7 +40,7 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
             case _: UnsolvedSymbolException =>
                 methodCallExpr.getName.asString()
             case e: Throwable =>
-                log.warn("Unexpected Exception!", e)
+                if (CosynConfig.global.printParseErrors) log.warn("Unexpected Exception!", e)
                 methodCallExpr.getName.asString()
         }
     }

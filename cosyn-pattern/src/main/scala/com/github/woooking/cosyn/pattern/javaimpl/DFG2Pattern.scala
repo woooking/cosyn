@@ -4,6 +4,7 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{MethodDeclaration, VariableDeclarator}
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.stmt._
+import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder.{name, _}
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, FindNameContext, HoleExpr, HoleFactory, NameOrHole, Type}
 import com.github.woooking.cosyn.comm.skeleton.{Pattern, model}
@@ -11,11 +12,12 @@ import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
-import scala.compat.java8.OptionConverters._
 import org.slf4s.Logging
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
+import scala.util.{Failure, Success, Try}
 
 class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] with GraphTypeDef[DFGNode, DFGEdge] with Logging {
     val holeFactory = HoleFactory()
@@ -84,33 +86,51 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 if (nodes.contains(node)) (added :+ foreach(CodeUtil.jpTypeToType(n.getVariableDeclarator.getType), n.getVariableDeclarator.getName.asString(), iterable, block(body: _*)), ctx2)
                 else (added ++ body, ctx2)
 
-            //            case n: ForStmt if n.getCompare.isEmpty =>
-            //                val (initCode, ctx1) = gcl(n.getInitialization, "")
-            //                val (updateCode, ctx2) = gcl(n.getUpdate, "", ctx1)
-            //                val (bodyCode, ctx3) = generateCode(n.getBody, nodes, ctx2, s"$indent    ")
-            //                val codes = initCode ++ updateCode :+ bodyCode
-            //                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "") (s"${indent}for (${initCode.mkString("")}; ; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx3)
-            //                else rsn(ctx3, codes: _*)
-            //            case n: ForStmt =>
-            //                val (initCode, ctx1) = gcl(n.getInitialization, "")
-            //                val (compareCode, ctx2) = generateCode(n.getCompare.get(), nodes, ctx1, s"$indent    ")
-            //                val (updateCode, ctx3) = gcl(n.getUpdate, "", ctx2)
-            //                val (bodyCode, ctx4) = generateCode(n.getBody, nodes, ctx3, s"$indent    ")
-            //                val codes = (initCode :+ compareCode) ++ updateCode :+ bodyCode
-            //                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "" || compareCode != "") (s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4)
-            //                else rsn(ctx4, codes: _*)
-            //            case n: IfStmt if n.getElseStmt.isEmpty =>
-            //                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
-            //                val idt = if (nodes.contains(node)) s"$indent    " else indent
-            //                val (thenCode, ctx2) = gc1(n.getThenStmt, idt, ctx1)
-            //                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent}\n", ctx2)
-            //                else rsn(ctx2, conditionCode, thenCode)
-            //            case n: IfStmt =>
-            //                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
-            //                val idt = if (nodes.contains(node)) s"$indent    " else indent
-            //                val (thenCode, elseCode, ctx2) = gc2(n.getThenStmt, n.getElseStmt.get(), idt, ctx1)
-            //                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent} else {\n${el(elseCode)}$indent}\n", ctx2)
-            //                else rsn(ctx2, conditionCode, thenCode, elseCode)
+            case n: ForStmt if n.getCompare.isEmpty =>
+                @tailrec
+                def process(exprs: List[Expression], ctx: Ctx, added: List[model.Statement], result: List[model.Expression]): (List[model.Expression], Ctx, List[model.Statement]) = exprs match {
+                    case Nil => (result.reverse, ctx, added)
+                    case h :: t =>
+                        val GenExprResult(init, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
+                        process(t, newCtx, added ++ newAdded, init :: result)
+                }
+
+                val (init, ctx1, added1) = process(n.getInitialization.asScala.toList, names, Nil, Nil)
+                val (update, ctx2, added2) = process(n.getUpdate.asScala.toList, ctx1, Nil, Nil)
+
+                val (body, ctx3) = generateCodeStmt(n.getBody, nodes, ctx2)
+
+                if (nodes.contains(node)) (added1 ++ added2 :+ forStmt(init, update, block(body: _*)), ctx3)
+                else (added1 ++ added2, ctx3)
+            case n: ForStmt =>
+                @tailrec
+                def process(exprs: List[Expression], ctx: Ctx, added: List[model.Statement], result: List[model.Expression]): (List[model.Expression], Ctx, List[model.Statement]) = exprs match {
+                    case Nil => (result.reverse, ctx, added)
+                    case h :: t =>
+                        val GenExprResult(init, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
+                        process(t, newCtx, added ++ newAdded, init :: result)
+                }
+
+                val (init, ctx1, added1) = process(n.getInitialization.asScala.toList, names, Nil, Nil)
+                val GenExprResult(condition, ctx2, added2) = generateCodeExpr(n.getCompare.get(), nodes, ctx1)
+                val (update, ctx3, added3) = process(n.getUpdate.asScala.toList, ctx2, Nil, Nil)
+
+                val (body, ctx4) = generateCodeStmt(n.getBody, nodes, ctx3)
+
+                if (nodes.contains(node)) (added1 ++ added2 ++ added3 :+ forStmt(init, condition, update, block(body: _*)), ctx4)
+                else (added1 ++ added2 ++ added3, ctx4)
+
+            case n: IfStmt if n.getElseStmt.isEmpty =>
+                val GenExprResult(condition, ctx, added) = generateCodeExpr(n.getCondition, nodes, names)
+                val (thenStmt, ctx2) = generateCodeStmt(n.getThenStmt, nodes, ctx)
+                if (nodes.contains(node)) (added :+ when(condition, block(thenStmt: _*)), ctx2)
+                else (added ++ thenStmt, ctx2)
+            case n: IfStmt =>
+                val GenExprResult(condition, ctx, added) = generateCodeExpr(n.getCondition, nodes, names)
+                val (thenStmt, ctx2) = generateCodeStmt(n.getThenStmt, nodes, ctx)
+                val (elseStmt, ctx3) = generateCodeStmt(n.getElseStmt.get(), nodes, ctx2)
+                if (nodes.contains(node)) (added :+ when(condition, block(thenStmt: _*), block(elseStmt: _*)), ctx3)
+                else (added ++ thenStmt ++ elseStmt, ctx3)
             case n: ReturnStmt if n.getExpression.isEmpty =>
                 if (nodes.contains(node)) (ret() :: Nil, names)
                 else (Nil, names)
@@ -122,10 +142,11 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                val (code, ctx) = gc1(n.getExpression, "")
             //                if (nodes.contains(node)) (s"throw $code", ctx)
             //                else rsn(ctx, code)
-            //            case n: WhileStmt =>
-            //                val (conditionCode, ctx1) = gc1(n.getCondition, "")
-            //                val (bodyCode, ctx2) = gc1(n.getBody, s"$indent    ", ctx1)
-            //                rs(s"${indent}while ($conditionCode) {\n$bodyCode$indent}\n", ctx2, conditionCode, bodyCode)
+            case n: WhileStmt =>
+                val GenExprResult(condition, ctx1, added1) = generateCodeExpr(n.getCondition, nodes, names)
+                val (body, ctx2) = generateCodeStmt(n.getBody, nodes, ctx1)
+                if (nodes.contains(node)) (added1 :+ whileStmt(condition, block(body: _*)), ctx2)
+                else (added1 ++ body, ctx2)
             case n: TryStmt =>
                 generateCodeStmt(n.getTryBlock, nodes, names)
             case _ =>
@@ -144,9 +165,17 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
 
         @inline
         def rs1(gen: model.Expression => model.Expression, ctx: Set[String], ast1: Expression): GenExprResult = {
-            val GenExprResult(e, ctx, added) = generateCodeExpr(ast1, nodes, names)
-            if (nodes.contains(node)) GenExprResult(gen(e), ctx, added)
-            else GenExprResult(holeFactory.newHole(), ctx, added)
+            val GenExprResult(e, ctx1, added) = generateCodeExpr(ast1, nodes, ctx)
+            if (nodes.contains(node)) GenExprResult(gen(e), ctx1, added)
+            else GenExprResult(holeFactory.newHole(), ctx1, added)
+        }
+
+        @inline
+        def rs2(gen: (model.Expression, model.Expression) => model.Expression, ctx: Set[String], ast1: Expression, ast2: Expression): GenExprResult = {
+            val GenExprResult(e1, ctx1, added1) = generateCodeExpr(ast1, nodes, ctx)
+            val GenExprResult(e2, ctx2, added2) = generateCodeExpr(ast2, nodes, ctx1)
+            if (nodes.contains(node)) GenExprResult(gen(e1, e2), ctx2, added1 ++ added2)
+            else GenExprResult(holeFactory.newHole(), ctx2, added1 ++ added2)
         }
 
         node match {
@@ -163,11 +192,8 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                val (valuesCode, ctx) = gcl(n.getValues, "")
             //                val ellip = valuesCode.map(el).mkString(", ")
             //                rs(s"{$ellip}", ctx, valuesCode: _*)
-            //            case n: BinaryExpr =>
-            //                val (leftCode, rightCode, ctx) = gc2(n.getLeft, n.getRight, "")
-            //                if (nodes.contains(node)) (s"${el(leftCode)} ${n.getOperator.asString()} ${el(rightCode)}", ctx)
-            //                else if (leftCode != "" && rightCode != "") (s"$leftCode\n$indent$rightCode", ctx)
-            //                else (s"$leftCode$rightCode", ctx)
+            case n: BinaryExpr =>
+                rs2((left, right) => binary(n.getOperator.asString(), left, right), names, n.getLeft, n.getRight)
             case n: BooleanLiteralExpr =>
                 rs0(model.BooleanLiteral(n.getValue), names)
             case n: CastExpr =>
@@ -179,42 +205,23 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                val (conditionCode, thenCode, elseCode, ctx) = gc3(n.getCondition, n.getThenExpr, n.getElseExpr, "")
             //                rs(s"$conditionCode ? $thenCode : $elseCode", ctx, conditionCode, thenCode, elseCode)
             //            case n: ConstructorDeclaration => generateCode(n.getBody, nodes, names, indent)
-            //            case n: EnclosedExpr => generateCode(n.getInner, nodes, names, indent)
-            case n: FieldAccessExpr if n.getScope.isNameExpr && n.getScope.asNameExpr().getName.asString().matches("^[A-Z].*") =>
+            case n: EnclosedExpr => generateCodeExpr(n.getInner, nodes, names)
+            case n: FieldAccessExpr if n.getScope.isNameExpr && n.getScope.asNameExpr().getName.asString().matches("^[A-Z].*") => // TODO: enum or static field access
                 val constant: NameOrHole = if (nodes.contains(n.getName)) n.getName.asString() else holeFactory.newHole()
                 val ty = CodeUtil.resolvedTypeToType(n.getScope.asNameExpr().calculateResolvedType()).asInstanceOf[BasicType]
                 rs0(enum(ty, constant), names)
-            //            case n: ForEachStmt =>
-            //                val (code, ctx) = gc1(n.getBody, s"$indent    ")
-            //                if (nodes.contains(node)) (s"${indent}for () {\n$code$indent}\n", ctx)
-            //                else rsn(ctx, code)
-            //            case n: ForStmt if n.getCompare.isEmpty =>
-            //                val (initCode, ctx1) = gcl(n.getInitialization, "")
-            //                val (updateCode, ctx2) = gcl(n.getUpdate, "", ctx1)
-            //                val (bodyCode, ctx3) = generateCode(n.getBody, nodes, ctx2, s"$indent    ")
-            //                val codes = initCode ++ updateCode :+ bodyCode
-            //                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "") (s"${indent}for (${initCode.mkString("")}; ; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx3)
-            //                else rsn(ctx3, codes: _*)
-            //            case n: ForStmt =>
-            //                val (initCode, ctx1) = gcl(n.getInitialization, "")
-            //                val (compareCode, ctx2) = generateCode(n.getCompare.get(), nodes, ctx1, s"$indent    ")
-            //                val (updateCode, ctx3) = gcl(n.getUpdate, "", ctx2)
-            //                val (bodyCode, ctx4) = generateCode(n.getBody, nodes, ctx3, s"$indent    ")
-            //                val codes = (initCode :+ compareCode) ++ updateCode :+ bodyCode
-            //                if (nodes.contains(node) || initCode.mkString("") != "" || updateCode.mkString("") != "" || compareCode != "") (s"${indent}for (${initCode.mkString("")}; $compareCode; ${updateCode.mkString("")}) {\n$bodyCode$indent}\n", ctx4)
-            //                else rsn(ctx4, codes: _*)
-            //            case n: IfStmt if n.getElseStmt.isEmpty =>
-            //                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
-            //                val idt = if (nodes.contains(node)) s"$indent    " else indent
-            //                val (thenCode, ctx2) = gc1(n.getThenStmt, idt, ctx1)
-            //                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent}\n", ctx2)
-            //                else rsn(ctx2, conditionCode, thenCode)
-            //            case n: IfStmt =>
-            //                val (conditionCode, ctx1) = generateCode(n.getCondition, nodes, names, "")
-            //                val idt = if (nodes.contains(node)) s"$indent    " else indent
-            //                val (thenCode, elseCode, ctx2) = gc2(n.getThenStmt, n.getElseStmt.get(), idt, ctx1)
-            //                if (nodes.contains(node)) (s"${indent}if (${el(conditionCode)}) {\n${el(thenCode)}$indent} else {\n${el(elseCode)}$indent}\n", ctx2)
-            //                else rsn(ctx2, conditionCode, thenCode, elseCode)
+            case n: FieldAccessExpr =>
+                val constant: NameOrHole = if (nodes.contains(n.getName)) n.getName.asString() else holeFactory.newHole()
+                val GenExprResult(receiver, ctx, added) = generateCodeExpr(n.getScope, nodes, names)
+                Try {
+                    val ty = CodeUtil.resolvedTypeToType(n.getScope.calculateResolvedType()).asInstanceOf[BasicType]
+                    GenExprResult(field(ty, receiver, constant), ctx, added)
+                } match {
+                    case Success(value) if nodes.contains(node) =>
+                        value
+                    case Failure(_) =>
+                        GenExprResult(holeFactory.newHole(), ctx, added)
+                }
             //            case n: InstanceOfExpr =>
             //                val (code, ctx) = gc1(n.getExpression, "")
             //                rs(s"$code instanceof ${n.getType}", ctx, code)
@@ -228,9 +235,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                if (nodes.contains(node)) (s"${n.getName}($ellip)", ctx)
             //                else rsn(ctx, argsCode: _*)
             case n: MethodCallExpr if n.getScope.isPresent =>
-                val scope = n.getScope.get()
-                val receiverType = CodeUtil.resolvedTypeToType(scope.calculateResolvedType()).asInstanceOf[BasicType]
-
+                @tailrec
                 def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
                     remain match {
                         case Nil =>
@@ -249,14 +254,26 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                     }
                 }
 
+                val scope = n.getScope.get()
+
                 val GenExprResult(scopeCode, ctx, added) = generateCodeExpr(scope, nodes, names)
 
-                val (args, ctx2, added2) = process(n.getArguments.asScala.toList, ctx, added, Nil)
-
-                if (nodes.contains(node)) {
-                    GenExprResult(call(scopeCode, receiverType, n.getName.asString(), args: _*), ctx2, added2)
-                } else {
-                    GenExprResult(holeFactory.newHole(), ctx2, added2)
+                Try {process(n.getArguments.asScala.toList, ctx, added, Nil)} match {
+                    case Failure(_: UnsolvedSymbolException) =>
+                        GenExprResult(holeFactory.newHole(), ctx, added)
+                    case Failure(exception) =>
+                        exception.printStackTrace()
+                        ???
+                    case Success((args, ctx2, added2)) =>
+                        Try {
+                            val receiverType = CodeUtil.resolvedTypeToType(scope.calculateResolvedType()).asInstanceOf[BasicType]
+                            GenExprResult(call(scopeCode, receiverType, n.getName.asString(), args: _*), ctx2, added2)
+                        } match {
+                            case Success(value) if nodes.contains(node) =>
+                                value
+                            case _ =>
+                                GenExprResult(holeFactory.newHole(), ctx2, added2)
+                        }
                 }
             case n: NameExpr =>
                 val name = n.getName.asString()
@@ -264,7 +281,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 else if (noName) GenExprResult(holeFactory.newHole(), names, Nil)
                 else if (names.contains(name)) GenExprResult(name, names, Nil)
                 else GenExprResult(holeFactory.newHole(), names, Nil)
-            //            case _: NullLiteralExpr => rs("null", names)
+            case _: NullLiteralExpr => rs0(model.NullLiteral, names)
             case n: ObjectCreationExpr if n.getScope.isEmpty =>
                 val receiverType = BasicType(n.getType.toString)
 
@@ -293,17 +310,8 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 } else {
                     GenExprResult(holeFactory.newHole(), ctx, added)
                 }
-            //            case n: ReturnStmt if n.getExpression.isEmpty =>
-            //                rs(s"${indent}return;", names)
-            //            case n: ReturnStmt =>
-            //                val (code, ctx) = gc1(n.getExpression.get(), "")
-            //                rs(s"return $code;", ctx, code)
             case n: StringLiteralExpr =>
                 rs0(model.StringLiteral(n.asString()), names)
-            //            case n: ThrowStmt =>
-            //                val (code, ctx) = gc1(n.getExpression, "")
-            //                if (nodes.contains(node)) (s"throw $code", ctx)
-            //                else rsn(ctx, code)
             //            case _: ThisExpr => rs("this", names)
             case n: UnaryExpr =>
                 val ope = n.getOperator
@@ -312,21 +320,6 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 generateVariableDeclarator(n.getVariable(0), nodes, names, noName)
             //            case n: VariableDeclarator if n.getInitializer.isEmpty =>
             //                rs(s"${n.getType} ${n.getName}", names)
-            //            case n: VariableDeclarator =>
-            //                val name = n.getName.asString()
-            //                val (code, ctx) = gc1(n.getInitializer.get(), "")
-            //                val newCtx = if (nodes.contains(node) || nodes.contains(n.getInitializer.get())) ctx + name else ctx
-            //                rs(s"${n.getType} $name = $code", newCtx, code)
-            //                if (nodes.contains(node) || nodes.contains(n.getInitializer.get())) (s"${n.getType} $name = $code", ctx + name)
-            //                else rsn(ctx, code)
-            //            case n: WhileStmt =>
-            //                val (conditionCode, ctx1) = gc1(n.getCondition, "")
-            //                val (bodyCode, ctx2) = gc1(n.getBody, s"$indent    ", ctx1)
-            //                rs(s"${indent}while ($conditionCode) {\n$bodyCode$indent}\n", ctx2, conditionCode, bodyCode)
-            //            case n: TryStmt =>
-            //                val (code, ctx) = gc1(n.getTryBlock, indent)
-            //                //                rs(s"${indent}try {\n$code$indent}\n", ctx, code)
-            //                rs(s"$indent$code", ctx, code)
             case _ =>
                 log.warn(s"not implemented ${node.getClass} $node")
                 ???
@@ -334,21 +327,27 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
     }
 
     def generateVariableDeclarator(node: VariableDeclarator, nodes: Set[Node], names: Set[String], noName: Boolean = false): GenExprResult = {
-        val ty = CodeUtil.resolvedTypeToType(node.getType.resolve())
-        node.getInitializer.asScala match {
-            case Some(value) =>
-                val GenExprResult(expr, ctx2, added) = generateCodeExpr(value, nodes, names)
-                expr match {
-                    case _: HoleExpr =>
-                        if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
-                        else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
-                    case _ =>
-                        GenExprResult(v(ty, node.getName.asString(), expr), ctx2 + node.getName.asString(), added)
-                }
-            case None =>
-                if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
-                else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
+        try {
+            val ty = CodeUtil.resolvedTypeToType(node.getType.resolve())
+            node.getInitializer.asScala match {
+                case Some(value) =>
+                    val GenExprResult(expr, ctx2, added) = generateCodeExpr(value, nodes, names)
+                    expr match {
+                        case _: HoleExpr =>
+                            if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
+                            else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
+                        case _ =>
+                            GenExprResult(v(ty, node.getName.asString(), expr), ctx2 + node.getName.asString(), added)
+                    }
+                case None =>
+                    if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
+                    else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
+            }
+        } catch {
+            case _: UnsolvedSymbolException =>
+                GenExprResult(holeFactory.newHole(), names, Nil)
         }
+
     }
 
 }

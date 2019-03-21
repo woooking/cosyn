@@ -1,13 +1,11 @@
 package com.github.woooking.cosyn.pattern.javaimpl.dfg
 
-import java.io.PrintStream
-
+import cats.Show
+import com.github.javaparser.ast.{Node => ASTNode}
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.javaimpl.ir.IRExpression
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.IRStatement
 import com.google.common.collect.{BiMap, HashBiMap}
-import com.github.javaparser.ast.{Node => ASTNode}
-import com.github.woooking.cosyn.pattern.util.Printable
 import de.parsemis.graph._
 
 import scala.annotation.tailrec
@@ -38,7 +36,7 @@ class SimpleDFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] {
             val node = ite.next()
             var outDiff = false
             val outs = current.outgoingEdgeIterator()
-            while (outs.hasNext() && !outDiff) {
+            while (outs.hasNext && !outDiff) {
                 val outEdge = outs.next()
                 val other = outEdge.getOtherNode(current)
                 if (nodeMap.containsValue(other)) {
@@ -47,9 +45,9 @@ class SimpleDFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] {
                 }
             }
 
-            var inDiff = false;
+            var inDiff = false
             val ins = current.incommingEdgeIterator()
-            while (ins.hasNext()) {
+            while (ins.hasNext) {
                 val inEdge = ins.next()
                 val other = inEdge.getOtherNode(current)
                 if (nodeMap.containsValue(other)) {
@@ -74,18 +72,18 @@ class SimpleDFG(val cfg: CFG) extends ListGraph[DFGNode, DFGEdge] {
 }
 
 object SimpleDFG {
-    implicit val dfgPrintable = new Printable[SimpleDFG] {
-        override def print(obj: SimpleDFG, ps: PrintStream): Unit = {
-            val ite = obj.edgeIterator()
-            while (ite.hasNext) {
-                val edge = ite.next()
-                if (edge.getDirection() == Edge.INCOMING) {
-                    ps.println(s"${edge.getNodeB.getLabel} -- ${edge.getLabel} -> ${edge.getNodeA.getLabel}")
-                } else {
-                    ps.println(s"${edge.getNodeA.getLabel} -- ${edge.getLabel} -> ${edge.getNodeB.getLabel}")
-                }
+    implicit val dfgShow: Show[SimpleDFG] = (obj: SimpleDFG) => {
+        var s = ""
+        val ite = obj.edgeIterator()
+        while (ite.hasNext) {
+            val edge = ite.next()
+            if (edge.getDirection() == Edge.INCOMING) {
+                s = s + s"${edge.getNodeB.getLabel} -- ${edge.getLabel} -> ${edge.getNodeA.getLabel}"
+            } else {
+                s = s + s"${edge.getNodeA.getLabel} -- ${edge.getLabel} -> ${edge.getNodeB.getLabel}"
             }
         }
+        s
     }
 
     type DNode = Node[DFGNode, DFGEdge]

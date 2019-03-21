@@ -9,6 +9,7 @@ import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.{CombinedTypeSolver, JavaParserTypeSolver}
 import com.github.javaparser.{JavaParser, ParseResult, ParserConfiguration}
+import com.github.woooking.cosyn.comm.util.FunctionUtil
 import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.Pipe
 import com.github.woooking.cosyn.pattern.api.Pipe.Filter
@@ -76,11 +77,11 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
 
     private def cfg2dfg: Pipe[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
 
-    private def cuResultFilter: Filter[CUs] = (Pipe.id[CUs] /: cuFilters) (_ | _)
+    private def cuResultFilter: Filter[CUs] = FunctionUtil.sum(cuFilters.toList)
 
-    private def cfgFilter: Filter[CFGs] = (Pipe.id[CFGs] /: cfgFilters) (_ | _)
+    private def cfgFilter: Filter[CFGs] = FunctionUtil.sum(cfgFilters.toList)
 
-    private def dfgFilter: Filter[DFGs] = (Pipe.id[DFGs] /: dfgFilters) (_ | _)
+    private def dfgFilter: Filter[DFGs] = FunctionUtil.sum(dfgFilters.toList)
 
     override def >>:(input: Path): DFGs =
         input >>: (sourceFilesGenerator |  cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)

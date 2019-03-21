@@ -7,9 +7,11 @@ import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity, PatternEntity, TypeEntity}
 import org.neo4j.ogm.session.Session
 import io.circe.syntax._
+import org.slf4s.Logging
+
 import scala.collection.JavaConverters._
 
-object PatternSaver {
+object PatternSaver extends Logging {
     def savePatterns(patterns: Seq[Pattern]): Unit = {
         val session = KnowledgeGraph.session
 
@@ -24,6 +26,8 @@ object PatternSaver {
     }
 
     private def toEntity(session: Session, pattern: Pattern): PatternEntity = {
+        log.debug(pattern.stmts.generateCode(""))
+
         val entity = PatternEntity.create(pattern.asJson.noSpaces)
 
         val types = TypeCollector.instance[BlockStmt].collect(pattern.stmts)

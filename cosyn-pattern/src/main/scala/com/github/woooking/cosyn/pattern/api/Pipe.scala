@@ -1,7 +1,10 @@
 package com.github.woooking.cosyn.pattern.api
 
+import cats.Monoid
+
 /**
   * 管道抽象接口。
+  *
   * @tparam In 管道输入的类型
   * @tparam Out 管道输出的类型
   */
@@ -25,4 +28,9 @@ object Pipe {
       * @tparam T 过滤器的输入和输出类型
       */
     type Filter[T] = Pipe[T, T]
+
+    implicit def filterCombineMonoid[T]: Monoid[Filter[T]] = new Monoid[Filter[T]] {
+        def empty: Filter[T] = id
+        def combine(x: Filter[T], y: Filter[T]): Filter[T] = x | y
+    }
 }

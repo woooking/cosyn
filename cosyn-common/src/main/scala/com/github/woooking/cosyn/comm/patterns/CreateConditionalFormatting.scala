@@ -27,7 +27,7 @@ object CreateConditionalFormatting {
                     "byte",
                     field(
                         "org.apache.poi.ss.usermodel.ComparisonOperator",
-                        "byte",
+                        BasicType("byte"),
                         holeFactory.newHole()
                     ),
                 ),

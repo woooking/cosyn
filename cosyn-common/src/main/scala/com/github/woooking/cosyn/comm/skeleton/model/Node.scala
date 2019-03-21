@@ -21,6 +21,47 @@ sealed case class ExprStmt(expr: Expression) extends Statement {
     override def toString: String = s"$expr;"
 }
 
+sealed case class IfStmt(condition: Expression, thenStmt: BlockStmt, elseStmt: Option[BlockStmt]) extends Statement {
+    override def generateCode(indent: String): String = elseStmt match {
+        case Some(value) =>
+            s"""${indent}if ($condition) {
+               |${thenStmt.generateCode(s"    $indent")}
+               |$indent} else {
+               |${value.generateCode(s"    $indent")}
+               |$indent}""".stripMargin
+        case None =>
+            s"""${indent}if ($condition) {
+               |${thenStmt.generateCode(s"    $indent")}
+               |$indent}""".stripMargin
+    }
+
+
+    override def toString: String =elseStmt match {
+        case Some(value) =>
+            s"""if ($condition) {
+               |${thenStmt.generateCode("    ")}
+               |} else {
+               |${value.generateCode(s"    ")}
+               |}""".stripMargin
+        case None =>
+            s"""if ($condition) {
+               |${thenStmt.generateCode(s"    ")}
+               |}""".stripMargin
+    }
+}
+
+sealed case class ForStmt(inits: Seq[Expression], condition: Option[Expression], updates: List[Expression], block: BlockStmt) extends Statement {
+    override def generateCode(indent: String): String =
+        s"""${indent}for (${inits.mkString(", ")};${condition.getOrElse("")};${updates.mkString(", ")}) {
+           |${block.generateCode(s"    $indent")}
+           |$indent}""".stripMargin
+
+    override def toString: String =
+        s"""for (${inits.mkString(", ")};${condition.getOrElse("")};${updates.mkString(", ")}) {
+           |${block.generateCode("    ")}
+           |}""".stripMargin
+}
+
 sealed case class ForEachStmt(ty: Type, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
     override def generateCode(indent: String): String =
         s"""${indent}for (${CodeUtil.qualifiedClassName2Simple(ty.toString)} $variable : $iterable) {
@@ -30,6 +71,18 @@ sealed case class ForEachStmt(ty: Type, variable: String, iterable: Expression, 
     override def toString: String =
         s"""for (${CodeUtil.qualifiedClassName2Simple(ty.toString)} $variable : $iterable) {
            |    $block
+           |}""".stripMargin
+}
+
+sealed case class WhileStmt(condition: Expression, block: BlockStmt) extends Statement {
+    override def generateCode(indent: String): String =
+        s"""${indent}while ($condition) {
+           |${block.generateCode(s"    $indent")}
+           |$indent}""".stripMargin
+
+    override def toString: String =
+        s"""while ($condition) {
+           |${block.generateCode("    ")}
            |}""".stripMargin
 }
 
@@ -50,6 +103,10 @@ sealed case class HoleExpr (id: Int) extends NameOrHole {
 
 sealed case class AssignExpr(name: NameExpr, target: Expression) extends Expression {
     override def toString: String = s"$name = $target"
+}
+
+sealed case class BinaryExpr(ope: String, left: Expression, right: Expression) extends Expression {
+    override def toString: String = s"$left $ope $right"
 }
 
 sealed case class EnumConstantExpr(enumType: BasicType, name: Expression) extends Expression {
@@ -86,6 +143,10 @@ sealed case class SimpleNameExpr(name: String) extends NameExpr {
 
 sealed case class StaticFieldAccessExpr(receiverType: BasicType, targetType: Type, name: NameOrHole) extends Expression {
     override def toString: String = s"${qualifiedClassName2Simple(receiverType.ty)}.$name"
+}
+
+sealed case class FieldAccessExpr(receiverType: BasicType, receiver: Expression, name: NameOrHole) extends Expression {
+    override def toString: String = s"$receiver.$name"
 }
 
 sealed case class VariableDeclaration(ty: Type, name: NameExpr, init: Option[Expression]) extends Expression {
@@ -131,6 +192,10 @@ sealed case class CharLiteral(value: Char) extends LiteralExpr{
 
 sealed case class StringLiteral(value: String) extends LiteralExpr {
     override def toString: String = s"""\"$value\""""
+}
+
+case object NullLiteral extends LiteralExpr {
+    override def toString: String = "null"
 }
 
 case class HoleFactory(var nextId: Int = 0) {

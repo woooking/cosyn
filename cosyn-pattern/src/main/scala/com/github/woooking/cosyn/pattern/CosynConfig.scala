@@ -7,6 +7,7 @@ import pureconfig.generic.auto._
 case class CosynConfig(
                           clientCodeDir: File,
                           srcCodeDirs: List[File],
+                          printParseErrors: Boolean = false,
                           debug: Boolean = false,
                       )
 
