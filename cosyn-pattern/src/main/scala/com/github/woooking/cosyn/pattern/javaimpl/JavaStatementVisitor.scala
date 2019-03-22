@@ -3,22 +3,24 @@ package com.github.woooking.cosyn.pattern.javaimpl
 import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
+import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.{IRAssert, IRMethodInvocation, IRReturn, IRThrow}
 import org.slf4s.Logging
-import scala.compat.java8.OptionConverters._
 
 import scala.collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
 
 class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
     private val exprVisitor = new JavaExpressionVisitor(outerCfg)
 
     val visitor: GenericVisitorWithDefaults[outerCfg.Context, outerCfg.Context] = new GenericVisitorWithDefaults[outerCfg.Context, outerCfg.Context] {
         override def visit(n: AssertStmt, context: outerCfg.Context): outerCfg.Context = {
-            val check = n.getCheck.accept(exprVisitor, context.block)
-            val message = n.getMessage.asScala.map(_.accept(exprVisitor, context.block))
-            context.block.addStatement(new IRAssert(check, message, Set(n)))
+            for (
+                check <- n.getCheck.accept(exprVisitor, context.block);
+                message <- n.getMessage.asScala.map(_.accept(exprVisitor, context.block))
+            ) context.block.addStatement(new IRAssert(check, message, Set(n)))
             context
         }
 
@@ -74,20 +76,21 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
         }
 
         override def visit(n: ForEachStmt, context: outerCfg.Context): outerCfg.Context = {
+            val ty = CodeUtil.resolvedTypeToType(n.getVariable.calculateResolvedType()).toString
             context.block.seal()
             val entryBlock = outerCfg.createStatements()
             context.block.setNext(entryBlock)
             val iteExpr = n.getIterable.accept(exprVisitor, entryBlock)
-            val tempIte = entryBlock.addStatement(IRMethodInvocation(outerCfg, "java.lang.Iterable.iterator()", Some(iteExpr), Seq(), Set(n))).target
+            val tempIte = entryBlock.addStatement(IRMethodInvocation(outerCfg, "Iterable", "java.lang.Iterable.iterator()", iteExpr, Seq(), Set(n))).target
             val conditionBlock = outerCfg.createStatements()
             entryBlock.setNext(conditionBlock)
             entryBlock.seal()
-            val condition = conditionBlock.addStatement(IRMethodInvocation(outerCfg, "java.util.Iterator.hasNext()", Some(tempIte), Seq(), Set(n))).target
+            val condition = conditionBlock.addStatement(IRMethodInvocation(outerCfg, "boolean", "java.util.Iterator.hasNext()", Some(tempIte), Seq(), Set(n))).target
             val thenBlock = outerCfg.createStatements()
-            val next = thenBlock.addStatement(IRMethodInvocation(outerCfg, "java.util.Iterator.next()", Some(tempIte), Seq(), Set(n))).target
+            val next = thenBlock.addStatement(IRMethodInvocation(outerCfg, ty, "java.util.Iterator.next()", Some(tempIte), Seq(), Set(n))).target
             outerCfg.writeVar(n.getVariableDeclarator.getName.asString(), thenBlock, next)
             val elseBlock = outerCfg.createStatements()
-            val branch = outerCfg.createBranch(condition, thenBlock, elseBlock)
+            val branch = outerCfg.createBranch(Some(condition), thenBlock, elseBlock)
             branch.seal()
             conditionBlock.setNext(branch)
             // TODO next
@@ -159,34 +162,35 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
         }
 
         override def visit(n: ReturnStmt, context: outerCfg.Context): outerCfg.Context = {
-            val expr = n.getExpression.asScala.map(_.accept(exprVisitor, context.block))
-            context.block.addStatement(new IRReturn(expr, Set(n)))
+            for (expr <- n.getExpression.asScala.map(_.accept(exprVisitor, context.block))) context.block.addStatement(new IRReturn(expr, Set(n)))
             context
         }
 
         override def visit(n: SwitchStmt, context: outerCfg.Context): outerCfg.Context = {
-            val selector = n.getSelector.accept(exprVisitor, context.block)
-            context.block.seal()
-            val switch = outerCfg.createSwitch(selector)
-            context.block.setNext(switch)
-            val exitBlock = outerCfg.createStatements()
-            // TODO: fall through
-            n.getEntries.asScala.map(e => e.getLabels.asScala.toList -> e.getStatements.asScala).foreach {
-                case (Nil, s) =>
-                    val statements = outerCfg.createStatements()
-                    switch(DefaultLabel) = statements
-                    val newContext = (context.push(statements, exitBlock, null) /: s) ((c, st) => st.accept(this, c))
-                    newContext.block.seal()
-                    newContext.block.setNext(exitBlock)
-                case (ls, s) =>
-                    val labels = ls.map(_.accept(exprVisitor, context.block))
-                    val statements = outerCfg.createStatements()
-                    labels.map(ExpressionLabel.apply).foreach(switch(_) = statements)
-                    val newContext = (context.push(statements, exitBlock, null) /: s) ((c, st) => st.accept(this, c))
-                    newContext.block.seal()
-                    newContext.block.setNext(exitBlock)
+            val c = for (selector <- n.getSelector.accept(exprVisitor, context.block)) yield {
+                context.block.seal()
+                val switch = outerCfg.createSwitch(selector)
+                context.block.setNext(switch)
+                val exitBlock = outerCfg.createStatements()
+                // TODO: fall through
+                n.getEntries.asScala.map(e => e.getLabels.asScala.toList -> e.getStatements.asScala).foreach {
+                    case (Nil, s) =>
+                        val statements = outerCfg.createStatements()
+                        switch(DefaultLabel) = statements
+                        val newContext = (context.push(statements, exitBlock, null) /: s) ((c, st) => st.accept(this, c))
+                        newContext.block.seal()
+                        newContext.block.setNext(exitBlock)
+                    case (ls, s) =>
+                        val labels = ls.flatMap(_.accept(exprVisitor, context.block).toList)
+                        val statements = outerCfg.createStatements()
+                        labels.map(ExpressionLabel.apply).foreach(switch(_) = statements)
+                        val newContext = (context.push(statements, exitBlock, null) /: s) ((c, st) => st.accept(this, c))
+                        newContext.block.seal()
+                        newContext.block.setNext(exitBlock)
+                }
+                context.copy(block = exitBlock)
             }
-            context.copy(block = exitBlock)
+            c.getOrElse(context)
         }
 
         override def visit(n: SynchronizedStmt, context: outerCfg.Context): outerCfg.Context = {
@@ -194,8 +198,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
         }
 
         override def visit(n: ThrowStmt, context: outerCfg.Context): outerCfg.Context = {
-            val exception = n.getExpression.accept(exprVisitor, context.block)
-            context.block.addStatement(new IRThrow(exception, Set(n)))
+            for (exception <- n.getExpression.accept(exprVisitor, context.block)) context.block.addStatement(new IRThrow(exception, Set(n)))
             context
         }
 

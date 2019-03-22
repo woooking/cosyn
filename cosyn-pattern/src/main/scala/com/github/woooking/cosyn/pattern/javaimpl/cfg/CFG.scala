@@ -30,23 +30,23 @@ class CFG(val name: String, val decl: Node) {
 
     def createStatements(): CFGStatements = new CFGStatements(this)
 
-    def createBranch(condition: IRExpression, thenBlock: CFGBlock, elseBlock: CFGBlock): CFGBranch = new CFGBranch(this, condition, thenBlock, elseBlock)
+    def createBranch(condition: Option[IRExpression], thenBlock: CFGBlock, elseBlock: CFGBlock): CFGBranch = new CFGBranch(this, condition, thenBlock, elseBlock)
 
     def createSwitch(selector: IRExpression): CFGSwitch = new CFGSwitch(this, selector)
 
     def writeVar(name: String, block: CFGBlock, value: IRExpression): Unit = block.defs(name) = value
 
-    def readVar(name: String, block: CFGBlock): IRExpression = block.defs.getOrElse(name, readVarRec(name, block))
+    def readVar(ty: String, name: String, block: CFGBlock): IRExpression = block.defs.getOrElse(name, readVarRec(ty, name, block))
 
-    private def readVarRec(name: String, block: CFGBlock): IRExpression = {
+    private def readVarRec(ty: String, name: String, block: CFGBlock): IRExpression = {
         val v = if (!block.isSealed) {
-            val phi = new IRPhi(block)
+            val phi = new IRPhi(ty, block)
             block.incompletePhis(name) = phi
             phi.target
         } else if (block.preds.length == 1) {
-            readVar(name, block.preds(0))
+            readVar(ty, name, block.preds(0))
         } else {
-            val phi = new IRPhi(block)
+            val phi = new IRPhi(ty, block)
             writeVar(name, block, phi.target)
             addPhiOperands(name, phi)
         }
@@ -55,7 +55,7 @@ class CFG(val name: String, val decl: Node) {
     }
 
     def addPhiOperands(name: String, phi: IRPhi): IRExpression = {
-        phi.block.preds.foreach(pred => phi.appendOperand(readVar(name, pred)))
+        phi.block.preds.foreach(pred => phi.appendOperand(readVar(phi.ty, name, pred)))
         tryRemoveTrivialPhi(name, phi)
     }
 
@@ -67,7 +67,7 @@ class CFG(val name: String, val decl: Node) {
                 same = op
             }
         }
-        val result = if (same == null) IRExtern(name) else same
+        val result = if (same == null) IRExtern(phi.ty, name) else same
         phi.replaceBy(result)
         (phi.target.uses - phi).foreach {
             case p: IRPhi => tryRemoveTrivialPhi(name, p)

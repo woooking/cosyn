@@ -2,11 +2,12 @@ package com.github.woooking.cosyn.comm.util
 
 import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.javaparser.ast.{`type` => jptype}
-import com.github.javaparser.resolution.types.{ResolvedArrayType, ResolvedPrimitiveType, ResolvedReferenceType, ResolvedType}
+import com.github.javaparser.resolution.types._
+import org.slf4s.Logging
 
 import scala.annotation.tailrec
 
-object CodeUtil {
+object CodeUtil extends Logging {
     /**
       * 从类的全限定名称中提取简化名称，即以'.'分割后的最后一段字符串
       * 例：
@@ -95,6 +96,7 @@ object CodeUtil {
             case t: jptype.ClassOrInterfaceType => BasicType(t.asString())
             case t: jptype.ArrayType => ArrayType(jpTypeToType(t.getComponentType))
             case _ =>
+                log.error(s"Implementation missing ${jpType.getClass}")
                 ???
         }
     }
@@ -102,9 +104,11 @@ object CodeUtil {
     def resolvedTypeToType(resolvedType: ResolvedType): Type = {
         resolvedType match {
             case t: ResolvedPrimitiveType => BasicType(t.describe())
+            case t: ResolvedVoidType => BasicType(t.describe())
             case t: ResolvedReferenceType => BasicType(t.getQualifiedName)
             case t: ResolvedArrayType => ArrayType(resolvedTypeToType(t.getComponentType))
             case _ =>
+                log.error(s"Implementation missing ${resolvedType.getClass}")
                 ???
         }
     }

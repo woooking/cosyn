@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.pattern.javaimpl.ir.{IRTemp, IRExpression}
 
 import scala.collection.mutable
 
-class IRPhi(val block: CFGBlock) extends IRDefStatement(block.cfg) {
+class IRPhi(val ty: String, val block: CFGBlock) extends IRDefStatement(block.cfg) {
     block.phis += this
 
     val operands: mutable.ArrayBuffer[IRExpression] = mutable.ArrayBuffer()

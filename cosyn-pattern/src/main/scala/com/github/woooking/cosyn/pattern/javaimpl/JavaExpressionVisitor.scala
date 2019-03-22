@@ -7,6 +7,7 @@ import com.github.javaparser.ast.{Node, NodeList}
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserConstructorDeclaration, JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration}
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionFieldDeclaration
+import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.pattern.{Components, CosynConfig}
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.javaimpl.ir._
@@ -15,9 +16,15 @@ import org.slf4s.Logging
 
 import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
+import scala.util.Try
 
-class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRExpression, CFGStatements] with Logging {
+class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Option[IRExpression], CFGStatements] with Logging {
     private val methodEntityRepository = Components.methodEntityRepository
+
+    private def typeOf(expr: Expression): Option[String] = {
+        Try(CodeUtil.resolvedTypeToType(expr.calculateResolvedType()).toString).toOption
+    }
+
     private def assignOpe2BinaryOpe(ope: AssignExpr.Operator): BinaryExpr.Operator = ope match {
         case AssignExpr.Operator.PLUS => BinaryExpr.Operator.PLUS
         case AssignExpr.Operator.MINUS => BinaryExpr.Operator.MINUS
@@ -52,13 +59,13 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
                     d.getQualifiedSignature
             }
         } catch {
-            case e: UnsolvedSymbolException =>
+            case _: UnsolvedSymbolException =>
                 //                println("-----")
                 //                println(methodCallExpr.getName.asString())
                 //                println(cfg.decl)
                 //                e.printStackTrace()
                 objectCreationExpr.getType.asString()
-            case e: Throwable =>
+            case _: Throwable =>
                 //                println("-----")
                 //                println(methodCallExpr.getName.asString())
                 //                println(cfg.decl)
@@ -78,50 +85,57 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
         log.warn(s"$msg not supported ${posInfo(n)}")
     }
 
-    override def defaultAction(n: Node, arg: CFGStatements): IRExpression = ???
+    override def defaultAction(n: Node, arg: CFGStatements): Option[IRExpression] = ???
 
-    override def defaultAction(n: NodeList[_ <: Node], arg: CFGStatements): IRExpression = ???
+    override def defaultAction(n: NodeList[_ <: Node], arg: CFGStatements): Option[IRExpression] = ???
 
-    override def visit(n: ArrayAccessExpr, block: CFGStatements): IRExpression = {
-        val name = n.getName.accept(this, block)
-        val index = n.getIndex.accept(this, block)
-        block.addStatement(new IRArrayAccess(cfg, name, index, Set(n))).target
+    override def visit(n: ArrayAccessExpr, block: CFGStatements): Option[IRExpression] = {
+        for (
+            name <- n.getName.accept(this, block);
+            index <- n.getIndex.accept(this, block);
+            ty <- typeOf(n)
+        ) yield block.addStatement(new IRArrayAccess(cfg, ty, name, index, Set(n))).target
     }
 
-    override def visit(n: ArrayCreationExpr, block: CFGStatements): IRExpression = {
-        val levels = n.getLevels.asScala.flatMap(_.getDimension.asScala.map(_.accept(this, block)))
-        val initializers = n.getInitializer.asScala.toList.flatMap(_.getValues.asScala.map(_.accept(this, block)))
-        block.addStatement(IRMethodInvocation(cfg, "<init>[]", Some(IRTypeObject(n.getElementType.asString(), n)), levels ++ initializers, Set(n))).target
+    override def visit(n: ArrayCreationExpr, block: CFGStatements): Option[IRExpression] = {
+        val levels = n.getLevels.asScala.flatMap(_.getDimension.asScala.flatMap(_.accept(this, block)).toList)
+        val initializers = n.getInitializer.asScala.toList.flatMap(_.getValues.asScala.flatMap(_.accept(this, block).toList))
+        val ty = CodeUtil.resolvedTypeToType(n.calculateResolvedType()).toString
+        block.addStatement(IRMethodInvocation(cfg, ty, "<init>[]", Some(IRTypeObject(n.getElementType.asString(), n)), levels ++ initializers, Set(n))).target
     }
 
-    override def visit(n: ArrayInitializerExpr, block: CFGStatements): IRExpression = {
-        val values = n.getValues.asScala.map(v => v.accept(this, block))
+    override def visit(n: ArrayInitializerExpr, block: CFGStatements): Option[IRExpression] = {
+        val values = n.getValues.asScala.flatMap(_.accept(this, block).toList)
         IRArray(values.toList, n)
     }
 
-    override def visit(n: AssignExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: AssignExpr, block: CFGStatements): Option[IRExpression] = {
         n.getTarget match {
             case nameExpr: NameExpr =>
-                val source = n.getValue.accept(this, block)
-                n.getOperator match {
+                for (
+                    source <- n.getValue.accept(this, block);
+                    ty <- typeOf(nameExpr)
+                ) yield n.getOperator match {
                     case AssignExpr.Operator.ASSIGN =>
                         cfg.writeVar(nameExpr.getName.asString(), block, source)
                         source
                     case ope =>
-                        val value = cfg.readVar(nameExpr.getName.asString(), block)
-                        val target = block.addStatement(new IRBinaryOperation(cfg, assignOpe2BinaryOpe(ope), value, source, Set(n))).target
+                        val value = cfg.readVar(ty, nameExpr.getName.asString(), block)
+                        val target = block.addStatement(new IRBinaryOperation(cfg, ty, assignOpe2BinaryOpe(ope), value, source, Set(n))).target
                         cfg.writeVar(nameExpr.getName.asString(), block, target)
                         target
                 }
             case fieldAccessExpr: FieldAccessExpr if fieldAccessExpr.getScope.isThisExpr =>
-                val source = n.getValue.accept(this, block)
-                n.getOperator match {
+                for (
+                    source <- n.getValue.accept(this, block);
+                    ty <- typeOf(fieldAccessExpr)
+                ) yield n.getOperator match {
                     case AssignExpr.Operator.ASSIGN =>
                         cfg.writeVar(fieldAccessExpr.getName.asString(), block, source)
                         source
                     case ope =>
-                        val value = cfg.readVar(fieldAccessExpr.getName.asString(), block)
-                        val target = block.addStatement(new IRBinaryOperation(cfg, assignOpe2BinaryOpe(ope), value, source, Set(n))).target
+                        val value = cfg.readVar(ty, fieldAccessExpr.getName.asString(), block)
+                        val target = block.addStatement(new IRBinaryOperation(cfg, ty, assignOpe2BinaryOpe(ope), value, source, Set(n))).target
                         cfg.writeVar(fieldAccessExpr.getName.asString(), block, target)
                         target
                 }
@@ -132,44 +146,52 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
         }
     }
 
-    override def visit(n: BinaryExpr, block: CFGStatements): IRExpression = {
-        val lhs = n.getLeft.accept(this, block)
-        val rhs = n.getRight.accept(this, block)
-        block.addStatement(new IRBinaryOperation(cfg, n.getOperator, lhs, rhs, Set(n))).target
+    override def visit(n: BinaryExpr, block: CFGStatements): Option[IRExpression] = {
+        for (
+            lhs <- n.getLeft.accept(this, block);
+            rhs <- n.getRight.accept(this, block);
+            ty <- typeOf(n)
+        ) yield {
+            block.addStatement(new IRBinaryOperation(cfg, ty, n.getOperator, lhs, rhs, Set(n))).target
+        }
     }
 
-    override def visit(n: BooleanLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: BooleanLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRBoolean(n.getValue, n)
     }
 
-    override def visit(n: CastExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: CastExpr, block: CFGStatements): Option[IRExpression] = {
         n.getExpression.accept(this, block)
     }
 
-    override def visit(n: CharLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: CharLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRChar(n.asChar(), n)
     }
 
-    override def visit(n: ClassExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: ClassExpr, block: CFGStatements): Option[IRExpression] = {
         IRTypeObject(n.getType.asString(), n)
     }
 
-    override def visit(n: ConditionalExpr, block: CFGStatements): IRExpression = {
-        val condition = n.getCondition.accept(this, block)
-        val thenExpr = n.getThenExpr.accept(this, block)
-        val elseExpr = n.getElseExpr.accept(this, block)
-        block.addStatement(new IRConditionalExpr(cfg, condition, thenExpr, elseExpr, Set(n))).target
+    override def visit(n: ConditionalExpr, block: CFGStatements): Option[IRExpression] = {
+        for (
+            condition <- n.getCondition.accept(this, block);
+            thenExpr <- n.getThenExpr.accept(this, block);
+            elseExpr <- n.getElseExpr.accept(this, block);
+            ty <- typeOf(n)
+        ) yield {
+            block.addStatement(new IRConditionalExpr(cfg, ty, condition, thenExpr, elseExpr, Set(n))).target
+        }
     }
 
-    override def visit(n: DoubleLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: DoubleLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRDouble(n.asDouble(), n)
     }
 
-    override def visit(n: EnclosedExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: EnclosedExpr, block: CFGStatements): Option[IRExpression] = {
         n.getInner.accept(this, block)
     }
 
-    override def visit(n: FieldAccessExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: FieldAccessExpr, block: CFGStatements): Option[IRExpression] = {
         try {
             n.resolve() match {
                 case d: ReflectionFieldDeclaration if d.isStatic =>
@@ -181,84 +203,93 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
                     val name = n.getName.asString()
                     block.addStatement(new IRStaticFieldAccess(cfg, receiver, name, Set(n))).target
                 case d: JavaParserEnumConstantDeclaration =>
-                    val value = IREnum(d.getName, n.getName)
+                    val value = IREnum(d.getName, d.getType.asReferenceType().getQualifiedName, n.getName)
                     block.addStatement(new IREnumAccess(cfg, d.getType.asReferenceType().getQualifiedName, value, Set(n))).target
                 case _ =>
-                    val receiver = n.getScope.accept(this, block)
-                    val name = n.getName.asString()
-                    block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(n))).target
+                    for (receiver <- n.getScope.accept(this, block)) yield {
+                        val name = n.getName.asString()
+                        val ty = CodeUtil.resolvedTypeToType(n.calculateResolvedType()).toString
+                        block.addStatement(new IRFieldAccess(cfg, ty, receiver, name, Set(n))).target
+                    }
             }
         } catch {
-            case e: Throwable =>
-//                e.printStackTrace()
-                val receiver = n.getScope.accept(this, block)
-                val name = n.getName.asString()
-                block.addStatement(new IRFieldAccess(cfg, receiver, name, Set(n))).target
+            case _: Throwable =>
+                for (receiver <- n.getScope.accept(this, block)) yield {
+                    val name = n.getName.asString()
+                    block.addStatement(new IRFieldAccess(cfg, "", receiver, name, Set(n))).target
+                }
         }
 
     }
 
-    override def visit(n: InstanceOfExpr, block: CFGStatements): IRExpression = {
-        val expr = n.getExpression.accept(this, block)
-        block.addStatement(new IRInstanceOf(cfg, expr, n.getType, Set(n))).target
+    override def visit(n: InstanceOfExpr, block: CFGStatements): Option[IRExpression] = {
+        for (expr <- n.getExpression.accept(this, block)) yield block.addStatement(new IRInstanceOf(cfg, expr, n.getType, Set(n))).target
     }
 
-    override def visit(n: IntegerLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: IntegerLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRInteger(n.asInt(), n)
     }
 
-    override def visit(n: LambdaExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: LambdaExpr, block: CFGStatements): Option[IRExpression] = {
         log.warn("LambdaExpr not supported")
         IRLambda // TODO: lambda expr
     }
 
-    override def visit(n: LongLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: LongLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRLong(n.asLong(), n)
     }
 
-    override def visit(n: MethodCallExpr, block: CFGStatements): IRExpression = {
-        val receiver = n.getScope.asScala.map(node => node.accept(this, block))
-        val args = n.getArguments.asScala.map(node => node.accept(this, block))
-        block.addStatement(IRMethodInvocation(cfg, resolveMethodCallExpr(n), receiver, args, Set(n))).target
+    override def visit(n: MethodCallExpr, block: CFGStatements): Option[IRExpression] = {
+        for (
+            receiver <- n.getScope.asScala.map(_.accept(this, block));
+            ty <- typeOf(n)
+        ) yield {
+            val args = n.getArguments.asScala.flatMap(_.accept(this, block).toList)
+            block.addStatement(IRMethodInvocation(cfg, ty, resolveMethodCallExpr(n), receiver, args, Set(n))).target
+        }
     }
 
-    override def visit(n: MethodReferenceExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: MethodReferenceExpr, block: CFGStatements): Option[IRExpression] = {
         log.warn("MethodReferenceExpr not supported")
         IRMethodReference // TODO: MethodReferenceExpr
     }
 
-    override def visit(n: NameExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: NameExpr, block: CFGStatements): Option[IRExpression] = {
         val name = n.getName.asString()
-        cfg.readVar(name, block) match {
-            case IRUndef => IRExtern(name)
+        for (ty <- typeOf(n)) yield cfg.readVar(ty, name, block) match {
+            case IRUndef => IRExtern(ty, name)
             case e => e
         }
     }
 
-    override def visit(n: NullLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: NullLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRNull(n)
     }
 
-    override def visit(n: ObjectCreationExpr, block: CFGStatements): IRExpression = {
-        val args = n.getArguments.asScala.map(node => node.accept(this, block))
-        block.addStatement(IRMethodInvocation(cfg, resolveObjectCreationExpr(n), None, args, Set(n))).target
+    override def visit(n: ObjectCreationExpr, block: CFGStatements): Option[IRExpression] = {
+        for (
+            ty <- typeOf(n)
+        ) yield {
+            val args = n.getArguments.asScala.flatMap(_.accept(this, block).toList)
+            block.addStatement(IRMethodInvocation(cfg, ty, resolveObjectCreationExpr(n), None, args, Set(n))).target
+        }
     }
 
-    override def visit(n: StringLiteralExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: StringLiteralExpr, block: CFGStatements): Option[IRExpression] = {
         IRString(n.asString(), n)
     }
 
-    override def visit(n: SuperExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: SuperExpr, block: CFGStatements): Option[IRExpression] = {
         // TODO: more specific
         IRSuper(n)
     }
 
-    override def visit(n: ThisExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: ThisExpr, block: CFGStatements): Option[IRExpression] = {
         // TODO: more specific
         IRThis(n)
     }
 
-    override def visit(n: UnaryExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: UnaryExpr, block: CFGStatements): Option[IRExpression] = {
         n.getOperator match {
             case UnaryExpr.Operator.PREFIX_INCREMENT |
                  UnaryExpr.Operator.POSTFIX_INCREMENT |
@@ -272,45 +303,56 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[IRE
                         ""
                 }
                 //                val name = n.getExpression.asNameExpr().getName.asString()
-                val source = cfg.readVar(name, block)
+                val source = cfg.readVar(typeOf(n.getExpression).getOrElse("<Unknown>"), name, block)
                 val ope = if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.POSTFIX_INCREMENT)
                     BinaryExpr.Operator.PLUS
                 else
                     BinaryExpr.Operator.MINUS
 
-                val target = block.addStatement(new IRBinaryOperation(cfg, ope, source, IRInteger(1, n), Set(n))).target
+                val ty = CodeUtil.resolvedTypeToType(n.getExpression.calculateResolvedType()).toString
+                val target = block.addStatement(new IRBinaryOperation(cfg, ty, ope, source, IRInteger(1, n), Set(n))).target
                 cfg.writeVar(name, block, target)
                 if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.PREFIX_DECREMENT)
                     target
                 else
                     source
             case ope =>
-                val source = n.getExpression.accept(this, block)
-                block.addStatement(new IRUnaryOperation(cfg, ope, source, Set(n))).target
+                for (
+                    source <- n.getExpression.accept(this, block)
+                ) yield {
+                    val ty = CodeUtil.resolvedTypeToType(n.getExpression.calculateResolvedType()).toString
+                    block.addStatement(new IRUnaryOperation(cfg, ty, ope, source, Set(n))).target
+                }
         }
     }
 
-    override def visit(n: VariableDeclarationExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: VariableDeclarationExpr, block: CFGStatements): Option[IRExpression] = {
         n.getVariables.asScala.foreach(_.accept(this, block))
         null // TODO
     }
 
-    override def visit(n: TypeExpr, block: CFGStatements): IRExpression = {
+    override def visit(n: TypeExpr, block: CFGStatements): Option[IRExpression] = {
         IRTypeObject(n.getType.asString(), n)
     }
 
-    override def visit(n: VariableDeclarator, block: CFGStatements): IRExpression = {
-        val initValue = n.getInitializer.asScala.map(_.accept(this, block)).getOrElse(IRNull(n))
-        val name = n.getName.asString()
-        initValue match {
-            case t: IRTemp =>
-                cfg.writeVar(name, block, t)
-                t
-            case _ =>
-                val target = block.addStatement(new IRAssignment(cfg, initValue, Set(n))).target
-                cfg.writeVar(name, block, target)
-                target
+    override def visit(n: VariableDeclarator, block: CFGStatements): Option[IRExpression] = {
+        for (
+            initValue <- n.getInitializer.asScala.map(_.accept(this, block)).getOrElse(Some(IRNull(n)));
+            ty <- Try(CodeUtil.resolvedTypeToType(n.getType.resolve()).toString).toOption
+        ) yield {
+            val name = n.getName.asString()
+            initValue match {
+                case t: IRTemp =>
+                    cfg.writeVar(name, block, t)
+                    t
+                case _ =>
+                    val target = block.addStatement(new IRAssignment(cfg, ty, initValue, Set(n))).target
+                    cfg.writeVar(name, block, target)
+                    target
+            }
         }
+
     }
 
+    implicit def wrapOption[A](value: A): Option[A] = Some(value)
 }

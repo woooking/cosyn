@@ -10,7 +10,7 @@ import de.parsemis.miner.environment.Settings
 
 object PatternMiningRunner {
     def main(args: Array[String]): Unit = {
-        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4, minNodes = 3)
+        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4)
         val clientCodeRoot = CosynConfig.global.clientCodeDir
         val graphGenerator = JavaDFGGenerator()
 //        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, String](

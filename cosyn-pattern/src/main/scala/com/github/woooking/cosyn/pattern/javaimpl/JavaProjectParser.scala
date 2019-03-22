@@ -47,7 +47,9 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
         this
     }
 
-    private def resolveParameterType(p: Parameter): String = p.getType.asString()
+    private def resolveParameterType(p: Parameter): Option[String] = {
+        scala.util.Try(p.getType.resolve().describe()).toOption
+    }
 
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => File(path).listRecursively
@@ -67,7 +69,9 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
                     case _: MethodDeclaration => new BlockStmt
                 }
 
-                method.getParameters.forEach(p => cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, resolveParameterType(p))))
+                method.getParameters.forEach(p =>
+                    for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
+                )
                 val statementVisitor = new JavaStatementVisitor(cfg)
                 val pair = body.accept(statementVisitor.visitor, statementVisitor.outerCfg.Context(cfg.entry))
                 pair.block.seal()
@@ -84,7 +88,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
     private def dfgFilter: Filter[DFGs] = FunctionUtil.sum(dfgFilters.toList)
 
     override def >>:(input: Path): DFGs =
-        input >>: (sourceFilesGenerator |  cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)
+        input >>: (sourceFilesGenerator | cuResultFilter | cuResult2cfg | cfgFilter | cfg2dfg | dfgFilter)
 
 
 }

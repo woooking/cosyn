@@ -35,7 +35,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
         }
     }
 
-    type Ctx = Set[String]
+    type Ctx = Map[String, model.NameExpr]
 
     case class GenExprResult(e: model.Expression, ctx: Ctx, added: List[model.Statement])
 
@@ -48,11 +48,11 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
 
     def generateCode(dfg: SimpleDFG, nodes: Set[PNode]): Pattern = {
         val recoverNodes = dfg.recover(nodes)
-        val block = generateCode(dfg.cfg.decl, recoverNodes, Set.empty)
+        val block = generateCode(dfg.cfg.decl, recoverNodes, Map.empty)
         Pattern(holeFactory, block)
     }
 
-    def generateCode(node: Node, nodes: Set[Node], names: Ctx, noName: Boolean = false): model.BlockStmt = node match {
+    def generateCode(node: Node, nodes: Set[Node], names: Ctx): model.BlockStmt = node match {
         case n: MethodDeclaration if n.getBody.isPresent =>
             val (stmts, _) = generateCodeStmt(n.getBody.get(), nodes, names)
             block(stmts: _*)
@@ -61,7 +61,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             ???
     }
 
-    def generateCodeStmt(node: Statement, nodes: Set[Node], names: Ctx, noName: Boolean = false): (List[model.Statement], Ctx) = {
+    def generateCodeStmt(node: Statement, nodes: Set[Node], names: Ctx): (List[model.Statement], Ctx) = {
         node match {
             case n: BlockStmt =>
                 @tailrec
@@ -101,7 +101,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 val (body, ctx3) = generateCodeStmt(n.getBody, nodes, ctx2)
 
                 if (nodes.contains(node)) (added1 ++ added2 :+ forStmt(init, update, block(body: _*)), ctx3)
-                else (added1 ++ added2, ctx3)
+                else (added1 ++ added2 ++ body, ctx3)
             case n: ForStmt =>
                 @tailrec
                 def process(exprs: List[Expression], ctx: Ctx, added: List[model.Statement], result: List[model.Expression]): (List[model.Expression], Ctx, List[model.Statement]) = exprs match {
@@ -118,7 +118,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 val (body, ctx4) = generateCodeStmt(n.getBody, nodes, ctx3)
 
                 if (nodes.contains(node)) (added1 ++ added2 ++ added3 :+ forStmt(init, condition, update, block(body: _*)), ctx4)
-                else (added1 ++ added2 ++ added3, ctx4)
+                else (added1 ++ added2 ++ added3 ++ body, ctx4)
 
             case n: IfStmt if n.getElseStmt.isEmpty =>
                 val GenExprResult(condition, ctx, added) = generateCodeExpr(n.getCondition, nodes, names)
@@ -155,23 +155,23 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
         }
     }
 
-    def generateCodeExpr(node: Expression, nodes: Set[Node], names: Set[String], noName: Boolean = false): GenExprResult = {
+    def generateCodeExpr(node: Expression, nodes: Set[Node], names: Ctx): GenExprResult = {
 
         @inline
-        def rs0(gen: => model.Expression, ctx: Set[String]): GenExprResult = {
+        def rs0(gen: => model.Expression, ctx: Ctx): GenExprResult = {
             if (nodes.contains(node)) GenExprResult(gen, ctx, Nil)
             else GenExprResult(holeFactory.newHole(), ctx, Nil)
         }
 
         @inline
-        def rs1(gen: model.Expression => model.Expression, ctx: Set[String], ast1: Expression): GenExprResult = {
+        def rs1(gen: model.Expression => model.Expression, ctx: Ctx, ast1: Expression): GenExprResult = {
             val GenExprResult(e, ctx1, added) = generateCodeExpr(ast1, nodes, ctx)
             if (nodes.contains(node)) GenExprResult(gen(e), ctx1, added)
             else GenExprResult(holeFactory.newHole(), ctx1, added)
         }
 
         @inline
-        def rs2(gen: (model.Expression, model.Expression) => model.Expression, ctx: Set[String], ast1: Expression, ast2: Expression): GenExprResult = {
+        def rs2(gen: (model.Expression, model.Expression) => model.Expression, ctx: Ctx, ast1: Expression, ast2: Expression): GenExprResult = {
             val GenExprResult(e1, ctx1, added1) = generateCodeExpr(ast1, nodes, ctx)
             val GenExprResult(e2, ctx2, added2) = generateCodeExpr(ast2, nodes, ctx1)
             if (nodes.contains(node)) GenExprResult(gen(e1, e2), ctx2, added1 ++ added2)
@@ -245,7 +245,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                             val ty = CodeUtil.resolvedTypeToType(resolvedType)
                             val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
                             e match {
-                                case _: HoleExpr =>
+                                case _: model.HoleExpr | _: model.NameExpr =>
                                     process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
                                 case _ =>
                                     val n = name(ty)
@@ -277,9 +277,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 }
             case n: NameExpr =>
                 val name = n.getName.asString()
-                if (nodes.contains(node)) GenExprResult(name, names, Nil)
-                else if (noName) GenExprResult(holeFactory.newHole(), names, Nil)
-                else if (names.contains(name)) GenExprResult(name, names, Nil)
+                if (names.contains(name)) GenExprResult(names(name), names, Nil)
                 else GenExprResult(holeFactory.newHole(), names, Nil)
             case _: NullLiteralExpr => rs0(model.NullLiteral, names)
             case n: ObjectCreationExpr if n.getScope.isEmpty =>
@@ -317,7 +315,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 val ope = n.getOperator
                 rs1(e => unary(e, ope.asString(), ope.isPrefix), names, n.getExpression)
             case n: VariableDeclarationExpr =>
-                generateVariableDeclarator(n.getVariable(0), nodes, names, noName)
+                generateVariableDeclarator(n.getVariable(0), nodes, names)
             //            case n: VariableDeclarator if n.getInitializer.isEmpty =>
             //                rs(s"${n.getType} ${n.getName}", names)
             case _ =>
@@ -326,7 +324,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
         }
     }
 
-    def generateVariableDeclarator(node: VariableDeclarator, nodes: Set[Node], names: Set[String], noName: Boolean = false): GenExprResult = {
+    def generateVariableDeclarator(node: VariableDeclarator, nodes: Set[Node], names: Ctx): GenExprResult = {
         try {
             val ty = CodeUtil.resolvedTypeToType(node.getType.resolve())
             node.getInitializer.asScala match {
@@ -334,14 +332,13 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                     val GenExprResult(expr, ctx2, added) = generateCodeExpr(value, nodes, names)
                     expr match {
                         case _: HoleExpr =>
-                            if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
-                            else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
+                            GenExprResult(holeFactory.newHole(), names, Nil)
                         case _ =>
-                            GenExprResult(v(ty, node.getName.asString(), expr), ctx2 + node.getName.asString(), added)
+                            val newName = name(ty)
+                            GenExprResult(v(ty, newName, expr), ctx2 + (node.getName.asString() -> newName), added)
                     }
                 case None =>
-                    if (!nodes.contains(node)) GenExprResult(holeFactory.newHole(), names, Nil)
-                    else GenExprResult(v(ty, node.getName.asString()), names + node.getName.asString(), Nil)
+                    GenExprResult(holeFactory.newHole(), names, Nil)
             }
         } catch {
             case _: UnsolvedSymbolException =>

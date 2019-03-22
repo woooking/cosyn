@@ -5,6 +5,7 @@ import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
 import com.github.woooking.cosyn.pattern.javaimpl.ir.IRExpression
 
 class IRConditionalExpr(cfg: CFG,
+                        val ty: String,
                         condition: IRExpression,
                         thenExpr: IRExpression,
                         elseExpr: IRExpression, fromNode: Set[Node]) extends IRDefStatement(cfg, fromNode) {
