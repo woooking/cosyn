@@ -78,9 +78,9 @@ object SimpleDFG {
         while (ite.hasNext) {
             val edge = ite.next()
             if (edge.getDirection() == Edge.INCOMING) {
-                s = s + s"${edge.getNodeB.getLabel} -- ${edge.getLabel} -> ${edge.getNodeA.getLabel}"
+                s = s + s"${edge.getNodeB.getLabel} -- ${edge.getLabel} -> ${edge.getNodeA.getLabel}\n"
             } else {
-                s = s + s"${edge.getNodeA.getLabel} -- ${edge.getLabel} -> ${edge.getNodeB.getLabel}"
+                s = s + s"${edge.getNodeA.getLabel} -- ${edge.getLabel} -> ${edge.getNodeB.getLabel}\n"
             }
         }
         s
@@ -88,7 +88,6 @@ object SimpleDFG {
 
     type DNode = Node[DFGNode, DFGEdge]
     type DEdge = Edge[DFGNode, DFGEdge]
-
 
     def apply(cfg: CFG): SimpleDFG = {
         val dfg = new SimpleDFG(cfg)
