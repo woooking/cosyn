@@ -6,8 +6,8 @@ import com.github.woooking.cosyn.core.knowledge_graph.Recommendation
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 
 class EnumConstantHoleResolver extends HoleResolver {
-    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
-        pattern.parentOf(hole) match {
+    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+        context.pattern.parentOf(hole) match {
             case p: EnumConstantExpr =>
                 Some(EnumConstantQuestion(p.enumType))
             case _ =>

@@ -12,6 +12,7 @@ import com.github.woooking.cosyn.pattern.{Components, CosynConfig}
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.{CFG, CFGStatements}
 import com.github.woooking.cosyn.pattern.javaimpl.ir._
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements._
+import CodeUtil.typeOf
 import org.slf4s.Logging
 
 import scala.compat.java8.OptionConverters._
@@ -20,10 +21,6 @@ import scala.util.Try
 
 class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Option[IRExpression], CFGStatements] with Logging {
     private val methodEntityRepository = Components.methodEntityRepository
-
-    private def typeOf(expr: Expression): Option[String] = {
-        Try(CodeUtil.resolvedTypeToType(expr.calculateResolvedType()).toString).toOption
-    }
 
     private def assignOpe2BinaryOpe(ope: AssignExpr.Operator): BinaryExpr.Operator = ope match {
         case AssignExpr.Operator.PLUS => BinaryExpr.Operator.PLUS

@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.core.knowledge_graph.Recommendation
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 
 trait HoleResolver {
-    def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question]
+    def resolve(context: Context, hole: HoleExpr): Option[Question]
 }
 
 

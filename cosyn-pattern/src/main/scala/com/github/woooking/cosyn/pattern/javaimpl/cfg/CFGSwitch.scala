@@ -2,6 +2,7 @@ package com.github.woooking.cosyn.pattern.javaimpl.cfg
 
 import java.io.PrintStream
 
+import cats.Show
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFGSwitch.SwitchLabel
 import com.github.woooking.cosyn.pattern.javaimpl.ir.IRExpression
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.IRStatement
@@ -15,19 +16,20 @@ class CFGSwitch(cfg: CFG, selector: IRExpression) extends CFGBlock(cfg) {
 
     override def setNext(next: CFGBlock): Unit = throw new Exception("Cannot set next block of switch")
 
-    def print(ps: PrintStream = System.out): Unit = {
-        ps.println(this)
-        blocks.foreach {
-            case (label, block) => ps.println(s"$label -> $block")
-        }
-    }
-
     override def toString: String = s"[Block $id: Switch]"
 
     override def statements: Seq[IRStatement] = phis
 }
 
 object CFGSwitch {
+    implicit val cfgSwitchShow: Show[CFGSwitch] = (cfgSwitch: CFGSwitch) => {
+        var s = cfgSwitch.toString
+        cfgSwitch.blocks.foreach {
+            case (label, block) => s += s"\n$label -> $block"
+        }
+        s
+    }
+
     sealed trait SwitchLabel
 
     case class ExpressionLabel(expression: IRExpression) extends SwitchLabel

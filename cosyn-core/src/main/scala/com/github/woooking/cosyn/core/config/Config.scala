@@ -8,8 +8,8 @@ object Config {
     val printUnCategorisedMethods: Boolean = false
     // ----- 算法参数 -----
     val maxSearchStep: Int = 3
-    val recommendNumber: Int = 10
-    val iterablePenalty: Double = 0.5
+    val recommendNumber: Int = 5
+    val iterablePenalty: Double = 0.1
     val holeResolver = CombineHoleResolver(
         new EnumConstantHoleResolver,
         new StaticFieldAccessHoleResolver,

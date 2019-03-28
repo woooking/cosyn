@@ -87,14 +87,15 @@ object GraphBuilder extends Logging {
                         resolvedMethod.getReturnType match {
                             case _ if resolvedMethod.getReturnType.isTypeVariable =>
                             case _ if resolvedMethod.getReturnType.isVoid =>
-                            case _ if resolvedMethod.getReturnType.isPrimitive =>
+                            case returnType if resolvedMethod.getReturnType.isPrimitive =>
+                                returnType.asPrimitive().describe()
                             case returnType if resolvedMethod.getReturnType.isReferenceType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setProduce(EntityManager.getTypeEntityOrCreate(name))
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
                             case returnType if resolvedMethod.getReturnType.isArray =>
                                 val name = getComponentTypeRecursively(returnType)
                                 if (name.isReferenceType) {
-                                    methodEntity.setProduceMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
+                                    methodEntity.setReturnsMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
                                 }
                         }
                     }
@@ -112,7 +113,7 @@ object GraphBuilder extends Logging {
                         resolvedMethod.declaringType() match {
                             case returnType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setProduce(EntityManager.getTypeEntityOrCreate(name))
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
                         }
                     }
                 } catch {

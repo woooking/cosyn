@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 
 object NLP {
     val props = new Properties()
-    props.setProperty("annotators", "tokenize, ssplit")
+    props.setProperty("annotators", "tokenize, ssplit, pos, depparse")
     val nlp = new StanfordCoreNLPClient(props, "http://162.105.88.181", 9101)
 
     type SpecialPreFilter = (String, String) => String

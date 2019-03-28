@@ -15,11 +15,11 @@ object QAServer {
         implicit val scheduler: Scheduler = context.system.scheduler
 
         message match {
-            case StartSession(ref, reqCtx, description) =>
+            case StartSession(ref, reqCtx) =>
                 val session = context.spawn(QASession.initializing, next.toString)
                 context.watchWith(session, SessionEnded(next))
-                context.ask[Start, StartResponse](session)(r => Start(r, reqCtx, description)) {
-                    case Success(QuestionFromSession(ctx, pattern, question)) => ReplyToClient(ref, StartSessionResponseWithQuestion(next, ctx, pattern, question))
+                context.ask[Start, StartResponse](session)(r => Start(r, reqCtx)) {
+                    case Success(QuestionFromSession(ctx, question)) => ReplyToClient(ref, StartSessionResponseWithQuestion(next, ctx, question))
                     case Success(m: Finished) => ReplyToClient(ref, m)
                     case Success(m: ErrorOccured) => ReplyToClient(ref, m)
                     case Failure(_) => ReplyToClient(ref, ErrorOccured("Error in server"))

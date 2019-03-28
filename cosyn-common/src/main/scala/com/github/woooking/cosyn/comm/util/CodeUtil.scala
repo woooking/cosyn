@@ -1,11 +1,13 @@
 package com.github.woooking.cosyn.comm.util
 
+import com.github.javaparser.ast.expr.Expression
 import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.javaparser.ast.{`type` => jptype}
 import com.github.javaparser.resolution.types._
 import org.slf4s.Logging
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 object CodeUtil extends Logging {
     /**
@@ -32,6 +34,27 @@ object CodeUtil extends Logging {
       */
     def isGetMethod(simpleName: String): Boolean = {
         simpleName.matches("^get[A-Z].*")
+    }
+
+    /**
+      * 从方法签名中提取接受者类型的全限定名称
+      * 例：
+      * java.lang.Object.toString() => Some(java.lang.Object)
+      * func(int, long) => None
+      * @param signature 方法的签名
+      * @return 接受者类型的全限定名称
+      */
+    def methodReceiverType(signature: String): Option[BasicType] = {
+        val pattern = """(.*)\(([a-zA-Z., ]*)\)""".r
+        pattern.findFirstMatchIn(signature) match {
+            case Some(m) =>
+                val g = m.group(1)
+                g.lastIndexOf('.') match {
+                    case -1 => None
+                    case i => Some(BasicType(g.substring(0, i)))
+                }
+            case None => None
+        }
     }
 
     /**
@@ -111,5 +134,9 @@ object CodeUtil extends Logging {
                 log.error(s"Implementation missing ${resolvedType.getClass}")
                 ???
         }
+    }
+
+    def typeOf(expr: Expression): Option[String] = {
+        Try(CodeUtil.resolvedTypeToType(expr.calculateResolvedType()).toString).toOption
     }
 }

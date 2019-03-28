@@ -1,17 +1,15 @@
 package com.github.woooking.cosyn.core.code
 
-import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion, Result}
-import com.github.woooking.cosyn.comm.skeleton.model._
-import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, Type}
+import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, Type, _}
 import com.github.woooking.cosyn.comm.util.CodeUtil
-import CodeBuilder._
-import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.core.Components
+import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion, Result}
 
 sealed trait Question {
     def description: String
 
-    def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result
+    def processInput(context: Context, hole: HoleExpr, input: String): Result
 }
 
 object Question {
@@ -22,7 +20,7 @@ object Question {
 
     final case class NewQuestion(question: Question) extends Result
 
-    final case class Filled(context: Context, pattern: Pattern) extends Result
+    final case class Filled(context: Context) extends Result
 
 }
 
@@ -32,15 +30,15 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
         s"$question\n$choiceString"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
         val regex = """#(\d+)""".r
         regex.findFirstMatchIn(input) match {
             case None =>
                 ErrorInput("Error Format!")
             case Some(m) =>
-                choices(m.group(1).toInt - 1).action(context, pattern, hole) match {
+                choices(m.group(1).toInt - 1).action(context, hole) match {
                     case NewQA(qa) => NewQuestion(qa)
-                    case Resolved(newContext, newPattern) => Filled(newContext, newPattern)
+                    case Resolved(newContext) => Filled(newContext)
                     case UnImplemented =>
                         ErrorInput("Not Implemented! Please try other choices.")
                 }
@@ -56,11 +54,11 @@ case class EnumConstantQuestion(ty: BasicType) extends Question {
         s"Which $simpleName?"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
         val constants = typeEntityRepository.enumConstants(ty)
         constants.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                Filled(context, pattern.fillHole(hole, c))
+                Filled(context.copy(pattern = context.pattern.fillHole(hole, c)))
             case None =>
                 ErrorInput(s"Valid inputs are ${constants.map(_.toLowerCase).mkString("/")}.")
         }
@@ -74,11 +72,11 @@ case class StaticFieldAccessQuestion(receiverType: BasicType, targetType: Type) 
         s"Which field?"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
         val fields = typeEntityRepository.staticFields(receiverType, targetType)
         fields.find(_.toLowerCase() == input.toLowerCase()) match {
             case Some(c) =>
-                Filled(context, pattern.fillHole(hole, c))
+                Filled(context.copy(pattern = context.pattern.fillHole(hole, c)))
             case None =>
                 ErrorInput(s"Valid inputs are ${fields.map(_.toLowerCase).mkString("/")}.")
         }
@@ -93,7 +91,7 @@ case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question 
         case None => s"Please input a $ty:"
     }
 
-    override def processInput(context: Context, pattern: Pattern, hole: HoleExpr, input: String): Result = {
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
         try {
             val expr = ty match {
                 case "boolean" => BooleanLiteral(input.toBoolean)
@@ -106,7 +104,7 @@ case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question 
                 case "char" => CharLiteral(input(0))
                 case "java.lang.String" => StringLiteral(input)
             }
-            Filled(context, pattern.fillHole(hole, expr))
+            Filled(context.copy(pattern = context.pattern.fillHole(hole, expr)))
         } catch {
             case _: NumberFormatException =>
                 ErrorInput("Error Format!")

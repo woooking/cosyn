@@ -9,13 +9,15 @@ import scala.collection.JavaConverters._
 import io.circe.parser.decode
 
 class NLMatcher(query: String, limit: Int) {
+    import Ordering.Double.reverse
+
     private val patternRepository = Components.patternRepository
 
     private val queryWords = query.split(" ").map(_.toLowerCase)
 
     def find(): List[(Pattern, Double)] = {
         val patterns = patternRepository.getAllPatterns
-        patterns.map(evaluate).sortBy(_._2).take(limit)
+        patterns.map(evaluate).sortBy(_._2)(reverse).take(limit)
     }
 
     private def evaluate(pattern: PatternEntity): (Pattern, Double) = {

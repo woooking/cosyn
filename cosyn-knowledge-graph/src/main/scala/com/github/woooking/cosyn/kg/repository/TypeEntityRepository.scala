@@ -5,9 +5,8 @@ import com.github.woooking.cosyn.kg.Repository
 import com.github.woooking.cosyn.kg.entity.TypeEntity
 
 trait TypeEntityRepository extends Repository {
-    def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]]
 
-    def get(qualifiedName: String): TypeEntity
+    def getIterablePaths(basicType: BasicType): Set[List[TypeEntity]]
 
     def getAllNonAbstractSubTypes(typeEntity: TypeEntity): Set[TypeEntity]
 

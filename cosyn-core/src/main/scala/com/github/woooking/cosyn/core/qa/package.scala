@@ -8,11 +8,11 @@ package com.github.woooking.cosyn.core.qa {
 
     sealed trait QAClientMessage
 
-    final case class NewTask(context: Context, description: String) extends QAClientMessage
+    final case class NewTask(context: Context) extends QAClientMessage
 
     sealed trait StartSessionResponse extends QAClientMessage
 
-    final case class StartSessionResponseWithQuestion(sessionId: Long, context: Context, pattern: Pattern, question: Question) extends StartSessionResponse
+    final case class StartSessionResponseWithQuestion(sessionId: Long, context: Context, question: Question) extends StartSessionResponse
 
     sealed trait AnswerResponse extends QAClientMessage
 
@@ -26,7 +26,7 @@ package com.github.woooking.cosyn.core.qa {
 
     // QA Client -> QA Server
 
-    final case class StartSession(from: ActorRef[StartSessionResponse], context: Context, description: String) extends QAServerMessage
+    final case class StartSession(from: ActorRef[StartSessionResponse], context: Context) extends QAServerMessage
 
     final case class Answer(from: ActorRef[QAClientMessage], sessionId: Long, answer: String) extends QAServerMessage
 
@@ -46,7 +46,7 @@ package com.github.woooking.cosyn.core.qa {
 
     sealed trait QASessionMessage
 
-    final case class Start(from: ActorRef[StartResponse], context: Context, description: String) extends QASessionMessage
+    final case class Start(from: ActorRef[StartResponse], context: Context) extends QASessionMessage
 
     final case class ProcessAnswer(from: ActorRef[ProcessAnswerResponse], input: String) extends QASessionMessage
 
@@ -54,12 +54,12 @@ package com.github.woooking.cosyn.core.qa {
 
     //
 
-    final case class QuestionFromSession(context: Context, pattern: Pattern, question: Question) extends StartResponse
+    final case class QuestionFromSession(context: Context, question: Question) extends StartResponse
         with ProcessAnswerResponse with ProcessUndoResponse with AnswerResponse with UndoResponse
 
-    final case class ErrorAnswer(context: Context, pattern: Pattern, question: Question, message: String) extends ProcessAnswerResponse with AnswerResponse
+    final case class ErrorAnswer(context: Context, question: Question, message: String) extends ProcessAnswerResponse with AnswerResponse
 
-    final case class Finished(context: Context, pattern: Pattern) extends StartResponse with StartSessionResponse with ProcessAnswerResponse with AnswerResponse
+    final case class Finished(context: Context) extends StartResponse with StartSessionResponse with ProcessAnswerResponse with AnswerResponse
 
     case object CannotUndo extends ProcessUndoResponse with UndoResponse
 

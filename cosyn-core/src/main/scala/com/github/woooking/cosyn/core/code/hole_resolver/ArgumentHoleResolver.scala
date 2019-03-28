@@ -9,7 +9,8 @@ import com.github.woooking.cosyn.core.code._
 class ArgumentHoleResolver extends HoleResolver {
     private val methodEntityRepository = Components.methodEntityRepository
 
-    override def resolve(context: Context, pattern: Pattern, hole: HoleExpr): Option[Question] = {
+    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+        val pattern = context.pattern
         pattern.parentOf(hole) match {
             case p: MethodCallArgs =>;
                 val method = pattern.parentOf(p).asInstanceOf[MethodCallExpr]
@@ -18,7 +19,7 @@ class ArgumentHoleResolver extends HoleResolver {
                         val arg = method.args(index)
                         arg.ty match {
                             case PrimitiveOrString(ty) =>
-                                val entity = methodEntityRepository.get(method.getQualifiedSignature)
+                                val entity = methodEntityRepository.getMethod(method.getQualifiedSignature)
                                 val paramName = entity.getParamNames.split(",")(index)
                                 val paramJavadoc = entity.getParamJavadoc(paramName)
                                 Some(PrimitiveQuestion(Option(paramJavadoc), ty))

@@ -7,23 +7,27 @@ import com.github.woooking.cosyn.core.Components
 import com.github.woooking.cosyn.core.code._
 import com.github.woooking.cosyn.core.code.rules.{CreateMethodJudger, GetMethodJudger, LoadMethodJudger}
 import com.github.woooking.cosyn.core.config.Config
-import com.github.woooking.cosyn.kg.entity.MethodEntity
+import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity}
 
 object QAHelper {
+
     private sealed trait MethodType
 
     sealed abstract class MethodCategory(val questionGenerator: String => String)
 
     object MethodCategory {
+
         final case object Create extends MethodCategory(ty => s"Create a new ${CodeUtil.qualifiedClassName2Simple(ty)}")
+
         final case object Load extends MethodCategory(ty => s"Load a ${CodeUtil.qualifiedClassName2Simple(ty)}")
+
         final case object Get extends MethodCategory(ty => s"Get a ${CodeUtil.qualifiedClassName2Simple(ty)}")
+
     }
 
     private final case object OtherType extends MethodCategory(_ => "Unknown")
 
     private val methodEntityRepository = Components.methodEntityRepository
-
 
     def choiceQAForType(context: Context, ty: Type): ChoiceQuestion = profile("choice-for-type") {
         ty match {
@@ -51,9 +55,18 @@ object QAHelper {
                         Seq()
                     case (category, ms) => Seq(MethodCategoryChoice(bt, category, ms))
                 }
+
+                // t是枚举类型，则添加枚举选项
+                val enumChoice = methodEntityRepository.getType(t) match {
+                    case e: EnumEntity =>
+                        EnumChoice(e) :: Nil
+                    case _ =>
+                        Nil
+                }
+
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
-                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ methodCategoryChoices)
+                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ methodCategoryChoices)
             case ArrayType(BasicType(_)) =>
                 ???
             case _ =>

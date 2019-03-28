@@ -9,6 +9,7 @@ import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder.{name, _}
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, FindNameContext, HoleExpr, HoleFactory, NameOrHole, Type}
 import com.github.woooking.cosyn.comm.skeleton.{Pattern, model}
 import com.github.woooking.cosyn.comm.util.CodeUtil
+import com.github.woooking.cosyn.pattern.Components
 import com.github.woooking.cosyn.pattern.api.PatternGenerator
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphTypeDef
@@ -20,6 +21,8 @@ import scala.compat.java8.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern] with GraphTypeDef[DFGNode, DFGEdge] with Logging {
+    private val methodEntityRepository = Components.methodEntityRepository
+
     val holeFactory = HoleFactory()
 
     class SimpleFindNameContext extends FindNameContext {
@@ -266,8 +269,8 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                         ???
                     case Success((args, ctx2, added2)) =>
                         Try {
-                            val receiverType = CodeUtil.resolvedTypeToType(scope.calculateResolvedType()).asInstanceOf[BasicType]
-                            GenExprResult(call(scopeCode, receiverType, n.getName.asString(), args: _*), ctx2, added2)
+                            val qualifiedSignature = methodEntityRepository.getMethodProto(n.resolve().getQualifiedSignature)
+                            GenExprResult(call(scopeCode, CodeUtil.methodReceiverType(qualifiedSignature).get, n.getName.asString(), args: _*), ctx2, added2)
                         } match {
                             case Success(value) if nodes.contains(node) =>
                                 value

@@ -41,14 +41,6 @@ object DFGEdge {
         type Type = Value
 
         val Singleton: EdgeType.Value = Value("#None")
-        val Data: EdgeType.Value = Value("#DATA")
-        val MethodInvocation: EdgeType.Value = Value("#METHOD_INVOCATION")
-        val Reference: EdgeType.Value = Value("#REFERENCE")
-        val Binary: EdgeType.Value = Value("#BINARY")
-        val Unary: EdgeType.Value = Value("#UNARY")
-        val FieldAccess: EdgeType.Value = Value("#FIELD_ACCESS")
-        val ArrayCreation: EdgeType.Value = Value("#ARRAY_CREATION")
-        val InstanceOf: EdgeType.Value = Value("#INSTANCE_OF")
-        val Extern: EdgeType.Value = Value("#EXTERN")
+        val MethodArg: EdgeType.Value = Value("#MethodArg")
     }
 }

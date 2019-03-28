@@ -20,6 +20,7 @@ public class MethodEntity {
     private boolean isDeprecated;
     private Modifier.Keyword accessSpecifier;
     private String paramNames;
+    private String returnType;
 
     @Relationship(type = "HAS_METHOD", direction = Relationship.INCOMING)
     private TypeEntity declareType;
@@ -27,11 +28,11 @@ public class MethodEntity {
     @Relationship(type = "EXTENDS")
     private Set<MethodEntity> extendedMethods = new HashSet<>();
 
-    @Relationship(type = "PRODUCES")
-    private TypeEntity produce;
+    @Relationship(type = "RETURNS")
+    private TypeEntity returns;
 
-    @Relationship(type = "PRODUCES_MULTIPLE")
-    private TypeEntity produceMultiple;
+    @Relationship(type = "RETURNS_MULTIPLE")
+    private TypeEntity returnsMultiple;
 
     @Relationship(type = "JAVADOC")
     private MethodJavadocEntity javadoc;
@@ -52,6 +53,7 @@ public class MethodEntity {
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
         this.javadoc = javadoc;
+        this.returnType = resolved.getClassName();
         var paramNames = new ArrayList<String>();
         var paramNum = resolved.getNumberOfParams();
         for (int i = 0; i < paramNum; ++i) {
@@ -72,6 +74,7 @@ public class MethodEntity {
         this.accessSpecifier = resolved.accessSpecifier();
         this.declareType = declareType;
         this.javadoc = javadoc;
+        this.returnType = resolved.getReturnType().describe();
         var paramNames = new ArrayList<String>();
         var paramNum = resolved.getNumberOfParams();
         for (int i = 0; i < paramNum; ++i) {
@@ -82,8 +85,7 @@ public class MethodEntity {
         declareType.addHasMethod(this);
     }
 
-    @PostLoad
-    public void setup() {
+    public void lazySetupParamJavadocs() {
         this.paramJavadocs = javadoc == null ?
             Map.of() :
             javadoc.getParams().stream().collect(Collectors.toMap(MethodParamJavadocEntity::getName, MethodParamJavadocEntity::getDescription));
@@ -93,16 +95,16 @@ public class MethodEntity {
         this.extendedMethods.addAll(extendedMethods);
     }
 
-    public void setProduce(TypeEntity produce) {
-        assert this.produce == null;
-        this.produce = produce;
-        produce.addProducer(this);
+    public void setReturns(TypeEntity returns) {
+        assert this.returns == null;
+        this.returns = returns;
+        returns.addProducer(this);
     }
 
-    public void setProduceMultiple(TypeEntity produceMultiple) {
-        assert this.produceMultiple == null;
-        this.produceMultiple = produceMultiple;
-        produceMultiple.addMultipleProducer(this);
+    public void setReturnsMultiple(TypeEntity returnsMultiple) {
+        assert this.returnsMultiple == null;
+        this.returnsMultiple = returnsMultiple;
+        returnsMultiple.addMultipleProducer(this);
     }
 
     public String getSignature() {
@@ -121,8 +123,12 @@ public class MethodEntity {
         return declareType;
     }
 
-    public TypeEntity getProduce() {
-        return produce;
+    public TypeEntity getReturns() {
+        return returns;
+    }
+
+    public String getReturnType() {
+        return returnType;
     }
 
     public Keyword getAccessSpecifier() {
@@ -138,6 +144,9 @@ public class MethodEntity {
     }
 
     public String getParamJavadoc(String param) {
+        if (this.paramJavadocs == null) {
+            lazySetupParamJavadocs();
+        }
         return this.paramJavadocs.get(param);
     }
 

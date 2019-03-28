@@ -7,7 +7,7 @@ import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
 
-case class Context(variables: Set[(String, Type)], extendedTypes: Seq[String]) {
+case class Context(query: String, variables: Set[(String, Type)], pattern: Pattern, extendedTypes: Seq[String]) {
     private val typeEntityRepository = Components.typeEntityRepository
 
     def findVariables(ty: Type): Set[String] = {
@@ -18,10 +18,6 @@ case class Context(variables: Set[(String, Type)], extendedTypes: Seq[String]) {
 
     def update(pattern: Pattern): Context = {
         this.copy(variables = variables ++ VariableCollector.instance[BlockStmt].collect(pattern.stmts))
-    }
-
-    def update(name: String, ty: Type): Context = {
-        this.copy(variables = variables + (name -> ty))
     }
 
     def findFreeVariableName(ty: Type): String = {

@@ -76,7 +76,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
         }
 
         override def visit(n: ForEachStmt, context: outerCfg.Context): outerCfg.Context = {
-            val ty = CodeUtil.resolvedTypeToType(n.getVariable.calculateResolvedType()).toString
+            val ty = CodeUtil.typeOf(n.getVariable)
             context.block.seal()
             val entryBlock = outerCfg.createStatements()
             context.block.setNext(entryBlock)
@@ -87,8 +87,10 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
             entryBlock.seal()
             val condition = conditionBlock.addStatement(IRMethodInvocation(outerCfg, "boolean", "java.util.Iterator.hasNext()", Some(tempIte), Seq(), Set(n))).target
             val thenBlock = outerCfg.createStatements()
-            val next = thenBlock.addStatement(IRMethodInvocation(outerCfg, ty, "java.util.Iterator.next()", Some(tempIte), Seq(), Set(n))).target
-            outerCfg.writeVar(n.getVariableDeclarator.getName.asString(), thenBlock, next)
+            ty.foreach(t => {
+                val next = thenBlock.addStatement(IRMethodInvocation(outerCfg, t, "java.util.Iterator.next()", Some(tempIte), Seq(), Set(n))).target
+                outerCfg.writeVar(n.getVariableDeclarator.getName.asString(), thenBlock, next)
+            })
             val elseBlock = outerCfg.createStatements()
             val branch = outerCfg.createBranch(Some(condition), thenBlock, elseBlock)
             branch.seal()

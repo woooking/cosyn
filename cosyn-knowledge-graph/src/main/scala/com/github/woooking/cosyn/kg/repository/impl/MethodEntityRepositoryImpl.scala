@@ -14,11 +14,8 @@ import scala.collection.mutable
 class MethodEntityRepositoryImpl extends MethodEntityRepository {
     private val producersCache = mutable.Map[Type, Set[MethodEntity]]()
 
-    def get(qualifiedSignature: String): MethodEntity = profile("getMethodEntity") {
-        session.load(classOf[MethodEntity], qualifiedSignature)
-    }
     private def isAccessible(entity: MethodEntity): Boolean = {
-        val methodEntity = session.load(classOf[MethodEntity], entity.getQualifiedSignature)
+        val methodEntity = getMethod(entity.getQualifiedSignature)
         // TODO: 考虑继承和protected
         methodEntity.getAccessSpecifier == Modifier.Keyword.PUBLIC ||
             methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.PACKAGE_PRIVATE
@@ -32,7 +29,7 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
         }
 
         def processMethod(entity: MethodEntity, producerContext: ProducerContext): ProducerContext = {
-            val methodEntity = session.load(classOf[MethodEntity], entity.getQualifiedSignature)
+            val methodEntity = getMethod(entity.getQualifiedSignature)
             val ProducerContext(deleteMap, visited, result) = producerContext
             val extendedMethods = methodEntity.getExtendedMethods.asScala.filter(isAccessible)
             if (extendedMethods.exists(visited.contains)) ProducerContext(deleteMap, visited + methodEntity, result)
@@ -48,7 +45,7 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
                 case Some((front, rest)) if processedType.contains(front) =>
                     process(rest, processedType, producerContext)
                 case Some((front, rest)) =>
-                    val frontEntity = session.load(classOf[TypeEntity], front.getQualifiedName)
+                    val frontEntity = getType(front.getQualifiedName)
                     val methods = (if (multiple) frontEntity.getMultipleProducers else frontEntity.getProducers).asScala.filter(isAccessible)
                     val newProducerContext = (producerContext /: methods) {
                         case (c, m) => processMethod(m, c)
@@ -68,14 +65,14 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
             case None =>
                 val methods = ty match {
                     case BasicType(t) =>
-                        val typeEntity = session.load(classOf[TypeEntity], t)
+                        val typeEntity = getType(t)
                         producers(typeEntity, multiple = false)
-                            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                            .map(m => getMethod(m.getQualifiedSignature))
                             .filter(!_.isDeprecated)
                     case ArrayType(BasicType(t)) =>
-                        val typeEntity = session.load(classOf[TypeEntity], t)
+                        val typeEntity = getType(t)
                         producers(typeEntity, multiple = true)
-                            .map(m => session.load(classOf[MethodEntity], m.getQualifiedSignature))
+                            .map(m => getMethod(m.getQualifiedSignature))
                             .filter(!_.isDeprecated)
                     case _ =>
                         ???
@@ -87,7 +84,7 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
 
     @tailrec
     private def getMethodProtoRec(method: MethodEntity): String = {
-        val entity = get(method.getQualifiedSignature)
+        val entity = getMethod(method.getQualifiedSignature)
         entity.getExtendedMethods.asScala.headOption match {
             case Some(extended) => getMethodProtoRec(extended)
             case None => entity.getQualifiedSignature
@@ -95,8 +92,9 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
     }
 
     def getMethodProto(method: String): String = {
-        val entity = session.load(classOf[MethodEntity], method)
-        if (entity == null) method
-        else getMethodProtoRec(entity)
+        get[MethodEntity](method) match {
+            case Some(value) => getMethodProtoRec(value)
+            case None => method
+        }
     }
 }
