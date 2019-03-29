@@ -1,13 +1,12 @@
 package com.github.woooking.cosyn.core.code
 
-import com.github.woooking.cosyn.comm.skeleton.model._
-import com.github.woooking.cosyn.comm.skeleton.model.Type
-import com.github.woooking.cosyn.comm.skeleton.visitors.VariableCollector
 import com.github.woooking.cosyn.comm.skeleton.Pattern
+import com.github.woooking.cosyn.comm.skeleton.model.{Type, _}
+import com.github.woooking.cosyn.comm.skeleton.visitors.VariableCollector
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
 
-case class Context(query: String, variables: Set[(String, Type)], pattern: Pattern, extendedTypes: Seq[String]) {
+case class Context(query: String, variables: Set[(String, Type)], pattern: Pattern, extendedTypes: Seq[String], nlp: NlpContext) {
     private val typeEntityRepository = Components.typeEntityRepository
 
     def findVariables(ty: Type): Set[String] = {

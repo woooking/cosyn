@@ -28,30 +28,30 @@ object Recommendation {
             2.0
     }
 
-    private def recommend(context: Context, qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr]): List[RecommendChoice] = qa match {
+    private def recommend(context: Context, qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = qa match {
         case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) =>
             val pattern = context.pattern
-            pattern.holes diff originHoles match {
+            pattern.holes diff originHoles diff ignoredHoles.toList match {
                 case Nil => RecommendChoice(context, score) :: Nil
-                case head :: _ => recommend(context, head, depth + 1, score, originHoles)
+                case head :: _ => recommend(context, head, depth, score, originHoles, ignoredHoles + hole)
             }
         case ChoiceQuestion(_, choices) =>
             choices.toList.flatMap(choice => choice.action(context, hole) match {
                 case NewQA(newQA) =>
-                    recommend(context, newQA, hole, depth, score, originHoles)
+                    recommend(context, newQA, hole, depth, score, originHoles, ignoredHoles)
                 case Resolved(newContext) =>
                     val newScore = score + scoreOfChoice(choice)
                     val newPattern = newContext.pattern
-                    newPattern.holes diff originHoles match {
+                    newPattern.holes diff originHoles diff ignoredHoles.toList match {
                         case Nil =>
                             RecommendChoice(newContext, newScore) :: Nil
-                        case head :: _ => recommend(newContext, head, depth + 1, newScore, originHoles)
+                        case head :: _ => recommend(newContext, head, depth + 1, newScore, originHoles, ignoredHoles)
                     }
                 case UnImplemented => Nil
             })
     }
 
-    private def recommend(context: Context, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr]): List[RecommendChoice] = {
+    private def recommend(context: Context, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
         val pattern = context.pattern
         if (depth == Config.maxSearchStep) {
             num += 1
@@ -59,13 +59,13 @@ object Recommendation {
             val finalScore = (score /: (pattern.holes diff originHoles).map(penaltyOfHole(pattern, _))) (_ - _)
             RecommendChoice(context, finalScore) :: Nil
         } else QuestionGenerator.generateForHole(context, hole) match {
-            case Some(q) => recommend(context, q, hole, depth, score, originHoles)
+            case Some(q) => recommend(context, q, hole, depth, score, originHoles, ignoredHoles)
             case None => Nil
         }
     }
 
     def recommend(context: Context, hole: HoleExpr): List[RecommendChoice] = profile("recommend") {
         num = 0
-        recommend(context, hole, 0, 0.0, context.pattern.holes).distinct
+        recommend(context, hole, 0, 0.0, context.pattern.holes, Set.empty[HoleExpr]).distinct
     }
 }

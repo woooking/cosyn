@@ -4,6 +4,7 @@ import com.github.woooking.cosyn.core.code.hole_resolver._
 
 object Config {
     // ----- 调试参数 -----
+    val printNlp: Boolean = true
     val printCodeEachStep: Boolean = true
     val printUnCategorisedMethods: Boolean = false
     // ----- 算法参数 -----
