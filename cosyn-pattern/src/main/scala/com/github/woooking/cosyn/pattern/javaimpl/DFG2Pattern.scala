@@ -341,7 +341,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 else GenExprResult(holeFactory.newHole(), names, Nil)
             case _: NullLiteralExpr => rs0(model.NullLiteral, names)
             case n: ObjectCreationExpr if n.getScope.isEmpty =>
-                val receiverType = BasicType(n.getType.toString)
+                val receiverType = CodeUtil.resolvedTypeToType(n.getType.resolve()).asInstanceOf[BasicType]
 
                 def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
                     remain match {

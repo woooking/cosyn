@@ -46,6 +46,8 @@ class ArgumentHoleResolver extends HoleResolver {
                             case _ =>
                                 None
                         }
+                    case _ =>
+                        None
                 }
             case _ =>
                 None

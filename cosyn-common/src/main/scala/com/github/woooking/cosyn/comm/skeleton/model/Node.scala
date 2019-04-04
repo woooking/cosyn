@@ -128,7 +128,7 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
 }
 
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
-    override def toString: String = s"new $receiverType(${args.mkString(", ")})"
+    override def toString: String = s"new ${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.mkString(", ")})"
 
     def getQualifiedSignature = s"${receiverType.ty}.${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.map(_.ty).mkString(", ")})"
 }
