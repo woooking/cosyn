@@ -12,7 +12,8 @@ case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
     override def generate(data: File): Seq[SimpleDFG] = {
         val projectParser = new JavaProjectParser()
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(short)")))
-            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CreationHelper.createHyperlink(org.apache.poi.common.usermodel.HyperlinkType)")))
+//            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CreationHelper.createHyperlink(org.apache.poi.common.usermodel.HyperlinkType)")))
+            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.hssf.usermodel.DVConstraint.createExplicitListConstraint(java.lang.String[])")))
         if (CosynConfig.global.debug) {
             projectParser.register(DFGPrintFilter)
         }
@@ -23,14 +24,6 @@ case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "render")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "IndexWriter::init")))
 //            .register(DFGSizeFilter(50))
-        if (CosynConfig.global.debug) {
-            dfgs.foreach(d => {
-                println("---------")
-                println(d.cfg.decl)
-                println()
-                GraphUtil.printGraph()(d)
-            })
-        }
         dfgs
     }
 }

@@ -67,7 +67,7 @@ class CFG(val name: String, val decl: Node) {
                 same = op
             }
         }
-        val result = if (same == null) IRExtern(phi.ty, name) else same
+        val result = if (same == null) IRExtern(phi.ty, name, None) else same
         phi.replaceBy(result)
         (phi.target.uses - phi).foreach {
             case p: IRPhi => tryRemoveTrivialPhi(name, p)

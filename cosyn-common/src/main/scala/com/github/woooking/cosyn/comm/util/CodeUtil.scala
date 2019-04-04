@@ -45,7 +45,7 @@ object CodeUtil extends Logging {
       * @return 接受者类型的全限定名称
       */
     def methodReceiverType(signature: String): Option[BasicType] = {
-        val pattern = """(.*)\(([a-zA-Z., ]*)\)""".r
+        val pattern = """(.*)\(([a-zA-Z.,\[\] ]*)\)""".r
         pattern.findFirstMatchIn(signature) match {
             case Some(m) =>
                 val g = m.group(1)
@@ -130,6 +130,7 @@ object CodeUtil extends Logging {
             case t: ResolvedVoidType => BasicType(t.describe())
             case t: ResolvedReferenceType => BasicType(t.getQualifiedName)
             case t: ResolvedArrayType => ArrayType(resolvedTypeToType(t.getComponentType))
+            case _: ResolvedTypeVariable => BasicType("java.lang.Object")
             case _ =>
                 log.error(s"Implementation missing ${resolvedType.getClass}")
                 ???

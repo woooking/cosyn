@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.pattern.javaimpl
 
-import com.github.javaparser.ast.Node
+import com.github.javaparser.ast.{ArrayCreationLevel, Node}
 import com.github.javaparser.ast.body.{MethodDeclaration, VariableDeclarator}
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.stmt._
@@ -190,7 +190,26 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //            case n: ArrayAccessExpr =>
             //                val (nameCode, indexCode, ctx) = gc2(n.getName, n.getIndex, "")
             //                rs(s"${el(nameCode)}[${el(indexCode)}]", ctx, nameCode, indexCode)
-            //            case n: ArrayCreationExpr => (s"new ${n.getElementType}[]", names)
+            case n: ArrayCreationExpr =>
+                //                @tailrec
+                //                def processDims(remain: List[ArrayCreationLevel], ctx: Ctx, added: List[model.Statement], currentDims: List[Option[model.Expression]]): (List[Option[model.Expression]], Ctx, List[model.Statement]) = {
+                //                    remain match {
+                //                        case Nil =>
+                //                            (currentDims, ctx, added)
+                //                        case h :: tail =>
+                //                            h.getDimension.asScala match {
+                //                                case Some(value) =>
+                //                                    val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(value, nodes, ctx)
+                //                                    processDims(tail, newCtx, added ++ newAdded, currentDims :+ Some(e))
+                //                                case None =>
+                //                                    processDims(tail, ctx, added, currentDims :+ None)
+                //                            }
+                //
+                //                    }
+                //                }
+
+
+                GenExprResult(holeFactory.newHole(), names, Nil)
             //            case n: ArrayInitializerExpr =>
             //                val (valuesCode, ctx) = gcl(n.getValues, "")
             //                val ellip = valuesCode.map(el).mkString(", ")
@@ -237,6 +256,43 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                val ellip = argsCode.map(c => if (c == "") "<HOLE>" else c).mkString(", ")
             //                if (nodes.contains(node)) (s"${n.getName}($ellip)", ctx)
             //                else rsn(ctx, argsCode: _*)
+            case n: MethodCallExpr if n.getScope.isPresent && Try {n.resolve()}.toOption.exists(_.isStatic) =>
+                @tailrec
+                def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
+                    remain match {
+                        case Nil =>
+                            (currentArgs, ctx, added)
+                        case h :: tail =>
+                            val resolvedType = h.calculateResolvedType()
+                            val ty = CodeUtil.resolvedTypeToType(resolvedType)
+                            val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
+                            e match {
+                                case _: model.HoleExpr | _: model.NameExpr =>
+                                    process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
+                                case _ =>
+                                    val n = name(ty)
+                                    process(tail, newCtx, (added ++ newAdded) :+ expr2stmt(v(ty, n, e)), currentArgs :+ model.MethodCallArgs(ty, n))
+                            }
+                    }
+                }
+
+                Try {process(n.getArguments.asScala.toList, names, Nil, Nil)} match {
+                    case Failure(_: UnsolvedSymbolException) =>
+                        GenExprResult(holeFactory.newHole(), names, Nil)
+                    case Failure(exception) =>
+                        exception.printStackTrace()
+                        ???
+                    case Success((args, ctx2, added2)) =>
+                        Try {
+                            val qualifiedSignature = methodEntityRepository.getMethodProto(n.resolve().getQualifiedSignature)
+                            GenExprResult(call(CodeUtil.methodReceiverType(qualifiedSignature).get.ty, CodeUtil.methodReceiverType(qualifiedSignature).get, n.getName.asString(), args: _*), ctx2, added2)
+                        } match {
+                            case Success(value) if nodes.contains(node) =>
+                                value
+                            case _ =>
+                                GenExprResult(holeFactory.newHole(), ctx2, added2)
+                        }
+                }
             case n: MethodCallExpr if n.getScope.isPresent =>
                 @tailrec
                 def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
@@ -280,7 +336,8 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 }
             case n: NameExpr =>
                 val name = n.getName.asString()
-                if (names.contains(name)) GenExprResult(names(name), names, Nil)
+                if (nodes.contains(n)) GenExprResult(name, names, Nil)
+                else if (names.contains(name)) GenExprResult(names(name), names, Nil)
                 else GenExprResult(holeFactory.newHole(), names, Nil)
             case _: NullLiteralExpr => rs0(model.NullLiteral, names)
             case n: ObjectCreationExpr if n.getScope.isEmpty =>
@@ -295,7 +352,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                             val ty = CodeUtil.resolvedTypeToType(resolvedType)
                             val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
                             e match {
-                                case _: HoleExpr =>
+                                case _: HoleExpr | _: model.NameExpr =>
                                     process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
                                 case _ =>
                                     val n = name(ty)

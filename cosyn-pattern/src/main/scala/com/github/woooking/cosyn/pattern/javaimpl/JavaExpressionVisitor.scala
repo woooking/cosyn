@@ -237,7 +237,14 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     }
 
     override def visit(n: MethodCallExpr, block: CFGStatements): Option[IRExpression] = {
-        for (
+        if (Try {n.resolve()}.toOption.exists(_.isStatic)) {
+            for (
+                ty <- typeOf(n)
+            ) yield {
+                val args = n.getArguments.asScala.flatMap(_.accept(this, block).toList)
+                block.addStatement(IRMethodInvocation(cfg, ty, resolveMethodCallExpr(n), None, args, Set(n))).target
+            }
+        } else for (
             receiver <- n.getScope.asScala.map(_.accept(this, block));
             ty <- typeOf(n)
         ) yield {
@@ -254,7 +261,7 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     override def visit(n: NameExpr, block: CFGStatements): Option[IRExpression] = {
         val name = n.getName.asString()
         for (ty <- typeOf(n)) yield cfg.readVar(ty, name, block) match {
-            case IRUndef => IRExtern(ty, name)
+            case IRUndef => IRExtern(ty, name, None)
             case e => e
         }
     }

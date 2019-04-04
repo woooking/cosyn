@@ -27,7 +27,11 @@ trait CodeBuilder {
 
     def call(receiver: Expression, receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr = MethodCallExpr(Some(receiver), receiverType, simpleName, args)
 
+    def call(receiverType: BasicType, simpleName: String, args: MethodCallArgs*): MethodCallExpr = MethodCallExpr(None, receiverType, simpleName, args)
+
     def create(receiverType: BasicType, args: MethodCallArgs*): ObjectCreationExpr = ObjectCreationExpr(receiverType, args)
+
+    def create(basicType: BasicType, dimensions: List[Option[Expression]], initializers: List[Expression]): ArrayCreationExpr = ArrayCreationExpr(basicType, dimensions, initializers)
 
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 

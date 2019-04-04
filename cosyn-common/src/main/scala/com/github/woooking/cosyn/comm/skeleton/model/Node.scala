@@ -105,6 +105,10 @@ sealed case class AssignExpr(name: NameExpr, target: Expression) extends Express
     override def toString: String = s"$name = $target"
 }
 
+sealed case class ArrayCreationExpr(basicType: BasicType, dimensions: List[Option[Expression]], initializers: List[Expression]) extends Expression {
+    override def toString: String = s"new $basicType${dimensions.map(d => s"[${d.getOrElse("")}]").mkString("")}{${initializers.mkString(", ")}"
+}
+
 sealed case class BinaryExpr(ope: String, left: Expression, right: Expression) extends Expression {
     override def toString: String = s"$left $ope $right"
 }
@@ -125,6 +129,8 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
 
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
     override def toString: String = s"new $receiverType(${args.mkString(", ")})"
+
+    def getQualifiedSignature = s"${receiverType.ty}.${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.map(_.ty).mkString(", ")})"
 }
 
 sealed case class UnaryExpr(expr: Expression, ope: String, prefix: Boolean) extends Expression {

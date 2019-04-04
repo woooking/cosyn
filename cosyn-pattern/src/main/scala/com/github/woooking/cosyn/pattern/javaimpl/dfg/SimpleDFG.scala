@@ -90,35 +90,40 @@ object SimpleDFG extends GraphTypeDef[DFGNode, DFGEdge] {
             case block: CFGStatements => block.irStatements ++ block.phis
         }
 
-        val nodes = statements.map(s => {
+        val nodes: Seq[(IRStatement, PNode, Set[PNode])] = statements.map(s => {
             val opNode = dfg.addNode(DFGNode.statement2OpNode(s))
             if (s.isInstanceOf[IRDefStatement]) {
-                val tyNode = dfg.addNode(DFGNode.statement2Type(s))
-                dfg.addEdge(opNode, tyNode, DFGEdge.singleton, Edge.OUTGOING)
-                (s, opNode, Some(tyNode))
-            } else (s, opNode, None)
+                val tyNodes = DFGNode.statement2Type(s).map(n => {
+                    val tyNode = dfg.addNode(n)
+                    dfg.addEdge(opNode, tyNode, DFGEdge.singleton, Edge.OUTGOING)
+                    tyNode
+                })
+                (s, opNode, tyNodes)
+            } else (s, opNode, Set.empty[PNode])
         })
 
         val opMap: Map[IRStatement, PNode] = nodes.map(p => p._1 -> p._2).toMap
-        val tyMap: Map[IRStatement, PNode] = nodes.filter(_._3.isDefined).map(p => p._1 -> p._3.get).toMap
+        val tyMap: Map[IRStatement, Set[PNode]] = nodes.map(p => p._1 -> p._3).toMap
 
         @tailrec
-        def build(statements: List[(IRExpression, IRStatement)], dataNodes: Map[IRExpression, PNode], dataMap: Map[PNode, Set[ASTNode]]): Map[PNode, Set[ASTNode]] = statements match {
+        def build(statements: List[(IRExpression, IRStatement)], dataNodes: Map[IRExpression, Set[PNode]], dataMap: Map[PNode, Set[ASTNode]]): Map[PNode, Set[ASTNode]] = statements match {
             case Nil => dataMap
             case s :: ss =>
                 val (newDataNodes, newDataMap) = s match {
                     case (from, to) if from.definition.isDefined =>
-                        dfg.addEdge(tyMap(from.definition.get), opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                        tyMap(from.definition.get).foreach(dfg.addEdge(_, opMap(to), DFGEdge.singleton, Edge.OUTGOING))
                         (dataNodes, dataMap)
                     case (from, to) =>
-                        val (newMap, newDataMap, tyNode) = if (dataNodes.contains(from)) (dataNodes, dataMap, dataNodes(from)) else {
+                        val (newMap, newDataMap, tyNodes) = if (dataNodes.contains(from)) (dataNodes, dataMap, dataNodes(from)) else {
                             val dataNode = dfg.addNode(DFGNode.expression2DataNode(from))
-                            val tyNode = dfg.addNode(DFGNode.expression2Type(from))
-                            dfg.addEdge(dataNode, tyNode, DFGEdge.singleton, Edge.OUTGOING)
-                            val fromNodes = dataMap.getOrElse(tyNode, Set.empty[ASTNode])
-                            (dataNodes.updated(from, tyNode), dataMap.updated(dataNode, fromNodes ++ from.fromNodes), tyNode)
+                            val tyNodes = DFGNode.expression2Type(from).map(n => {
+                                val tyNode = dfg.addNode(n)
+                                dfg.addEdge(dataNode, tyNode, DFGEdge.singleton, Edge.OUTGOING)
+                                tyNode
+                            })
+                            (dataNodes.updated(from, tyNodes), dataMap.updated(dataNode, from.fromNodes), tyNodes)
                         }
-                        dfg.addEdge(tyNode, opMap(to), DFGEdge.singleton, Edge.OUTGOING)
+                        tyNodes.foreach(dfg.addEdge(_, opMap(to), DFGEdge.singleton, Edge.OUTGOING))
                         (newMap, newDataMap)
                 }
                 build(ss, newDataNodes, newDataMap.asInstanceOf[Map[PNode, Set[ASTNode]]])

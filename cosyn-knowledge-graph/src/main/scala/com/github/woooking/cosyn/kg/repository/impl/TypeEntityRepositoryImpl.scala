@@ -70,10 +70,13 @@ class TypeEntityRepositoryImpl extends TypeEntityRepository {
         typeEntity.getStaticFields.getFieldsInfo.getOrDefault(targetType.toString, java.util.List.of()).asScala.toSet
     }
 
-//    def isAssignable(source: Type, target: Type): Boolean = profile("isAssignable") {
-//        session.query(
-//            s"MATCH (n:TypeEntity { qualifiedName: '$source' })-[:EXTENDS*0..10]-(m:TypeEntity { qualifiedName: '$target' })\nRETURN n, m",
-//            Map.empty[String, String].asJava
-//        ).iterator().hasNext
-//    }
+    private def getAllParentTypes(typeEntity: TypeEntity): Set[String] =
+        (Set(typeEntity.getQualifiedName) /: typeEntity.getExtendedTypes.asScala) ((s, t) => s ++ getAllParentTypes(t))
+
+    override def getAllParentTypes(qualifiedName: String): Set[String] = profile("getAllParentTypes") {
+        getType(qualifiedName) match {
+            case null => Set(qualifiedName)
+            case typeEntity => getAllParentTypes(typeEntity)
+        }
+    }
 }

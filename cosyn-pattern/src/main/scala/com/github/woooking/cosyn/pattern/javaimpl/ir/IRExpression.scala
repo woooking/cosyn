@@ -47,7 +47,7 @@ case class IREnum(constant: String, ty: String, fromNode: Node) extends IRExpres
 case object IRUndef extends IRExpression(Set.empty) {
 }
 
-case class IRExtern(ty: String, name: String) extends IRExpression(Set.empty) {
+case class IRExtern(ty: String, name: String, fromNode: Option[Node]) extends IRExpression(fromNode.toSet) {
     override def toString: String = name
 }
 

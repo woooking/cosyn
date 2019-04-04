@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.pattern.javaimpl.dfg
 
+import com.github.woooking.cosyn.pattern.Components
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.DFGNode.NodeType
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements._
 import com.github.woooking.cosyn.pattern.javaimpl.ir._
@@ -21,6 +22,8 @@ abstract class DFGNode(val op: NodeType.Type, val info: String) {
 }
 
 object DFGNode extends Logging {
+    private val typeEntityRepository = Components.typeEntityRepository
+
     val parser: LabelParser[DFGNode] = new LabelParser[DFGNode] {
         override def serialize(labelType: DFGNode): String = labelType.toString
 
@@ -60,19 +63,19 @@ object DFGNode extends Logging {
         case _ => DFGDataNode(expression.toString)
     }
 
-    def expression2Type(expression: IRExpression): DFGTypeNode = expression match {
-        case _: IRString => DFGTypeNode("java.lang.String")
-        case _: IRInteger => DFGTypeNode("int")
-        case _: IRLong => DFGTypeNode("long")
-        case _: IRDouble => DFGTypeNode("double")
-        case _: IRBoolean => DFGTypeNode("boolean")
-        case _: IRChar => DFGTypeNode("char")
-        case _: IRNull => DFGTypeNode("java.lang.Object")
-        case e: IRExtern => DFGTypeNode(e.ty)
-        case e: IRArg => DFGTypeNode(e.ty)
+    def expression2Type(expression: IRExpression): Set[DFGTypeNode] = expression match {
+        case _: IRString => Set(DFGTypeNode("java.lang.String"))
+        case _: IRInteger => Set(DFGTypeNode("int"))
+        case _: IRLong => Set(DFGTypeNode("long"))
+        case _: IRDouble => Set(DFGTypeNode("double"))
+        case _: IRBoolean => Set(DFGTypeNode("boolean"))
+        case _: IRChar => Set(DFGTypeNode("char"))
+        case _: IRNull => Set(DFGTypeNode("java.lang.Object"))
+        case e: IRExtern => typeEntityRepository.getAllParentTypes(e.ty).map(DFGTypeNode)
+        case e: IRArg => typeEntityRepository.getAllParentTypes(e.ty).map(DFGTypeNode)
         case e: IRTemp => expression2Type(e.replaced.get)
-        case e: IREnum => DFGTypeNode(e.ty)
-        case e: IRTypeObject => DFGTypeNode("java.lang.Class")
+        case e: IREnum => typeEntityRepository.getAllParentTypes(e.ty).map(DFGTypeNode)
+        case e: IRTypeObject => Set(DFGTypeNode("java.lang.Class"))
         case _ =>
             log.error(s"${expression.getClass} missing")
             ???
@@ -95,18 +98,18 @@ object DFGNode extends Logging {
         case _: IRThrow => DFGOperationNode.Throw
     }
 
-    def statement2Type(statement: IRStatement): DFGTypeNode = statement match {
-        case s: IRBinaryOperation => DFGTypeNode(s.ty)
-        case s: IRUnaryOperation => DFGTypeNode(s.ty)
-        case s: IREnumAccess => DFGTypeNode(s.ty)
-        case s: IRFieldAccess => DFGTypeNode(s.ty)
-        case s: IRMethodInvocation => DFGTypeNode(s.ty)
-        case _: IRInstanceOf => DFGTypeNode("boolean")
-        case s: IRAssignment => DFGTypeNode(s.ty)
-        case s: IRArrayAccess => DFGTypeNode(s.ty)
-        case s: IRArrayCreation => DFGTypeNode(s.ty.asString())
-        case s: IRConditionalExpr => DFGTypeNode(s.ty)
-        case s: IRPhi => DFGTypeNode(s.ty)
+    def statement2Type(statement: IRStatement): Set[DFGTypeNode] = statement match {
+        case s: IRBinaryOperation => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRUnaryOperation => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IREnumAccess => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRFieldAccess => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRMethodInvocation => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case _: IRInstanceOf => Set(DFGTypeNode("boolean"))
+        case s: IRAssignment => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRArrayAccess => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRArrayCreation => typeEntityRepository.getAllParentTypes(s.ty.asString()).map(DFGTypeNode)
+        case s: IRConditionalExpr => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
+        case s: IRPhi => typeEntityRepository.getAllParentTypes(s.ty).map(DFGTypeNode)
         case _ =>
             log.error(s"${statement.getClass} missing")
             ???

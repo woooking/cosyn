@@ -68,7 +68,11 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
                     case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
                     case _: MethodDeclaration => new BlockStmt
                 }
-
+                if (CosynConfig.global.debug) {
+                    println("---------")
+                    println(cfg.decl)
+                    println()
+                }
                 method.getParameters.forEach(p =>
                     for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
                 )

@@ -10,6 +10,8 @@ trait TypeEntityRepository extends Repository {
 
     def getAllNonAbstractSubTypes(typeEntity: TypeEntity): Set[TypeEntity]
 
+    def getAllParentTypes(qualifiedName: String): Set[String]
+
     def isAssignable(source: Type, target: Type): Boolean
 
     def enumConstants(ty: BasicType): Set[String]
