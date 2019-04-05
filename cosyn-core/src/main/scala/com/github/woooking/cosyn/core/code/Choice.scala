@@ -3,7 +3,6 @@ package com.github.woooking.cosyn.core.code
 import com.github.woooking.cosyn.core.code.hole_resolver.QAHelper
 import com.github.woooking.cosyn.core.knowledge_graph.JavadocUtil
 import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity, TypeEntity}
-import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, _}
 import com.github.woooking.cosyn.comm.skeleton.visitors.FillHoleVisitor
@@ -32,6 +31,15 @@ case class VariableChoice(name: String) extends Choice {
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
         Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)))
+    }
+}
+
+case class CreateArrayChoice(ty: ArrayType) extends Choice {
+    override def toString: String = s"Create an array of ${ty.componentType}"
+
+    override def action(context: Context, hole: HoleExpr): ChoiceResult = {
+        val newPattern = context.pattern.fillHole(hole, create(ty, context.pattern.holeFactory.newHole() :: Nil))
+        Resolved(context.copy(pattern = newPattern))
     }
 }
 

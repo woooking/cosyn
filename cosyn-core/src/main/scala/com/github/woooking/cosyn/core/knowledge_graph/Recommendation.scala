@@ -17,6 +17,7 @@ object Recommendation {
         case _: EnumChoice => 0.0
         case _: MethodCategoryChoice => 0.0
         case _: MethodChoice => 0.0
+        case _: CreateArrayChoice => 0.0
         case IterableChoice(_, Some(_)) => 0.0 //Math.max(1.0 - (path.size - 1) * Config.iterablePenalty, 0.0)
         case IterableChoice(_, None) => 0.0 //-Config.iterablePenalty * (path.size - 1)
     }
@@ -29,7 +30,7 @@ object Recommendation {
     }
 
     private def recommend(context: Context, qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = qa match {
-        case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) =>
+        case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) | ArrayInitQuestion(_) =>
             val pattern = context.pattern
             pattern.holes diff originHoles diff ignoredHoles.toList match {
                 case Nil => RecommendChoice(context, score) :: Nil

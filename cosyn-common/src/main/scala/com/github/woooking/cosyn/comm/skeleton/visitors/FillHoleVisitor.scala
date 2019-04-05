@@ -2,13 +2,14 @@ package com.github.woooking.cosyn.comm.skeleton.visitors
 
 import com.github.woooking.cosyn.comm.skeleton.model.Type
 import com.github.woooking.cosyn.comm.skeleton.model._
+import org.slf4s.Logging
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy, the}
 
 trait FillHoleVisitor[T] {
     def fill(node: T, hole: HoleExpr, expr: Expression): Option[T]
 }
 
-object FillHoleVisitor {
+object FillHoleVisitor extends Logging {
     type FV[T] = FillHoleVisitor[T]
 
     def fillHole(scope: BlockStmt, hole: HoleExpr, expr: Expression): BlockStmt = {
@@ -50,6 +51,9 @@ object FillHoleVisitor {
             case None => None
             case Some((_, None)) => throw new Exception("")
             case Some((index, Some(filled))) => Some(seq.updated(index, filled))
+            case v =>
+                log.error(s"Match error here, $v not matched")
+                ???
         }
     }
 

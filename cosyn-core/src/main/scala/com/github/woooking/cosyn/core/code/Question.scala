@@ -2,9 +2,11 @@ package com.github.woooking.cosyn.core.code
 
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, Type, _}
+import com.github.woooking.cosyn.comm.skeleton.visitors.EndArrayInitVisitor
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion, Result}
+import com.github.woooking.cosyn.core.code.hole_resolver.QAHelper
 
 sealed trait Question {
     def description: String
@@ -42,6 +44,25 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
                     case UnImplemented =>
                         ErrorInput("Not Implemented! Please try other choices.")
                 }
+        }
+    }
+}
+
+case class ArrayInitQuestion(ty: Type) extends Question {
+    override def description: String = {
+        s"More $ty?(Y/N)"
+    }
+
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
+        input match {
+            case "Y" =>
+                NewQuestion(QAHelper.choiceQAForType(context, ty))
+            case "N" =>
+                val pattern = context.pattern
+                val newPattern = pattern.copy(stmts = EndArrayInitVisitor.end(pattern.stmts, hole))
+                Filled(context.copy(pattern = newPattern))
+            case _ =>
+                ErrorInput("Error Format!")
         }
     }
 }

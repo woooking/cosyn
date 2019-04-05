@@ -2,13 +2,14 @@ package com.github.woooking.cosyn.comm.skeleton.visitors
 
 import com.github.woooking.cosyn.comm.skeleton.model.Node
 import com.github.woooking.cosyn.comm.skeleton.model.Type
+import org.slf4s.Logging
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait ParentCollector[T] {
     def collect(parent: Node, value: T): Map[Node, Node]
 }
 
-object ParentCollector {
+object ParentCollector extends Logging {
     type PC[T] = ParentCollector[T]
 
     def instance[A](implicit enc: PC[A]): PC[A] = enc
@@ -37,6 +38,9 @@ object ParentCollector {
     implicit def hListInstance[H, T <: HList](implicit hInstance: Lazy[PC[H]], tInstance: PC[T]): PC[H :: T] = create {
         case (parent, h :: t) =>
             hInstance.value.collect(parent, h) ++ tInstance.collect(parent, t)
+        case v =>
+            log.error(s"Match error here, $v not matched")
+            ???
     }
 
     implicit def cNilInstance: PC[CNil] = nil
@@ -49,7 +53,13 @@ object ParentCollector {
     implicit def genericInstance[A, R](implicit generic: Generic.Aux[A, R], rInstance: Lazy[PC[R]]): PC[A] = create { (parent, value) =>
         value match {
             case n: Node =>
-                rInstance.value.collect(n, generic.to(value)) + (n -> parent)
+                try {
+                    rInstance.value.collect(n, generic.to(value)) + (n -> parent)
+                } catch {
+                    case e: MatchError =>
+                        e.printStackTrace()
+                        ???
+                }
             case _ => Map.empty
         }
     }

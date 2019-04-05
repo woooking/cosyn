@@ -67,11 +67,12 @@ object QAHelper {
                 val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
                 val q = s"Which $simpleName?"
                 ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ methodCategoryChoices)
-            case ArrayType(BasicType(_)) =>
-                ???
-            case _ =>
-                ???
-        }
+            case at: ArrayType =>
+                val vars = context.findVariables(at)
 
+                val simpleName = CodeUtil.qualifiedClassName2Simple(at.componentType.toString).toLowerCase
+                val q = s"Which ${simpleName}s?"
+                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) :+ CreateArrayChoice(at))
+        }
     }
 }

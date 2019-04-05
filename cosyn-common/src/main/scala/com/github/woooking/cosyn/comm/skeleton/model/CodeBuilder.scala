@@ -31,7 +31,7 @@ trait CodeBuilder {
 
     def create(receiverType: BasicType, args: MethodCallArgs*): ObjectCreationExpr = ObjectCreationExpr(receiverType, args)
 
-    def create(basicType: BasicType, dimensions: List[Option[Expression]], initializers: List[Expression]): ArrayCreationExpr = ArrayCreationExpr(basicType, dimensions, initializers)
+    def create(basicType: Type, initializers: List[Expression]): ArrayCreationExpr = ArrayCreationExpr(basicType, initializers)
 
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 
