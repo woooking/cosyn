@@ -11,7 +11,7 @@ object CreateDropDownList {
             "org.apache.poi.ss.util.CellRangeAddressList",
             "address",
             create(
-                "org.apache.poi.ss.util.CellRangeAddressList",
+                BasicType("org.apache.poi.ss.util.CellRangeAddressList"),
                 arg("int", holeFactory.newHole()),
                 arg("int", holeFactory.newHole()),
                 arg("int", holeFactory.newHole()),
@@ -23,7 +23,7 @@ object CreateDropDownList {
             "dvConstraint",
             call(
                 "DVConstraint",
-                "org.apache.poi.hssf.usermodel.DVConstraint",
+                BasicType("org.apache.poi.hssf.usermodel.DVConstraint"),
                 "createExplicitListConstraint",
                 arg(
                     ArrayType("java.lang.string"),
@@ -35,20 +35,20 @@ object CreateDropDownList {
             "org.apache.poi.ss.usermodel.DataValidation",
             "dataValidation",
             create(
-                "org.apache.poi.hssf.usermodel.HSSFDataValidation",
+                BasicType("org.apache.poi.hssf.usermodel.HSSFDataValidation"),
                 arg("org.apache.poi.ss.util.CellRangeAddressList", "address"),
                 arg("org.apache.poi.ss.usermodel.DataValidationConstraint", "dvConstraint"),
             )
         ),
         call(
             "dataValidation",
-            "org.apache.poi.ss.usermodel.DataValidation",
+            BasicType("org.apache.poi.ss.usermodel.DataValidation"),
             "setSuppressDropDownArrow",
             arg("boolean", BooleanLiteral(false))
         ),
         call(
             holeFactory.newHole(),
-            "org.apache.poi.ss.usermodel.Sheet",
+            BasicType("org.apache.poi.ss.usermodel.Sheet"),
             "addValidationData",
             arg("org.apache.poi.ss.usermodel.DataValidation", "dataValidation")
         )

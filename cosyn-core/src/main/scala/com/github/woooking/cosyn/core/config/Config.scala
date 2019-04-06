@@ -14,6 +14,7 @@ object Config {
     val holeResolver = CombineHoleResolver(
         new EnumConstantHoleResolver,
         new StaticFieldAccessHoleResolver,
+        new ArrayInitHoleResolver,
         new ReceiverHoleResolver,
         new ArgumentHoleResolver,
         new VariableInitializationHoleResolver,

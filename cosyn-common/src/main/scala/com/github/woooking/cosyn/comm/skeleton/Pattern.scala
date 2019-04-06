@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.comm.skeleton
 
 import com.github.woooking.cosyn.comm.patterns._
 import com.github.woooking.cosyn.comm.skeleton.model.{Expression, _}
-import com.github.woooking.cosyn.comm.skeleton.visitors.{FillHoleVisitor, HoleCollector, ParentCollector, ReplaceStmtVisitor}
+import com.github.woooking.cosyn.comm.skeleton.visitors._
 import com.github.woooking.cosyn.comm.util.TimeUtil.profile
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder}
@@ -38,6 +38,11 @@ case class Pattern private(holeFactory: HoleFactory, stmts: BlockStmt, parentMap
 
     def fillHole(hole: HoleExpr, expr: Expression): Pattern = profile("fill-hole") {
         val newStmts = FillHoleVisitor.fillHole(stmts, hole, expr)
+        Pattern(holeFactory, newStmts)
+    }
+
+    def replaceExpr(old: Expression, n: Expression): Pattern = profile("replace-expr") {
+        val newStmts = ReplaceVisitor.replace(stmts, old, n)
         Pattern(holeFactory, newStmts)
     }
 }

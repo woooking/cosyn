@@ -38,7 +38,7 @@ case class CreateArrayChoice(ty: ArrayType) extends Choice {
     override def toString: String = s"Create an array of ${ty.componentType}"
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val newPattern = context.pattern.fillHole(hole, create(ty, context.pattern.holeFactory.newHole() :: Nil))
+        val newPattern = context.pattern.fillHole(hole, create(ty.componentType, context.pattern.holeFactory.newHole() :: Nil))
         Resolved(context.copy(pattern = newPattern))
     }
 }
@@ -69,14 +69,14 @@ case class MethodChoice(method: MethodEntity) extends Choice {
             val pattern = context.pattern
             val receiverType = method.getDeclareType.getQualifiedName
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
-            val newPattern = pattern.fillHole(hole, call(CodeUtil.qualifiedClassName2Simple(receiverType), receiverType, method.getSimpleName, args: _*))
+            val newPattern = pattern.fillHole(hole, call(CodeUtil.qualifiedClassName2Simple(receiverType), BasicType(receiverType), method.getSimpleName, args: _*))
             Resolved(context.copy(pattern = newPattern))
         case _ =>
             val pattern = context.pattern
             val receiverType = method.getDeclareType.getQualifiedName
             val receiver = pattern.holeFactory.newHole()
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
-            val newPattern = pattern.fillHole(hole, call(receiver, receiverType, method.getSimpleName, args: _*))
+            val newPattern = pattern.fillHole(hole, call(receiver, BasicType(receiverType), method.getSimpleName, args: _*))
             Resolved(context.copy(pattern = newPattern))
     }
 }
@@ -85,7 +85,7 @@ case class EnumChoice(enumEntity: EnumEntity) extends Choice {
     override def toString: String = "Choose one"
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val newPattern = context.pattern.fillHole(hole, enum(enumEntity.getQualifiedName, context.pattern.holeFactory.newHole()))
+        val newPattern = context.pattern.fillHole(hole, enum(BasicType(enumEntity.getQualifiedName), context.pattern.holeFactory.newHole()))
         Resolved(context.copy(pattern = newPattern))
     }
 }

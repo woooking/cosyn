@@ -31,7 +31,7 @@ trait CodeBuilder {
 
     def create(receiverType: BasicType, args: MethodCallArgs*): ObjectCreationExpr = ObjectCreationExpr(receiverType, args)
 
-    def create(basicType: Type, initializers: List[Expression]): ArrayCreationExpr = ArrayCreationExpr(basicType, initializers)
+    def create(componentType: Type, initializers: List[Expression]): ArrayCreationExpr = ArrayCreationExpr(componentType, initializers)
 
     def field(receiverType: BasicType, targetType: Type, name: NameOrHole): StaticFieldAccessExpr = StaticFieldAccessExpr(receiverType, targetType, name)
 
@@ -57,7 +57,10 @@ trait CodeBuilder {
 object CodeBuilder extends CodeBuilder {
     implicit def expr2stmt(expr: Expression): ExprStmt = ExprStmt(expr)
 
-    implicit def string2type(s: String): BasicType = BasicType(s)
+    implicit def string2type(s: String): Type = {
+        if (s.trim.endsWith("[]")) ArrayType(string2type(s.trim.dropRight(2)))
+        else BasicType(s)
+    }
 
     implicit def string2name(s: String): SimpleNameExpr = SimpleNameExpr(s)
 }

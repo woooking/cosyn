@@ -105,8 +105,8 @@ sealed case class AssignExpr(name: NameExpr, target: Expression) extends Express
     override def toString: String = s"$name = $target"
 }
 
-sealed case class ArrayCreationExpr(ty: Type, initializers: List[Expression]) extends Expression {
-    override def toString: String = s"new $ty[]{${initializers.mkString(", ")}}"
+sealed case class ArrayCreationExpr(componentType: Type, initializers: List[Expression]) extends Expression {
+    override def toString: String = s"new $componentType[]{${initializers.mkString(", ")}}"
 }
 
 sealed case class BinaryExpr(ope: String, left: Expression, right: Expression) extends Expression {

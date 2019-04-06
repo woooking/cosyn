@@ -1,8 +1,9 @@
 package com.github.woooking.cosyn.core.code
 
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
+import com.github.woooking.cosyn.comm.skeleton.model.Type.PrimitiveOrString
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, Type, _}
-import com.github.woooking.cosyn.comm.skeleton.visitors.EndArrayInitVisitor
+import com.github.woooking.cosyn.comm.skeleton.visitors.{EndArrayInitVisitor, ReplaceVisitor}
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion, Result}
@@ -48,18 +49,22 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
     }
 }
 
-case class ArrayInitQuestion(ty: Type) extends Question {
+case class ArrayInitQuestion(componentType: Type, expr: ArrayCreationExpr) extends Question {
     override def description: String = {
-        s"More $ty?(Y/N)"
+        s"More $componentType?(Y/N)"
     }
 
     override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
         input match {
             case "Y" =>
-                NewQuestion(QAHelper.choiceQAForType(context, ty))
+                val pattern = context.pattern
+                val newExpr = expr.copy(initializers = expr.initializers :+ pattern.holeFactory.newHole())
+                val newPattern = pattern.replaceExpr(expr, newExpr)
+                Filled(context.copy(pattern = newPattern))
             case "N" =>
                 val pattern = context.pattern
-                val newPattern = pattern.copy(stmts = EndArrayInitVisitor.end(pattern.stmts, hole))
+                val newExpr = expr.copy(initializers = expr.initializers.dropRight(1))
+                val newPattern = pattern.replaceExpr(expr, newExpr)
                 Filled(context.copy(pattern = newPattern))
             case _ =>
                 ErrorInput("Error Format!")

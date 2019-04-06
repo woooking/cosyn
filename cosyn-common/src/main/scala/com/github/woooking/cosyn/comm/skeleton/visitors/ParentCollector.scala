@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.comm.skeleton.visitors
 
-import com.github.woooking.cosyn.comm.skeleton.model.Node
-import com.github.woooking.cosyn.comm.skeleton.model.Type
+import com.github.woooking.cosyn.comm.skeleton.model.{ArrayCreationExpr, Node, Type}
 import org.slf4s.Logging
 import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
@@ -26,10 +25,14 @@ object ParentCollector extends Logging {
         (Map.empty[Node, Node] /: seq) ((l, v) => l ++ vInstance.value.collect(parent, v))
     }
 
+    implicit def listInstance[V](implicit vInstance: Lazy[PC[V]]): PC[List[V]] = create { (parent, list) =>
+        (Map.empty[Node, Node] /: list) ((l, v) => l ++ vInstance.value.collect(parent, v))
+    }
+
     implicit def typeInstance[T <: Type]: PC[T] = nil
 
     implicit def optionInstance[V](implicit vInstance: Lazy[PC[V]]): PC[Option[V]] = create {
-        case (_, None)=> Map.empty
+        case (_, None) => Map.empty
         case (parent, Some(v)) => vInstance.value.collect(parent, v)
     }
 
@@ -37,7 +40,9 @@ object ParentCollector extends Logging {
 
     implicit def hListInstance[H, T <: HList](implicit hInstance: Lazy[PC[H]], tInstance: PC[T]): PC[H :: T] = create {
         case (parent, h :: t) =>
-            hInstance.value.collect(parent, h) ++ tInstance.collect(parent, t)
+//            hInstance.value.collect(parent, h) ++ tInstance.collect(parent, t)
+            val hr = hInstance.value.collect(parent, h)
+            hr ++ tInstance.collect(parent, t)
         case v =>
             log.error(s"Match error here, $v not matched")
             ???
@@ -52,15 +57,12 @@ object ParentCollector extends Logging {
 
     implicit def genericInstance[A, R](implicit generic: Generic.Aux[A, R], rInstance: Lazy[PC[R]]): PC[A] = create { (parent, value) =>
         value match {
+            case n: ArrayCreationExpr =>
+                val sub = rInstance.value.collect(n, generic.to(value))
+                sub + (n -> parent)
             case n: Node =>
-                try {
-                    rInstance.value.collect(n, generic.to(value)) + (n -> parent)
-                } catch {
-                    case e: MatchError =>
-                        e.printStackTrace()
-                        ???
-                }
-            case _ => Map.empty
+                rInstance.value.collect(n, generic.to(value)) + (n -> parent)
+            case _ => rInstance.value.collect(parent, generic.to(value))
         }
     }
 }

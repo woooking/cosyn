@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.comm.patterns
 
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.comm.skeleton.model.{BlockStmt, HoleFactory}
+import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, BlockStmt, HoleFactory}
 
 object ChangeFontFamily {
     val holeFactory = HoleFactory()
@@ -12,13 +12,13 @@ object ChangeFontFamily {
             "font",
             call(
                 holeFactory.newHole(),
-                "org.apache.poi.ss.usermodel.Workbook",
+                BasicType("org.apache.poi.ss.usermodel.Workbook"),
                 "createFont",
             )
         ),
         call(
             "font",
-            "org.apache.poi.ss.usermodel.Font",
+            BasicType("org.apache.poi.ss.usermodel.Font"),
             "setFontName",
             arg(
                 "java.lang.String",
@@ -30,13 +30,13 @@ object ChangeFontFamily {
             "style",
             call(
                 holeFactory.newHole(),
-                "org.apache.poi.ss.usermodel.Workbook",
+                BasicType("org.apache.poi.ss.usermodel.Workbook"),
                 "createCellStyle",
             )
         ),
         call(
             "style",
-            "org.apache.poi.ss.usermodel.CellStyle",
+            BasicType("org.apache.poi.ss.usermodel.CellStyle"),
             "setFont",
             arg(
                 "org.apache.poi.ss.usermodel.Font",
@@ -45,7 +45,7 @@ object ChangeFontFamily {
         ),
         call(
             holeFactory.newHole(),
-            "org.apache.poi.ss.usermodel.Cell",
+            BasicType("org.apache.poi.ss.usermodel.Cell"),
             "setCellStyle",
             arg(
                 "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",

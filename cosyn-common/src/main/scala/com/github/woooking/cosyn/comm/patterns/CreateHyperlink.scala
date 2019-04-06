@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.comm.patterns
 
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.comm.skeleton.model.{BlockStmt, HoleFactory}
+import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, BlockStmt, HoleFactory}
 
 object CreateHyperlink {
     val holeFactory = HoleFactory()
@@ -12,7 +12,7 @@ object CreateHyperlink {
             "creationHelper",
             call(
                 holeFactory.newHole(),
-                "org.apache.poi.ss.usermodel.Workbook",
+                BasicType("org.apache.poi.ss.usermodel.Workbook"),
                 "getCreationHelper",
             )
         ),
@@ -21,12 +21,12 @@ object CreateHyperlink {
             "link",
             call(
                 "creationHelper",
-                "org.apache.poi.ss.usermodel.CreationHelper",
+                BasicType("org.apache.poi.ss.usermodel.CreationHelper"),
                 "createHyperlink",
                 arg(
                     "org.apache.poi.common.usermodel.HyperlinkType",
                     enum(
-                        "org.apache.poi.common.usermodel.HyperlinkType",
+                        BasicType("org.apache.poi.common.usermodel.HyperlinkType"),
                         holeFactory.newHole()
                     ),
                 )
@@ -34,7 +34,7 @@ object CreateHyperlink {
         ),
         call(
             "link",
-            "org.apache.poi.common.usermodel.Hyperlink",
+            BasicType("org.apache.poi.common.usermodel.Hyperlink"),
             "setAddress",
             arg(
                 "java.lang.String",
@@ -43,7 +43,7 @@ object CreateHyperlink {
         ),
         call(
             holeFactory.newHole(),
-            "org.apache.poi.ss.usermodel.Cell",
+            BasicType("org.apache.poi.ss.usermodel.Cell"),
             "setHyperlink",
             arg(
                 "org.apache.poi.ss.usermodel.Hyperlink",

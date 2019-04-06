@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.comm.patterns
 
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.comm.skeleton.model.{BlockStmt, HoleFactory}
+import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, BlockStmt, HoleFactory}
 
 object TestPattern {
     val holeFactory = HoleFactory()
@@ -12,47 +12,10 @@ object TestPattern {
             "style",
             call(
                 "sheet",
-                "org.apache.poi.ss.usermodel.Workbook",
+                BasicType("org.apache.poi.ss.usermodel.Workbook"),
                 "createCellStyle",
             )
         ),
-        call(
-            "style",
-            "org.apache.poi.ss.usermodel.CellStyle",
-            "setFillForegroundColor",
-            arg(
-                "short",
-                call(
-                    enum(
-                        "org.apache.poi.ss.usermodel.IndexedColors",
-                        "RED"
-                    ),
-                    "org.apache.poi.ss.usermodel.IndexedColors",
-                    "getIndex",
-                )
-            ),
-        ),
-        call(
-            "style",
-            "org.apache.poi.ss.usermodel.CellStyle",
-            "setFillPattern",
-            arg(
-                "org.apache.poi.ss.usermodel.FillPatternType",
-                enum(
-                    "org.apache.poi.ss.usermodel.FillPatternType",
-                    "SOLID_FOREGROUND",
-                ),
-            )
-        ),
-        call(
-            holeFactory.newHole(),
-            "org.apache.poi.ss.usermodel.Cell",
-            "setCellStyle",
-            arg(
-                "setCellStyle(org.apache.poi.ss.usermodel.CellStyle)",
-                "style",
-            )
-        )
     )
     val pattern = Pattern(holeFactory, stmt)
 }

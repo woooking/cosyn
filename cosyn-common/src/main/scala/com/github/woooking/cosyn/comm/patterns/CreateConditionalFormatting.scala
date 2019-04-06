@@ -12,7 +12,7 @@ object CreateConditionalFormatting {
             "sheetCF",
             call(
                 holeFactory.newHole(),
-                "org.apache.poi.ss.usermodel.Sheet",
+                BasicType("org.apache.poi.ss.usermodel.Sheet"),
                 "getSheetConditionalFormatting",
             )
         ),
@@ -21,12 +21,12 @@ object CreateConditionalFormatting {
             "rule",
             call(
                 "sheetCF",
-                "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
+                BasicType("org.apache.poi.ss.usermodel.SheetConditionalFormatting"),
                 "createConditionalFormattingRule",
                 arg(
                     "byte",
                     field(
-                        "org.apache.poi.ss.usermodel.ComparisonOperator",
+                        BasicType("org.apache.poi.ss.usermodel.ComparisonOperator"),
                         BasicType("byte"),
                         holeFactory.newHole()
                     ),
@@ -42,38 +42,38 @@ object CreateConditionalFormatting {
             "fontFmt",
             call(
                 "rule",
-                "org.apache.poi.ss.usermodel.ConditionalFormattingRule",
+                BasicType("org.apache.poi.ss.usermodel.ConditionalFormattingRule"),
                 "createFontFormatting",
             )
         ),
         call(
             "fontFmt",
-            "org.apache.poi.ss.usermodel.FontFormatting",
+            BasicType("org.apache.poi.ss.usermodel.FontFormatting"),
             "setFontStyle",
             arg("boolean", holeFactory.newHole()),
             arg("boolean", holeFactory.newHole()),
         ),
         call(
             "fontFmt",
-            "org.apache.poi.ss.usermodel.FontFormatting",
+            BasicType("org.apache.poi.ss.usermodel.FontFormatting"),
             "setFontColorIndex",
             arg(
                 "short",
                 call(
                     enum(
-                        "org.apache.poi.ss.usermodel.IndexedColors",
+                        BasicType("org.apache.poi.ss.usermodel.IndexedColors"),
                         holeFactory.newHole()
                     ),
-                    "org.apache.poi.ss.usermodel.IndexedColors",
+                        BasicType("org.apache.poi.ss.usermodel.IndexedColors"),
                     "getIndex",
                 )
             ),
         ),
         call(
             "sheetCF",
-            "org.apache.poi.ss.usermodel.SheetConditionalFormatting",
+            BasicType("org.apache.poi.ss.usermodel.SheetConditionalFormatting"),
             "addConditionalFormatting",
-            arg(ArrayType(BasicType("org.apache.poi.ss.util.CellRangeAddress")), holeFactory.newHole()),
+            arg("org.apache.poi.ss.util.CellRangeAddress[]", holeFactory.newHole()),
             arg("org.apache.poi.ss.usermodel.ConditionalFormattingRule", "rule"),
         ),
     )

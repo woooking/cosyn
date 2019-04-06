@@ -159,6 +159,24 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
     }
 
     def generateCodeExpr(node: Expression, nodes: Set[Node], names: Ctx): GenExprResult = {
+        @tailrec
+        def processParams(remain: List[(String, Expression)], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
+            remain match {
+                case Nil =>
+                    (currentArgs, ctx, added)
+                case h :: tail =>
+                    val ty = h._1
+                    val expr = h._2
+                    val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(expr, nodes, ctx)
+                    e match {
+                        case _: model.HoleExpr | _: model.NameExpr =>
+                            processParams(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
+                        case _ =>
+                            val n = name(ty)
+                            processParams(tail, newCtx, (added ++ newAdded) :+ expr2stmt(v(ty, n, e)), currentArgs :+ model.MethodCallArgs(ty, n))
+                    }
+            }
+        }
 
         @inline
         def rs0(gen: => model.Expression, ctx: Ctx): GenExprResult = {
@@ -190,7 +208,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //            case n: ArrayAccessExpr =>
             //                val (nameCode, indexCode, ctx) = gc2(n.getName, n.getIndex, "")
             //                rs(s"${el(nameCode)}[${el(indexCode)}]", ctx, nameCode, indexCode)
-            case n: ArrayCreationExpr =>
+            case _: ArrayCreationExpr =>
                 //                @tailrec
                 //                def processDims(remain: List[ArrayCreationLevel], ctx: Ctx, added: List[model.Statement], currentDims: List[Option[model.Expression]]): (List[Option[model.Expression]], Ctx, List[model.Statement]) = {
                 //                    remain match {
@@ -207,7 +225,6 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 //
                 //                    }
                 //                }
-
 
                 GenExprResult(holeFactory.newHole(), names, Nil)
             //            case n: ArrayInitializerExpr =>
@@ -257,26 +274,11 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             //                if (nodes.contains(node)) (s"${n.getName}($ellip)", ctx)
             //                else rsn(ctx, argsCode: _*)
             case n: MethodCallExpr if n.getScope.isPresent && Try {n.resolve()}.toOption.exists(_.isStatic) =>
-                @tailrec
-                def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
-                    remain match {
-                        case Nil =>
-                            (currentArgs, ctx, added)
-                        case h :: tail =>
-                            val resolvedType = h.calculateResolvedType()
-                            val ty = CodeUtil.resolvedTypeToType(resolvedType)
-                            val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
-                            e match {
-                                case _: model.HoleExpr | _: model.NameExpr =>
-                                    process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
-                                case _ =>
-                                    val n = name(ty)
-                                    process(tail, newCtx, (added ++ newAdded) :+ expr2stmt(v(ty, n, e)), currentArgs :+ model.MethodCallArgs(ty, n))
-                            }
-                    }
-                }
-
-                Try {process(n.getArguments.asScala.toList, names, Nil, Nil)} match {
+                Try {
+                    val resolved = n.resolve()
+                    val paramTypes = (0 until resolved.getNumberOfParams).map(resolved.getParam).map(_.describeType())
+                    processParams((paramTypes zip n.getArguments.asScala).toList, names, Nil, Nil)
+                } match {
                     case Failure(_: UnsolvedSymbolException) =>
                         GenExprResult(holeFactory.newHole(), names, Nil)
                     case Failure(exception) =>
@@ -294,30 +296,15 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                         }
                 }
             case n: MethodCallExpr if n.getScope.isPresent =>
-                @tailrec
-                def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
-                    remain match {
-                        case Nil =>
-                            (currentArgs, ctx, added)
-                        case h :: tail =>
-                            val resolvedType = h.calculateResolvedType()
-                            val ty = CodeUtil.resolvedTypeToType(resolvedType)
-                            val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
-                            e match {
-                                case _: model.HoleExpr | _: model.NameExpr =>
-                                    process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
-                                case _ =>
-                                    val n = name(ty)
-                                    process(tail, newCtx, (added ++ newAdded) :+ expr2stmt(v(ty, n, e)), currentArgs :+ model.MethodCallArgs(ty, n))
-                            }
-                    }
-                }
-
                 val scope = n.getScope.get()
 
                 val GenExprResult(scopeCode, ctx, added) = generateCodeExpr(scope, nodes, names)
 
-                Try {process(n.getArguments.asScala.toList, ctx, added, Nil)} match {
+                Try {
+                    val resolved = n.resolve()
+                    val paramTypes = (0 until resolved.getNumberOfParams).map(resolved.getParam).map(_.describeType())
+                    processParams((paramTypes zip n.getArguments.asScala).toList, ctx, added, Nil)
+                } match {
                     case Failure(_: UnsolvedSymbolException) =>
                         GenExprResult(holeFactory.newHole(), ctx, added)
                     case Failure(exception) =>
@@ -343,25 +330,9 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             case n: ObjectCreationExpr if n.getScope.isEmpty =>
                 val receiverType = CodeUtil.resolvedTypeToType(n.getType.resolve()).asInstanceOf[BasicType]
 
-                def process(remain: List[Expression], ctx: Ctx, added: List[model.Statement], currentArgs: List[model.MethodCallArgs]): (List[model.MethodCallArgs], Ctx, List[model.Statement]) = {
-                    remain match {
-                        case Nil =>
-                            (currentArgs, ctx, added)
-                        case h :: tail =>
-                            val resolvedType = h.calculateResolvedType()
-                            val ty = CodeUtil.resolvedTypeToType(resolvedType)
-                            val GenExprResult(e, newCtx, newAdded) = generateCodeExpr(h, nodes, ctx)
-                            e match {
-                                case _: HoleExpr | _: model.NameExpr =>
-                                    process(tail, newCtx, added ++ newAdded, currentArgs :+ model.MethodCallArgs(ty, e))
-                                case _ =>
-                                    val n = name(ty)
-                                    process(tail, newCtx, (added ++ newAdded) :+ expr2stmt(v(ty, n, e)), currentArgs :+ model.MethodCallArgs(ty, n))
-                            }
-                    }
-                }
-
-                val (args, ctx, added) = process(n.getArguments.asScala.toList, names, Nil, Nil)
+                val resolved = n.resolve()
+                val paramTypes = (0 until resolved.getNumberOfParams).map(resolved.getParam).map(_.describeType())
+                val (args, ctx, added) = processParams((paramTypes zip n.getArguments.asScala).toList, names, Nil, Nil)
 
                 if (nodes.contains(node)) {
                     GenExprResult(create(receiverType, args: _*), ctx, added)
