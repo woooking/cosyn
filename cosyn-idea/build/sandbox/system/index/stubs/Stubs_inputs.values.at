@@ -1,145 +1,0 @@
-oveFromRangeStartArrayÙgetCustomXmlDelRangeEndArrayşÿÿÿÒØgetCustomXmlDelRangeStartListÓsetBoxArrayşÿÿÿÖİ	addNewBoxígetPhantArrayşÿÿÿÂ)È)	addNewAccùsetEqArrArrayşÿÿÿÄ"Ë"	getR2ListÙ.getCustomXmlMoveToRangeEndArrayşÿÿÿúÀ
-removeFuncÔ$getSSubArrayşÿÿÿğ+ö+
-getBarListÅgetSSupListß-sizeOfOMathArrayãsizeOfSPreArrayÃ+sizeOfLimLowArrayç%getLimLowListÕ%removeMoveToRangeStartêaddNewCustomXmlMoveToRangeEndã
-insertNewDÚ!setCustomXmlMoveToRangeEndArrayşÿÿÿÌÓinsertNewMoveFromÊ"insertNewCustomXmlMoveFromRangeEndèaddNewMoveToRangeEndßgetMoveToRangeEndListñ	addNewInsİ getCustomXmlMoveToRangeStartListûsizeOfSSubArrayı+sizeOfPhantArrayÏ)getCommentRangeEndArrayşÿÿÿêğinsertNewCommentRangeEndÌinsertNewR2À/getMoveFromListãsetPermStartArrayşÿÿÿòùsetMoveToRangeEndArrayşÿÿÿÈÏaddNewBookmarkEnd÷
-getPhantListı(getLimUppListÏ&getOMathParaList×addNewBookmarkStartı	getOMathListÑsetGroupChrArrayşÿÿÿò$ù$removeCustomXmlDelRangeStartÆremoveCustomXmlInsRangeStartÒremoveMü'setLimLowArrayşÿÿÿì%ó%getDListó addNewCustomXmlçremoveFÚ#removeCustomXmlMoveToRangeEndèremoveDæ!addNewLimLowÃ&removeCustomXmlInsRangeEndÌ
-getInsListïgetGroupChrArrayşÿÿÿà$æ$sizeOfPermEndArrayçsizeOfDArrayÅ!addNewPermStartÉgetCommentRangeStartArrayşÿÿÿğösetCustomXmlDelRangeEndArrayşÿÿÿäë
-getBoxListÿremoveCommentRangeStartŞgetBarArrayşÿÿÿÊĞremoveMoveFromRangeEndğremoveLimUppÂ'insertNewBorderBoxà sizeOfAccArrayİinsertNewSmartTagÚinsertNewOMathParaşsizeOfProofErrArrayó
-addNewSSubÙ,addNewCustomXmlInsRangeEndÇsetFuncArrayşÿÿÿø#ÿ#sizeOfRadArrayÉ*getSSubSupListå,Factory²setSmartTagArrayşÿÿÿÊÑ
-removeSPreä+getMoveFromRangeEndArrayşÿÿÿÂÈremoveBookmarkStartÂ
-
-addNewFuncÏ$insertNewDelĞsetCommentRangeStartArrayşÿÿÿÂÉaddNewMoveToË
-getR2ArrayşÿÿÿŞ.ä.getCustomXmlDelRangeStartArrayşÿÿÿØŞaddNewMoveFromRangeStartñremoveGroupChrÎ%getMoveFromArrayşÿÿÿèîremoveBookmarkEndü
-	addNewSdtÛaddNewCommentRangeStartÙgetSSupArrayşÿÿÿä-ê-	removeRadê*addNewLimUppı&removeLimLowÈ&getMoveToRangeStartArrayşÿÿÿüÂinsertNewBarìaddNewCommentRangeEndÓgetMoveFromRangeEndListıremoveCustomXmlìgetCustomXmlDelRangeEndListÍaddNewMoveFromRangeEndëremoveBorderBoxì sizeOfCommentRangeStartArrayıaddNewOMathÿgetNaryListÃ(getLimUppArrayşÿÿÿÔ&Ú&insertNewPermStartÂinsertNewMoveToÄsizeOfBookmarkStartArrayá	addNewPhantë)removeMoveToRangeEndäsizeOfRArrayù
-getAccListË
-removeSSupÒ.sizeOfMoveToRangeEndArrayÃinsertNewSSubÒ,insertNewProofErrÈgetAccArrayşÿÿÿĞÖ
-insertNewRÎsetMoveFromArrayşÿÿÿúÁ	removeBoxòsizeOfCustomXmlDelRangeEndArrayßgetPermEndArrayşÿÿÿÚà	removeAccş
-insertNewFÎ#addNewCustomXmlDelRangeStartÁaddNewCustomXmlInsRangeStartÍgetBookmarkStartListÏ	addNewR2Ç/sizeOfBorderBoxArrayË parseğÿÿÿ%.5>ENU^enu~…–#getCustomXmlMoveFromRangeStartArrayşÿÿÿÌÒremoveMoveToĞremoveEqArrà"sizeOfOMathParaArrayésetCustomXmlInsRangeStartArrayşÿÿÿöıgetBookmarkStartArrayşÿÿÿÔ	Ú	removeCustomXmlMoveToRangeStartî
-setR2Arrayşÿÿÿğ.÷."sizeOfCustomXmlMoveToRangeEndArrayÇ	setFArrayşÿÿÿş"Å#!sizeOfCustomXmlInsRangeStartArrayñremoveCustomXmlDelRangeEndÀ	removeInsâgetInsArrayşÿÿÿôúremoveSSubSupØ-removeR2Ì/insertNewSSupÆ.setBookmarkStartArrayşÿÿÿæ	í	setOMathArrayşÿÿÿèïinsertNewPermEndü
-addNewSPreß+getNaryArrayşÿÿÿÈ(Î(getCommentRangeEndListågetOMathParaArrayşÿÿÿÜâaddNewGroupChrÉ%sizeOfBarArray×getFuncListá#getDelArrayşÿÿÿîôaddNewSSubSupÓ-
-addNewNaryñ(getSdtArrayşÿÿÿòøremoveRÚsizeOfInsArrayÁ
-removeNaryö(setMoveFromRangeEndArrayşÿÿÿÔÛgetSmartTagArrayşÿÿÿøşgetMoveToArrayşÿÿÿâèsetPermEndArrayşÿÿÿìóinsertNewCommentRangeStartÒsizeOfR2Arrayë.getCommentRangeStartListësetMoveToArrayşÿÿÿôûremoveOMathParaÊgetEqArrArrayşÿÿÿò!ø!insertNewCustomXmlDelRangeStartúinsertNewCustomXmlInsRangeStartÆ	getRArrayşÿÿÿìò	getMArrayşÿÿÿÎ'Ô'setMoveToRangeStartArrayşÿÿÿÎÕsizeOfDelArrayûsizeOfSdtArrayÿnewInstanceşÿÿÿ insertNewCustomXmlMoveToRangeEndÜ$sizeOfCustomXmlMoveFromRangeEndArrayÓgetSmartTagListó!removeCustomXmlMoveFromRangeStartúaddNewMoveFromÑremovePermEndÈ	setBarArrayşÿÿÿÜãinsertNewGroupChrÂ%getLimLowArrayşÿÿÿÚ%à%getCustomXmlMoveToRangeEndListõ"insertNewCustomXmlMoveToRangeStartâinsertNewFuncÈ$removePhantğ)insertNewCustomXmlà$sizeOfCustomXmlMoveToRangeStartArrayÍremoveMoveFromÖsetPhantArrayşÿÿÿÔ)Û)getOMathArrayşÿÿÿÖÜ	removeSdtàgetSSubSupArrayşÿÿÿê,ğ,getBorderBoxListùaddNewBorderBoxç getSSubListë+
-getRadList÷)setMoveFromRangeStartArrayşÿÿÿÚá	setMArrayşÿÿÿà'ç'setBookmarkEndArrayşÿÿÿà
-ç
-getMoveToListİinsertNewEqArrÔ"sizeOfLimUppArrayá&removeCommentRangeEndØgetEqArrListí!	setDArrayşÿÿÿÊ!Ñ!insertNewMoveToRangeStartŞgetPermStartListÛinsertNewBoxægetProofErrListásetInsArrayşÿÿÿÆÍgetBorderBoxArrayşÿÿÿşÄ insertNewAccò!getCustomXmlMoveFromRangeEndArrayşÿÿÿÆÌinsertNewCustomXmlInsRangeEndÀ	addNewDel×sizeOfCustomXmlArrayËsetSPreArrayşÿÿÿÈ+Ï+getFListç"addNewSmartTagásetCustomXmlInsRangeEndArrayşÿÿÿğ÷!getCustomXmlMoveToRangeStartArrayşÿÿÿÀÆgetMoveFromRangeStartArrayşÿÿÿÈÎinsertNewSSubSupÌ-	addNewBaróinsertNewInsÖsetSSubSupArrayşÿÿÿü,Ã-sizeOfSSupArrayñ-setAccArrayşÿÿÿâéinsertNewCustomXmlDelRangeEndôgetPermEndListÕgetMoveToRangeStartList÷	getFArrayşÿÿÿì"ò"getCustomXmlInsRangeEndListÙ
-getDelListésizeOfMoveFromRangeStartArrayÕgetGroupChrListÛ$insertNewBookmarkEndğ
-sizeOfPermStartArrayísetNaryArrayşÿÿÿÚ(á(sizeOfCommentRangeEndArray÷sizeOfFuncArrayó#removeOMathÄgetMoveFromRangeStartListÃinsertNewSPreØ+setProofErrArrayşÿÿÿøÿremovePermStartÎsetOMathParaArrayşÿÿÿîõsetBorderBoxArrayşÿÿÿĞ × addNewCustomXmlMoveToRangeStartégetCustomXmlInsRangeStartListßaddNewMoveToRangeStartåsizeOfMArrayÛ'"getCustomXmlMoveFromRangeStartListÇ$insertNewCustomXmlMoveFromRangeStartîgetMoveToRangeEndArrayşÿÿÿöügetProofErrArrayşÿÿÿæìsizeOfGroupChrArrayí$sizeOfMoveToArrayïinsertNewPhantä)addNewCustomXmlMoveFromRangeEndï	addNewRadå*insertNewLimLowü%
-insertNewMğ'addNewProofErrÏgetCustomXmlInsRangeEndArrayşÿÿÿŞäaddNewPermEndÃ	setDelArrayşÿÿÿÀÇsetCustomXmlArrayşÿÿÿĞ×setSdtArrayşÿÿÿÄË
-removeSSubŞ,sizeOfSSubSupArray÷,setLimUppArrayşÿÿÿæ&í&getCustomXmlInsRangeStartArrayşÿÿÿäêinsertNewRadŞ*getTypeLoadernewValidatingXMLInputStreamşÿÿÿ ¨insertNewMoveFromRangeEndägetRListç
-getSdtListísizeOfMoveFromRangeEndArrayÏgetSPreListñ*!setCustomXmlMoveFromRangeEndArrayşÿÿÿØßremoveMoveFromRangeStartösizeOfNaryArrayÕ(addNewRÕgetCustomXmlList¹ getCustomXmlMoveFromRangeEndListÁinsertNewSdtÔaddNewM÷'removeProofErrÔ[type·
-typeLoaderZCTTrackChangeY
-DeprecatedËÿÿÿ˜¢ªÀúôîèâÜÖ	Ğ
-ÊÄşøòìæàÚÔÎÈÂüöğêäŞØÒÌÆÀ ú ô!î"è#â$Ü%Ö&Ğ'Ê(Ä)ş)ø*ò+ì,æ-à.ùÂĞ©	b?9®ÄÊªƒÀaCTSdtContentBlockFactory`InputStreamşÿÿÿNUCTOMathşÿÿÿèïXMLStreamReaderşÿÿÿnu
-XmlOptionsöÿÿÿ%5EUeu…–¨CTMarkupøÿÿÿğ÷äëØßÌÓCTCustomXmlBlockşÿÿÿĞ×CTRunTrackChangeøÿÿÿÆÍÀÇúÁôûCTPşÿÿÿÄË
-CTSdtBlockşÿÿÿÊÑStringşÿÿÿ%CTOMathParaşÿÿÿîõReaderşÿÿÿ^eXMLInputStreamüÿÿÿ– ¨URLşÿÿÿ>ECTPermStartşÿÿÿòù
-CTProofErrşÿÿÿøÿ
-CTBookmarkşÿÿÿæ	í	CTMoveBookmarküÿÿÿÚáÎÕFileşÿÿÿ.5Nodeşÿÿÿ~…CTMarkupRangeöÿÿÿà
-ç
-ÔÛÈÏÂÉüÃCTPermşÿÿÿìóCTTrackChangeøÿÿÿöıêñŞåÒÙCTTblşÿÿÿşÅ^$CTPermStart[]à	CTOMath[]ÖCTProofErr[]æintãÿÿÿËÅÿùóíçá	Û
-ÕÏÉÃı÷ñëåßÙÓÍÇÁûõïéã
-CTBookmarkıÿÿÿÚ	ö	ı	CTP[]òCTOMathParaıÿÿÿâşÅCTSdtBlock[]øCTSdtContentBlockîÿÿÿ%.5>ENU^enu~…–CTTrackChange[]üÿÿÿäØÌÀ
-CTSdtBlockıÿÿÿşÚáCTMoveBookmark[]şÿÿÿÈüCTMoveBookmarkúÿÿÿÎêñÂŞåCTOMathıÿÿÿÜøÿListãÿÿÿ¹óíçáÛÕÏ	É
-Ãı÷ñëåßÙÓÍÇÁûõïéãİ×ÑCTTrackChangeôÿÿÿêÆÍŞúÁÒîõÆâéCTRunTrackChange[]üÿÿÿôîèâCTPerm[]ÚCTCustomXmlBlockıÿÿÿÄàçCTTblıÿÿÿòÎÕCTOMathPara[]ÜCTMarkupRangeñÿÿÿÔ
-ğ
-÷
-ÈäëüØßöÒÙğÌÓ
-SchemaType·CTPermStartıÿÿÿæÂÉCTPermıÿÿÿàüÃ	CTMarkupRange[]ûÿÿÿÎ
-ÂöğêCTTbl[]ìCTCustomXmlBlock[]¾CTRunTrackChangeôÿÿÿúÖİôĞ×îÊÑèÄËXMLInputStreamşÿÿÿ ¨CTMarkupôÿÿÿäÀÇØôûÌèïÀÜã
-CTMarkup[]üÿÿÿŞÒÆúCTBookmark[]Ô	
-CTProofErrıÿÿÿìÈÏvoidéşÿÿĞ×ìÊÑæÄËàşÅÚøÿÔòùÎìóÈ	æ	í	Â
-à
-ç
-ü
-ÚáöÔÛğÎÕêÈÏäÂÉŞüÃØöıÒğ÷ÌêñÆäëÀŞåúØßôÒÙîÌÓèÆÍâÀÇÜúÁÖôûĞîõÊèïÄCTPıÿÿÿøÔÛ]ÏgetPermEndArrayşÿÿÿÚàsizeOfBookmarkEndArrayÛ
-sizeOfMoveToRangeStartArrayÉ getCustomXmlMoveToRangeStartListûgetMoveToRangeStartArrayşÿÿÿüÂ"insertNewCustomXmlMoveToRangeStartâsizeOfMoveToArrayïgetBookmarkEndArrayşÿÿÿÎ
-Ô
-removeOMathParaÊsetMoveFromRangeEndArrayşÿÿÿÔÛsizeOfDelArrayûaddNewMoveToRangeStartå!setCustomXmlMoveFromRangeEndArrayşÿÿÿØß	removeDelÜinsertNewMoveToRangeEndØsetCommentRangeEndArrayşÿÿÿüÃ
-getDelListésizeOfCommentRangeStartArrayıaddNewCustomXmlDelRangeEndûaddNewCommentRangeStartÙsetOMathArrayşÿÿÿèïgetOMathArrayşÿÿÿÖÜsizeOfCustomXmlInsRangeEndArrayëinsertNewProofErrÈremoveCustomXmlMoveToRangeEndèaddNewProofErrÏaddNewMoveFromRangeStartñaddNewCommentRangeEndÓ!sizeOfCustomXmlInsRangeStartArrayñinsertNewTblÎsizeOfMoveFromArrayõgetMoveToArrayşÿÿÿâègetDelArrayşÿÿÿîôsizeOfCustomXmlDelRangeEndArrayßparseğÿÿÿ%.5>ENU^enu~…–sizeOfMoveToRangeEndArrayÃ$insertNewCustomXmlMoveFromRangeStartîinsertNewMoveFromÊ!setCustomXmlMoveToRangeStartArrayşÿÿÿÒÙsizeOfInsArrayÁsizeOfMoveFromRangeEndArrayÏgetMoveFromRangeEndArrayşÿÿÿÂÈgetProofErrArrayşÿÿÿæìinsertNewMoveToRangeStartŞgetMoveToRangeStartList÷setMoveToRangeEndArrayşÿÿÿÈÏ insertNewCustomXmlMoveToRangeEndÜremoveOMathÄremoveCustomXmlDelRangeEndÀaddNewCustomXmlMoveToRangeEndãaddNewMoveFromRangeEndënewInstanceşÿÿÿsetBookmarkEndArrayşÿÿÿà
-ç
-sizeOfPermEndArrayçsetSdtArrayşÿÿÿÊÑ	setPArrayşÿÿÿÄË"sizeOfCustomXmlMoveToRangeEndArrayÇgetOMathParaArrayşÿÿÿÜâsetOMathParaArrayşÿÿÿîõsizeOfSdtArrayÅremovePermEndÈ	getCustomXmlDelRangeStartArrayşÿÿÿØŞgetCommentRangeEndListå getCustomXmlMoveFromRangeEndListÁ	addNewDel×#getCustomXmlMoveFromRangeStartArrayşÿÿÿÌÒsetMoveFromRangeStartArrayşÿÿÿÚá	getPArrayşÿÿÿòøsizeOfPermStartArrayísetDelArrayşÿÿÿÀÇsetPermStartArrayşÿÿÿòùsizeOfMoveFromRangeStartArrayÕ!sizeOfCustomXmlDelRangeStartArrayågetCommentRangeStartArrayşÿÿÿğösetCustomXmlInsRangeStartArrayşÿÿÿöıinsertNewCommentRangeStartÒsetCustomXmlMoveToRangeEndArrayşÿÿÿÌÓsetMoveFromArrayşÿÿÿúÁgetBookmarkStartListÏ	getOMathParaList×addNewMoveToËaddNewCustomXmlInsRangeEndÇinsertNewBookmarkStartö	insertNewMoveFromRangeStartê
-getTblListçaddNewPÛ&sizeOfCustomXmlMoveFromRangeStartArrayÙgetCustomXmlInsRangeEndListÙ"getCustomXmlMoveFromRangeStartListÇinsertNewBookmarkEndğ
-getCommentRangeEndArrayşÿÿÿêğsizeOfProofErrArrayóinsertNewPermEndüsizeOfCustomXmlArrayËgetMoveFromRangeStartArrayşÿÿÿÈÎsetCustomXmlArrayşÿÿÿĞ×removeMoveFromRangeEndğsetCustomXmlDelRangeStartArrayşÿÿÿêñgetMoveFromArrayşÿÿÿèîsetTblArrayşÿÿÿşÅgetPermStartArrayşÿÿÿàæinsertNewDelĞsizeOfCommentRangeEndArray÷getSdtArrayşÿÿÿøşgetProofErrListá	addNewSdtá!getCustomXmlMoveFromRangeEndArrayşÿÿÿÆÌaddNewBookmarkStartı	getCustomXmlInsRangeStartListßinsertNewCustomXmlDelRangeStartúgetCustomXmlDelRangeStartListÓaddNewPermEndÃ	getMoveToListİinsertNewCustomXmlInsRangeStartÆremoveCustomXmlInsRangeEndÌremoveCustomXmlìgetInsArrayşÿÿÿôútype·removeBookmarkEndü
-removePermStartÎremoveMoveFromÖaddNewOMathÿnewValidatingXMLInputStreamşÿÿÿ ¨	removeSdtæinsertNewCustomXmlDelRangeEndôgetCustomXmlInsRangeStartArrayşÿÿÿäêsetCustomXmlInsRangeEndArrayşÿÿÿğ÷	addNewInsİgetCustomXmlArrayşÿÿÿ¾ÄgetMoveToRangeEndArrayşÿÿÿöüremoveCommentRangeEndØsizeOfPArrayÿsizeOfTblArrayùaddNewCustomXmlMoveFromRangeEndïgetCustomXmlDelRangeEndArrayşÿÿÿÒØremoveMoveFromRangeStartögetCustomXmlMoveToRangeEndListõaddNewOMathParaÅsetProofErrArrayşÿÿÿøÿsetCommentRangeStartArrayşÿÿÿÂÉinsertNewOMathøsetCustomXmlDelRangeEndArrayşÿÿÿäësizeOfOMathArrayãgetCommentRangeStartListë!addNewCustomXmlMoveFromRangeStartõ#setCustomXmlMoveFromRangeStartArrayşÿÿÿŞå	removeInsâ!removeCustomXmlMoveFromRangeStartúgetTblArrayşÿÿÿìògetMoveFromRangeStartListÃaddNewCustomXmlDelRangeStartÁgetBookmarkStartArrayşÿÿÿÔ	Ú	addNewCustomXmlInsRangeStartÍgetOMathListÑremoveCommentRangeStartŞ$sizeOfCustomXmlMoveToRangeStartArrayÍaddNewBookmarkEnd÷
-insertNewOMathParaşremoveMoveToRangeStartêremoveCustomXmlMoveFromRangeEndôremoveMoveToRangeEndägetBookmarkEndListÉ
-insertNewMoveToÄgetPListísizeOfOMathParaArrayégetPermStartListÛ"insertNewCustomXmlMoveFromRangeEndèsetPermEndArrayşÿÿÿìó	addNewTblÕremoveMoveToĞinsertNewSdtÚ!getCustomXmlMoveToRangeStartArrayşÿÿÿÀÆgetCustomXmlMoveToRangeEndArrayşÿÿÿúÀsizeOfBookmarkStartArrayá	setMoveToArrayşÿÿÿôû
-insertNewPÔsetMoveToRangeStartArrayşÿÿÿÎÕaddNewMoveFromÑsetInsArrayşÿÿÿÆÍremovePàgetCustomXmlDelRangeEndListÍinsertNewCommentRangeEndÌinsertNewCustomXmlInsRangeEndÀinsertNewMoveFromRangeEndägetCustomXmlInsRangeEndArrayşÿÿÿŞä
-getSdtListógetCustomXmlList¹addNewPermStartÉinsertNewInsÖ$sizeOfCustomXmlMoveFromRangeEndArrayÓgetMoveFromRangeEndListıaddNewCustomXmlMoveToRangeStartégetMoveFromListãgetMoveToRangeEndListñaddNewMoveToRangeEndßaddNewCustomXmlçgetPermEndListÕremoveBookmarkStartÂ
-	removeTblÚinsertNewCustomXmlàremoveCustomXmlDelRangeStartÆremoveProofErrÔinsertNewPermStartÂremoveCustomXmlMoveToRangeStartîremoveCustomXmlInsRangeStartÒ
-getInsListïsetBookmarkStartArrayşÿÿÿæ	í	\ĞgetPermEndArrayşÿÿÿÚàsizeOfBookmarkEndArrayÛ
-sizeOfMoveToRangeStartArrayÉ getCustomXmlMoveToRangeStartListûgetMoveToRangeStartArrayşÿÿÿüÂ"insertNewCustomXmlMoveToRangeStartâsizeOfMoveToArrayïgetBookmarkEndArrayşÿÿÿÎ
-Ô
-removeOMathParaÊsetMoveFromRangeEndArrayşÿÿÿÔÛsizeOfDelArrayûremoveCustomXmlMoveToRangeEndè!setCustomXmlMoveFromRangeEndArrayşÿÿÿØß	removeDelÜinsertNewMoveToRangeEndØsetCommentRangeEndArrayşÿÿÿüÃ
-getDelListésizeOfCommentRangeStartArrayıaddNewCustomXmlDelRangeEndûaddNewCommentRangeStartÙsetOMathArrayşÿÿÿèïgetOMathArrayşÿÿÿÖÜsizeOfCustomXmlInsRangeEndArrayëinsertNewProofErrÈaddNewProofErrÏaddNewMoveFromRangeStartñaddNewCommentRangeEndÓ!sizeOfCustomXmlInsRangeStartArrayñgetTypeLoadersizeOfMoveFromArrayõgetMoveToArrayşÿÿÿâègetDelArrayşÿÿÿîôsizeOfCustomXmlDelRangeEndArrayßparseğÿÿÿ%.5>ENU^enu~…–sizeOfMoveToRangeEndArrayÃ$insertNewCustomXmlMoveFromRangeStartîinsertNewTblÎinsertNewMoveFromÊ!setCustomXmlMoveToRangeStartArrayşÿÿÿÒÙsizeOfInsArrayÁsizeOfMoveFromRangeEndArrayÏgetMoveFromRangeEndArrayşÿÿÿÂÈgetProofErrArrayşÿÿÿæìinsertNewMoveToRangeStartŞgetMoveToRangeStartList÷setMoveToRangeEndArrayşÿÿÿÈÏ insertNewCustomXmlMoveToRangeEndÜremoveOMathÄremoveCustomXmlDelRangeEndÀaddNewCustomXmlMoveToRangeEndãaddNewMoveFromRangeEndënewInstanceşÿÿÿsetBookmarkEndArrayşÿÿÿà
-ç
-sizeOfPermEndArrayçsetSdtArrayşÿÿÿÊÑ	setPArrayşÿÿÿÄË"sizeOfCustomXmlMoveToRangeEndArrayÇgetOMathParaArrayşÿÿÿÜâsetOMathParaArrayşÿÿÿîõsizeOfSdtArrayÅremovePermEndÈ	getCustomXmlDelRangeStartArrayşÿÿÿØŞgetCommentRangeEndListå getCustomXmlMoveFromRangeEndListÁ	addNewDel×#getCustomXmlMoveFromRangeStartArrayşÿÿÿÌÒsetMoveFromRangeStartArrayşÿÿÿÚá	getPArrayşÿÿÿòøsizeOfPermStartArrayísetDelArrayşÿÿÿÀÇsetPermStartArrayşÿÿÿòùsizeOfMoveFromRangeStartArrayÕ!sizeOfCustomXmlDelRangeStartArrayågetCommentRangeStartArrayşÿÿÿğögetMoveFromListãinsertNewCommentRangeStartÒsetCustomXmlMoveToRangeEndArrayşÿÿÿÌÓsetMoveFromArrayşÿÿÿúÁgetBookmarkStartListÏ	getOMathParaList×addNewMoveToËaddNewCustomXmlInsRangeEndÇinsertNewBookmarkStartö	insertNewMoveFromRangeStartê
-getTblListçaddNewPÛ&sizeOfCustomXmlMoveFromRangeStartArrayÙgetCustomXmlInsRangeEndListÙ"getCustomXmlMoveFromRangeStartListÇFactory²getCommentRangeEndArrayşÿÿÿêğsizeOfProofErrArrayóinsertNewPermEndüsizeOfCustomXmlArrayËgetMoveFromRangeStartArrayşÿÿÿÈÎsetCustomXmlArrayşÿÿÿĞ×removeMoveFromRangeEndğsetCustomXmlDelRangeStartArrayşÿÿÿêñgetMoveFromArrayşÿÿÿèîsetTblArrayşÿÿÿşÅgetPermStartArrayşÿÿÿàæinsertNewDelĞsizeOfCommentRangeEndArray÷getSdtArrayşÿÿÿøşgetProofErrListá	addNewSdtá!getCustomXmlMoveFromRangeEndArrayşÿÿÿÆÌaddNewBookmarkStartı	getCustomXmlInsRangeStartListßinsertNewCustomXmlDelRangeStartúgetCustomXmlDelRangeStartListÓaddNewPermEndÃ	getMoveToListİinsertNewCustomXmlInsRangeStartÆremoveCustomXmlInsRangeEndÌremoveCustomXmlìgetInsArrayşÿÿÿôúaddNewMoveToRangeStartåremoveBookmarkEndü
-removePermStartÎremoveMoveFromÖaddNewOMathÿnewValidatingXMLInputStreamşÿÿÿ ¨	removeSdtæinsertNewCustomXmlDelRangeEndôgetCustomXmlInsRangeStartArrayşÿÿÿäêsetCustomXmlInsRangeEndArrayşÿÿÿğ÷	addNewInsİgetCustomXmlArrayşÿÿÿ¾ÄgetMoveToRangeEndArrayşÿÿÿöüremoveCommentRangeEndØsizeOfPArrayÿsetCustomXmlInsRangeStartArrayşÿÿÿöıaddNewCustomXmlMoveFromRangeEndïgetCustomXmlDelRangeEndArrayşÿÿÿÒØremoveMoveFromRangeStartögetCustomXmlMoveToRangeEndListõaddNewOMathParaÅsetProofErrArrayşÿÿÿøÿsetCommentRangeStartArrayşÿÿÿÂÉinsertNewOMathøinsertNewBookmarkEndğ
-sizeOfOMathArrayãgetCommentRangeStartListë!addNewCustomXmlMoveFromRangeStartõ#setCustomXmlMoveFromRangeStartArrayşÿÿÿŞå	removeInsâ!removeCustomXmlMoveFromRangeStartúgetTblArrayşÿÿÿìògetMoveFromRangeStartListÃaddNewCustomXmlDelRangeStartÁgetBookmarkStartArrayşÿÿÿÔ	Ú	addNewCustomXmlInsRangeStartÍgetOMathListÑremoveCommentRangeStartŞ$sizeOfCustomXmlMoveToRangeStartArrayÍsizeOfTblArrayùaddNewBookmarkEnd÷
-insertNewOMathParaşremoveMoveToRangeStartêremoveCustomXmlMoveFromRangeEndôsetCustomXmlDelRangeEndArrayşÿÿÿäëremoveMoveToRangeEndägetBookmarkEndListÉ
-insertNewMoveToÄgetPListísizeOfOMathParaArrayégetPermStartListÛ"insertNewCustomXmlMoveFromRangeEndèsetPermEndArrayşÿÿÿìó	addNewTblÕremoveMoveToĞinsertNewSdtÚ!getCustomXmlMoveToRangeStartArrayşÿÿÿÀÆgetCustomXmlMoveToRangeEndArrayşÿÿÿúÀsizeOfBookmarkStartArrayá	setMoveToArrayşÿÿÿôû
-insertNewPÔsetMoveToRangeStartArrayşÿÿÿÎÕaddNewMoveFromÑsetInsArrayşÿÿÿÆÍremovePàgetCustomXmlDelRangeEndListÍinsertNewCommentRangeEndÌinsertNewCustomXmlInsRangeEndÀinsertNewMoveFromRangeEndägetCustomXmlInsRangeEndArrayşÿÿÿŞä
-getSdtListógetCustomXmlList¹addNewPermStartÉinsertNewInsÖ$sizeOfCustomXmlMoveFromRangeEndArrayÓgetMoveFromRangeEndListıaddNewCustomXmlMoveToRangeStartégetMoveToRangeEndListñaddNewMoveToRangeEndßaddNewCustomXmlçgetPermEndListÕremoveBookmarkStartÂ
-	removeTblÚinsertNewCustomXmlàremoveCustomXmlDelRangeStartÆremoveProofErrÔinsertNewPermStartÂremoveCustomXmlMoveToRangeStartîremoveCustomXmlInsRangeStartÒ
-getInsListïsetBookmarkStartArrayşÿÿÿæ	í	[type·
-typeLoaderZ	XmlObjectY
-Deprecatedßÿÿÿ˜¢ªÀúôîèâÜÖ	Ğ
-ÊÄşøòìæàÚÔÎÈÂüöğêäŞØí
-Îª	b·;şxé…aCTSignedHpsMeasureFactory`Stringşÿÿÿ%XMLInputStreamüÿÿÿ– ¨URLşÿÿÿ>EXMLStreamReaderşÿÿÿnuSTSignedHpsMeasureÊReaderşÿÿÿ^eFileşÿÿÿ.5InputStreamşÿÿÿNUNodeşÿÿÿ~…
-BigIntegerÃ
-XmlOptionsöÿÿÿ%5EUeu…–¨^
-BigInteger¹XMLInputStreamşÿÿÿ ¨CTSignedHpsMeasureîÿÿÿ%.5>ENU^enu~…–voidşÿÿÿÃÊSTSignedHpsMeasure¾
-SchemaType·]getVal¹xsetValÊnewValidatingXMLInputStreamşÿÿÿ ¨parseğÿÿÿ%.5>ENU^enu~…–newInstanceşÿÿÿxgetVal¾setValÃtype·\	getVal¹xgetVal¾parseğÿÿÿ%.5>ENU^enu~…–Factory²getTypeLoaderxsetValÊnewInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ ¨setValÃ[type·
-typeLoaderZ	XmlObjectY
-Deprecatedüÿÿÿ˜¢ªá
-Úª	b$äC+:Ó	/aFactoryCTVerticalAlignRun`Stringşÿÿÿ%XMLInputStreamüÿÿÿ– ¨URLşÿÿÿ>EXMLStreamReaderşÿÿÿnuSTVerticalAlignRunÊEnumÃReaderşÿÿÿ^eFileşÿÿÿ.5InputStreamşÿÿÿNUNodeşÿÿÿ~…
-XmlOptionsöÿÿÿ%5EUeu…–¨^XMLInputStreamşÿÿÿ ¨voidşÿÿÿÃÊCTVerticalAlignRunîÿÿÿ%.5>ENU^enu~…–Enum¹STVerticalAlignRun¾
-SchemaType·]getVal¹xsetValÊnewValidatingXMLInputStreamşÿÿÿ ¨parseğÿÿÿ%.5>ENU^enu~…–newInstanceşÿÿÿxgetVal¾setValÃtype·\	getVal¹xgetVal¾parseğÿÿÿ%.5>ENU^enu~…–Factory²getTypeLoaderxsetValÊnewInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ ¨setValÃ[type·
-typeLoaderZ	XmlObjectY
-Deprecatedüÿÿÿ˜¢ªóÎ§	bÂ¦ò LmîaFactorySTSignedHpsMeasure`
-Stringşÿÿÿ%,XMLInputStreamüÿÿÿ•§¯URLşÿÿÿELObjectReaderşÿÿÿelFileşÿÿÿ5<InputStreamşÿÿÿU\Nodeşÿÿÿ…ŒXMLStreamReaderşÿÿÿu|
-XmlOptionsöÿÿÿ,<L\l|Œ¯^
-SchemaType¾STSignedHpsMeasureíÿÿÿ%,5<ELU\elu|…Œ•XMLInputStreamşÿÿÿ§¯]newInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ§¯newValuetype¾parseğÿÿÿ%,5<ELU\elu|…Œ•\newValueparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯Factory¹getTypeLoadernewInstanceşÿÿÿ[type¾
-typeLoaderZ
-XmlIntegerY
-Deprecatedüÿÿÿ—Ÿ©±ãÂ§	bByuƒñ+â¡2¾aFactoryEnum¾STVerticalAlignRun`Stringüÿÿÿ%,ÍÛXMLInputStreamüÿÿÿ•§¯URLşÿÿÿELObjectReaderşÿÿÿelFileşÿÿÿ5<InputStreamşÿÿÿU\Nodeşÿÿÿ…ŒStringEnumAbstractBaseüXMLStreamReaderşÿÿÿu|
-XmlOptionsöÿÿÿ,<L\l|Œ¯^TableÉXMLInputStreamşÿÿÿ§¯voidüEnumûÿÿÿÍÔëíïSTVerticalAlignRuníÿÿÿ%,5<ELU\elu|…Œ•StringEnumAbstractBase÷
-SchemaTypeéintúÿÿÿÃÅÇñóõ]BASELINEëINT_BASELINEşÿÿÿÃñ	forStringÍINT_SUBSCRIPTşÿÿÿÇõparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯forIntÔsetüSUPERSCRIPTítableÉ	SUBSCRIPTïINT_SUPERSCRIPTşÿÿÿÅónewValue	enumValue÷typeénewInstanceşÿÿÿ\newValueparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯setüFactory¹getTypeLoadernewInstanceşÿÿÿforIntÔEnumÛreadResolveä	enumValue÷	forStringÍ[
-serialVersionUIDËINT_SUBSCRIPTşÿÿÿÇõINT_SUPERSCRIPTşÿÿÿÅóSUPERSCRIPTí
-typeLoader	SUBSCRIPTïtableÉINT_BASELINEşÿÿÿÃñBASELINEëtypeéZ	XmlStringStringEnumAbstractBaseÁY
-Deprecatedüÿÿÿ—Ÿ©±õ
-ä¥	b•$·Ù
- aCTSignedTwipsMeasureFactory`Stringşÿÿÿ%XMLInputStreamüÿÿÿ– ¨URLşÿÿÿ>EXMLStreamReaderşÿÿÿnuSTSignedTwipsMeasureÊReaderşÿÿÿ^eFileşÿÿÿ.5InputStreamşÿÿÿNUNodeşÿÿÿ~…
-BigIntegerÃ
-XmlOptionsöÿÿÿ%5EUeu…–¨^voidşÿÿÿÃÊ
-BigInteger¹CTSignedTwipsMeasureîÿÿÿ%.5>ENU^enu~…–XMLInputStreamşÿÿÿ ¨STSignedTwipsMeasure¾
-SchemaType·]getVal¹xsetValÊnewValidatingXMLInputStreamşÿÿÿ ¨parseğÿÿÿ%.5>ENU^enu~…–newInstanceşÿÿÿxgetVal¾setValÃtype·\	getVal¹xgetVal¾parseğÿÿÿ%.5>ENU^enu~…–Factory²getTypeLoaderxsetValÊnewInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ ¨setValÃ[type·
-typeLoaderZ	XmlObjectY
-Deprecatedüÿÿÿ˜¢ªÄ	ì¨	bz-Š6zÜ†aSTEighthPointMeasureFactory`
-Stringşÿÿÿ%,XMLInputStreamüÿÿÿ•§¯URLşÿÿÿELObjectReaderşÿÿÿelFileşÿÿÿ5<InputStreamşÿÿÿU\Nodeşÿÿÿ…ŒXMLStreamReaderşÿÿÿu|
-XmlOptionsöÿÿÿ,<L\l|Œ¯^
-SchemaType¾STEighthPointMeasureíÿÿÿ%,5<ELU\elu|…Œ•XMLInputStreamşÿÿÿ§¯]newInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ§¯newValuetype¾parseğÿÿÿ%,5<ELU\elu|…Œ•\newValueparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯Factory¹getTypeLoadernewInstanceşÿÿÿ[type¾
-typeLoaderZSTUnsignedDecimalNumberY
-Deprecatedüÿÿÿ—Ÿ©±÷ô¥	bÄé€û!ûaFactorySTSignedTwipsMeasure`
-Stringşÿÿÿ%,XMLInputStreamüÿÿÿ•§¯URLşÿÿÿELObjectReaderşÿÿÿelFileşÿÿÿ5<InputStreamşÿÿÿU\Nodeşÿÿÿ…ŒXMLStreamReaderşÿÿÿu|
-XmlOptionsöÿÿÿ,<L\l|Œ¯^
-SchemaType¾XMLInputStreamşÿÿÿ§¯STSignedTwipsMeasureíÿÿÿ%,5<ELU\elu|…Œ•]newInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ§¯newValuetype¾parseğÿÿÿ%,5<ELU\elu|…Œ•\newValueparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯Factory¹getTypeLoadernewInstanceşÿÿÿ[type¾
-typeLoaderZ
-XmlIntegerY
-Deprecatedüÿÿÿ—Ÿ©±Â	÷©	bÉ}2§f¢aFactorySTUnsignedDecimalNumber`
-Stringşÿÿÿ%,XMLInputStreamüÿÿÿ•§¯URLşÿÿÿELObjectReaderşÿÿÿelFileşÿÿÿ5<InputStreamşÿÿÿU\Nodeşÿÿÿ…ŒXMLStreamReaderşÿÿÿu|
-XmlOptionsöÿÿÿ,<L\l|Œ¯^
-SchemaType¾XMLInputStreamşÿÿÿ§¯STUnsignedDecimalNumberíÿÿÿ%,5<ELU\elu|…Œ•]newInstanceşÿÿÿnewValidatingXMLInputStreamşÿÿÿ§¯newValuetype¾parseğÿÿÿ%,5<ELU\elu|…Œ•\newValueparseğÿÿÿ%,5<ELU\elu|…Œ•newValidatingXMLInputStreamşÿÿÿ§¯Factory¹getTypeLoadernewInstanceşÿÿÿ[type¾
-typeLoaderZXmlUnsignedLongY
-Deprecatedüÿÿÿ—Ÿ©±sú´b¯NHaTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystemsÄµb»Ï^aTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystemsÖµbÇ·ËaTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystemsÅ·b„’’LaTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystemsä²böXyaTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystemsØ¼bÇj6aTypeSystemHolder^SchemaTypeSystem]
-typeSystem\TypeSystemHolderloadTypeSystem[
-typeSystem6çJbM> œaC`String\helloZBAYOverride	5æJbM> ›aB`String^String]hello\hello5åJbM> šaA`String^String]hello\hello4úJbĞŞ¹aTest`String^void]main\main4úJbĞŞ¹aTest`String^void]main\main4úJbĞŞ¹aTest`String^void]main\main4úJbĞŞ¹aTest`String^void]main\main4úJbĞŞ¹aTest`String^void]main\mainAúJbĞŞ¹aTest`StringSheet^void]main\maintestMúJbĞŞ¹aTest`StringSheet^voidşÿÿÿ]maintest\maintestMúJbĞŞ¹aTest`StringSheet^voidşÿÿÿ]maintest\maintestMúJbĞŞ¹aTest`StringSheet^voidşÿÿÿ]maintest\maintestMúJbĞŞ¹aTest`StringSheet^voidşÿÿÿ]maintest\maintestMúJbĞŞ¹aTest`StringSheet^voidşÿÿÿ]maintest\maintest
