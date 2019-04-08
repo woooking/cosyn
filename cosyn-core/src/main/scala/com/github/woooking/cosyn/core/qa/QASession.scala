@@ -5,7 +5,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import com.github.woooking.cosyn.comm.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.core.code.{Context, Question}
-import com.github.woooking.cosyn.core.knowledge_graph.NLMatcher
+import com.github.woooking.cosyn.core.knowledge_graph.{NLMatcher, NLP}
 
 object QASession {
 
@@ -18,7 +18,7 @@ object QASession {
             println(s"----------")
         }
         val pattern = patterns.head._1
-        val newCtx = ctx.copy(pattern = pattern)
+        val newCtx = ctx.copy(pattern = pattern, nlp = NLP.parse(ctx.query))
         generate(ref, QuestionData(newCtx, Nil))
     }
 

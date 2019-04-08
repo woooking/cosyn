@@ -6,7 +6,6 @@ import com.github.woooking.cosyn.comm.skeleton.model.BasicType
 import com.github.woooking.cosyn.comm.util.TimeUtil
 import com.github.woooking.cosyn.core.code.{Context, Question}
 import com.github.woooking.cosyn.core.config.Config
-import com.github.woooking.cosyn.core.knowledge_graph.NLP
 import com.github.woooking.cosyn.kg.KnowledgeGraph
 
 import scala.io.StdIn
@@ -59,10 +58,8 @@ object CmdQAClient {
     }
 
     def main(args: Array[String]): Unit = {
-        // ---- case 1 ----
         val task = StdIn.readLine()
-        NLP.parse(task)
-        val context = Context(task, Set("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), null, Seq("java.lang.Object"), NLP.parse(task))
+        val context = Context(task, Set("sheet" -> BasicType("org.apache.poi.ss.usermodel.Sheet")), null, Seq("java.lang.Object"), null)
         client ! NewTask(context)
     }
 }

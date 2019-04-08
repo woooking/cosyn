@@ -5,6 +5,7 @@ version := "1.0"
 val commonSettings = Seq(
     scalaVersion := "2.12.7",
     scalacOptions ++= Seq(
+        "-J-Xss8M",
         "-deprecation", // Emit warning and location for usages of deprecated APIs.
         "-encoding", "utf-8", // Specify character encoding used by source files.
         "-explaintypes", // Explain type errors in more detail.

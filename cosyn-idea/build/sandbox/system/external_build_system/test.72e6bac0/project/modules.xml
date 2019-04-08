@@ -1,0 +1,9 @@
+<project>
+  <component name="ExternalModuleListStorage">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/club.woooking.test.iml" filepath="$PROJECT_DIR$/.idea/modules/club.woooking.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/club.woooking.test.main.iml" filepath="$PROJECT_DIR$/.idea/modules/club.woooking.test.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/club.woooking.test.test.iml" filepath="$PROJECT_DIR$/.idea/modules/club.woooking.test.test.iml" />
+    </modules>
+  </component>
+</project>

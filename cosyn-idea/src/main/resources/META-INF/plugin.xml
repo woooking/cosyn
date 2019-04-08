@@ -1,0 +1,28 @@
+<idea-plugin>
+    <id>com.github.woooking.cosyn-idea</id>
+    <name>Cosyn Idea</name>
+    <vendor email="huacy@pku.edu.cn" url="woooking.club">PKU SEI</vendor>
+
+    <description><![CDATA[
+    Interactive Code Synthesis Tool For Java
+    ]]></description>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+    </extensions>
+
+    <actions>
+
+        <action id="com.github.woooking.cosyn.idea.CosynAction" class="com.github.woooking.cosyn.idea.CosynAction" text="Cosyn" description="Cosyn">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+
+</idea-plugin>

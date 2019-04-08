@@ -30,7 +30,7 @@ object Recommendation {
     }
 
     private def recommend(context: Context, qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = qa match {
-        case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) | ArrayInitQuestion(_) =>
+        case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) | ArrayInitQuestion(_, _) =>
             val pattern = context.pattern
             pattern.holes diff originHoles diff ignoredHoles.toList match {
                 case Nil => RecommendChoice(context, score) :: Nil
