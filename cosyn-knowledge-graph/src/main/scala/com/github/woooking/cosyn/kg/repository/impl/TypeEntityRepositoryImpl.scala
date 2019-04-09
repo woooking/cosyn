@@ -2,7 +2,7 @@ package com.github.woooking.cosyn.kg.repository.impl
 
 import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.comm.util.TimeUtil.profile
-import com.github.woooking.cosyn.kg.entity.{EnumEntity, PatternEntity, TypeEntity}
+import com.github.woooking.cosyn.kg.entity.{EnumEntity, TypeEntity}
 import com.github.woooking.cosyn.kg.repository.TypeEntityRepository
 
 import scala.annotation.tailrec
@@ -11,7 +11,8 @@ import scala.collection.immutable.Queue
 
 class TypeEntityRepositoryImpl extends TypeEntityRepository {
     private def getIterablePaths(entity: TypeEntity, path: List[TypeEntity]): Set[List[TypeEntity]] = {
-        val typeEntity = getType(entity.getQualifiedName)
+//        val typeEntity = getType(entity.getQualifiedName)
+        val typeEntity = entity
         val newPath = typeEntity :: path
         (Set(newPath) /: typeEntity.getIterables.asScala) ((s, t) => s ++ getIterablePaths(t, newPath))
     }
@@ -21,7 +22,8 @@ class TypeEntityRepositoryImpl extends TypeEntityRepository {
     }
 
     private def getAllNonAbstractSubTypesRec(typeEntity: TypeEntity): Set[TypeEntity] = {
-        val entity = getType(typeEntity.getQualifiedName)
+//        val entity = getType(typeEntity.getQualifiedName)
+        val entity = typeEntity
         val subTypes = entity.getSubTypes.asScala.toSet
         val initSet: Set[TypeEntity] = if (entity.isAbstract || entity.isInterface) Set() else Set(entity)
         (initSet /: subTypes) ((ts, t) => ts ++ getAllNonAbstractSubTypesRec(t))
@@ -37,7 +39,8 @@ class TypeEntityRepositoryImpl extends TypeEntityRepository {
         case Some((h, t)) if visited.contains(h) =>
             isAssignableRec(t, target, visited)
         case Some((h, t)) =>
-            val source = getType(h.getQualifiedName)
+//            val source = getType(h.getQualifiedName)
+            val source = h
             if (source == target) true
             else isAssignableRec(t ++ source.getExtendedTypes.asScala, target, visited + source)
     }

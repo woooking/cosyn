@@ -9,17 +9,17 @@ import com.github.woooking.cosyn.core.code._
 class ReceiverHoleResolver extends HoleResolver {
     private val typeEntityRepository = Components.typeEntityRepository
 
-    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+    override def resolve(context: Context, hole: HoleExpr, recommend: Boolean): Option[Question] = {
         context.pattern.parentOf(hole) match {
             case p: MethodCallExpr if p.receiver.contains(hole) =>
                 val methodEntity = typeEntityRepository.getMethod(p.getQualifiedSignature)
                 if (methodEntity.getReturnType != "void") {
-                    Some(QAHelper.choiceQAForType(context, p.receiverType))
+                    Some(QAHelper.choiceQAForType(context, p.receiverType, recommend))
                 } else {
                     val rawPaths = typeEntityRepository.getIterablePaths(p.receiverType)
                     val paths = rawPaths.filter(p => !rawPaths.exists(p2 => p.head.getExtendedTypes.contains(p2.head)))
                     if (paths.size == 1) {
-                        Some(QAHelper.choiceQAForType(context, p.receiverType))
+                        Some(QAHelper.choiceQAForType(context, p.receiverType, recommend))
                     } else {
                         val requireObject = CodeUtil.qualifiedClassName2Simple(p.receiverType.ty).toLowerCase()
                         val question = paths
@@ -28,8 +28,8 @@ class ReceiverHoleResolver extends HoleResolver {
                         val vars = paths
                             .map(p => p -> BasicType(p.head.getQualifiedName))
                             .flatMap(p => context.findVariables(p._2).map(p._1 -> _))
-                            .map(p => IterableChoice(p._1, p._2))
-                        Some(ChoiceQuestion(question, vars.toSeq ++ paths.map(IterableChoice.apply).toSeq))
+                            .map(p => IterableChoice(p._1, p._2, recommend))
+                        Some(ChoiceQuestion(question, vars.toSeq ++ paths.map(p => IterableChoice(p, recommend)).toSeq))
                     }
                 }
             case _ =>

@@ -5,10 +5,10 @@ import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.HoleExpr
 
 class CombineHoleResolver(resolvers: Seq[HoleResolver]) extends HoleResolver {
-    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+    override def resolve(context: Context, hole: HoleExpr, recommend: Boolean): Option[Question] = {
         (Option.empty[Question] /: resolvers) ((state, resolver) => state match {
             case Some(qa) => Some(qa)
-            case None => resolver.resolve(context, hole)
+            case None => resolver.resolve(context, hole, recommend)
         })
     }
 

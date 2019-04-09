@@ -90,7 +90,7 @@ case class EnumChoice(enumEntity: EnumEntity) extends Choice {
     }
 }
 
-case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String]) extends Choice {
+case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String], recommend: Boolean) extends Choice {
     override def toString: String = recommendVar match {
         case None =>
             val requireObject = path.last.getSimpleName.toLowerCase()
@@ -120,7 +120,7 @@ case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String]) 
                 case Some(name) =>
                     Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)))
                 case None =>
-                    NewQA(QAHelper.choiceQAForType(context, targetType))
+                    NewQA(QAHelper.choiceQAForType(context, targetType, recommend))
             }
         } else {
             val pattern = context.pattern
@@ -140,7 +140,7 @@ case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String]) 
 }
 
 object IterableChoice {
-    def apply(path: List[TypeEntity], recommendVar: String): IterableChoice = new IterableChoice(path, Some(recommendVar))
+    def apply(path: List[TypeEntity], recommendVar: String, recommend: Boolean): IterableChoice = new IterableChoice(path, Some(recommendVar), recommend)
 
-    def apply(path: List[TypeEntity]): IterableChoice = new IterableChoice(path, None)
+    def apply(path: List[TypeEntity], recommend: Boolean): IterableChoice = new IterableChoice(path, None, recommend)
 }

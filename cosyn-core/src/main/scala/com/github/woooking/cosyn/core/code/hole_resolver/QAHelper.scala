@@ -29,44 +29,58 @@ object QAHelper {
 
     private val methodEntityRepository = Components.methodEntityRepository
 
-    def choiceQAForType(context: Context, ty: Type): ChoiceQuestion = profile("choice-for-type") {
+    def choiceQAForType(context: Context, ty: Type, recommend: Boolean): ChoiceQuestion = profile("choice-for-type") {
         ty match {
             case bt @ BasicType(t) =>
                 val vars = context.findVariables(bt)
                 val producers = methodEntityRepository.producers(bt)
 
-                val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
-                    case m if CreateMethodJudger.judge(m) => MethodCategory.Create
-                    case m if LoadMethodJudger.judge(m) => MethodCategory.Load
-                    case m if GetMethodJudger.judge(m) => MethodCategory.Get
-                    case _ =>
-                        OtherType
-                }
-                val methodCategoryChoices = cases.flatMap {
-                    case (OtherType, m) =>
-                        if (Config.printUnCategorisedMethods) {
-                            println("----- UnCategorised -----")
-                            m.foreach(f => {
-                                println(f.getQualifiedSignature)
-                                println(Option(f.getJavadoc).getOrElse(""))
-                            })
-                            println("-------------------------")
-                        }
-                        Seq()
-                    case (category, ms) => Seq(MethodCategoryChoice(bt, category, ms))
-                }
+                if (recommend) {
+                    // t是枚举类型，则添加枚举选项
+                    val enumChoice = methodEntityRepository.getType(t) match {
+                        case e: EnumEntity =>
+                            EnumChoice(e) :: Nil
+                        case _ =>
+                            Nil
+                    }
 
-                // t是枚举类型，则添加枚举选项
-                val enumChoice = methodEntityRepository.getType(t) match {
-                    case e: EnumEntity =>
-                        EnumChoice(e) :: Nil
-                    case _ =>
-                        Nil
-                }
+                    val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
+                    val q = s"Which $simpleName?"
+                    ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ producers.map(MethodChoice.apply))
+                } else {
+                    val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
+                        case m if profile("CreateMethodJudger") {CreateMethodJudger.judge(m)} => MethodCategory.Create
+                        case m if profile("LoadMethodJudger") {LoadMethodJudger.judge(m)} => MethodCategory.Load
+                        case m if profile("GetMethodJudger") {GetMethodJudger.judge(m)} => MethodCategory.Get
+                        case _ =>
+                            OtherType
+                    }
+                    val methodCategoryChoices = cases.flatMap {
+                        case (OtherType, m) =>
+                            if (Config.printUnCategorisedMethods) {
+                                println("----- UnCategorised -----")
+                                m.foreach(f => {
+                                    println(f.getQualifiedSignature)
+                                    println(Option(f.getJavadoc).getOrElse(""))
+                                })
+                                println("-------------------------")
+                            }
+                            Seq()
+                        case (category, ms) => Seq(MethodCategoryChoice(bt, category, ms))
+                    }
 
-                val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
-                val q = s"Which $simpleName?"
-                ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ methodCategoryChoices)
+                    // t是枚举类型，则添加枚举选项
+                    val enumChoice = methodEntityRepository.getType(t) match {
+                        case e: EnumEntity =>
+                            EnumChoice(e) :: Nil
+                        case _ =>
+                            Nil
+                    }
+
+                    val simpleName = CodeUtil.qualifiedClassName2Simple(t).toLowerCase
+                    val q = s"Which $simpleName?"
+                    ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ methodCategoryChoices)
+                }
             case at: ArrayType =>
                 val vars = context.findVariables(at)
 

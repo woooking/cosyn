@@ -6,7 +6,7 @@ import com.github.woooking.cosyn.core.knowledge_graph.Recommendation
 import com.github.woooking.cosyn.comm.skeleton.Pattern
 
 class StaticFieldAccessHoleResolver extends HoleResolver {
-    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+    override def resolve(context: Context, hole: HoleExpr, recommend: Boolean): Option[Question] = {
         context.pattern.parentOf(hole) match {
             case p: StaticFieldAccessExpr =>
                 Some(StaticFieldAccessQuestion(p.receiverType, p.targetType))

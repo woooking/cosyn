@@ -6,9 +6,7 @@ package com.github.woooking.cosyn.core.qa {
 
     // QA Client 接受消息
 
-    sealed trait QAClientMessage
-
-    final case class NewTask(context: Context) extends QAClientMessage
+    trait QAClientMessage
 
     sealed trait StartSessionResponse extends QAClientMessage
 

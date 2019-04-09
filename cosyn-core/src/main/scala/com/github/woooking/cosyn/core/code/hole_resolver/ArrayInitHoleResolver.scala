@@ -5,7 +5,7 @@ import com.github.woooking.cosyn.comm.skeleton.model._
 import com.github.woooking.cosyn.core.code._
 
 class ArrayInitHoleResolver extends HoleResolver {
-    override def resolve(context: Context, hole: HoleExpr): Option[Question] = {
+    override def resolve(context: Context, hole: HoleExpr, recommend: Boolean): Option[Question] = {
         val pattern = context.pattern
         pattern.parentOf(hole) match {
             case p: ArrayCreationExpr if p.initializers.last == hole =>
@@ -15,7 +15,7 @@ class ArrayInitHoleResolver extends HoleResolver {
                     case PrimitiveOrString(ty) =>
                         Some(PrimitiveQuestion(None, ty))
                     case ty =>
-                        Some(QAHelper.choiceQAForType(context, ty))
+                        Some(QAHelper.choiceQAForType(context, ty, recommend))
                 }
             case _ =>
                 None

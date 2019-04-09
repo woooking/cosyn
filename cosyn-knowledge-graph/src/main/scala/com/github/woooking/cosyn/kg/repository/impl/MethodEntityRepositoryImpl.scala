@@ -15,7 +15,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
     private val producersCache = mutable.Map[Type, Set[MethodEntity]]()
 
     private def isAccessible(entity: MethodEntity): Boolean = {
-        val methodEntity = getMethod(entity.getQualifiedSignature)
+//        val methodEntity = getMethod(entity.getQualifiedSignature)
+        val methodEntity = entity
         // TODO: 考虑继承和protected
         methodEntity.getAccessSpecifier == Modifier.Keyword.PUBLIC ||
             methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.PACKAGE_PRIVATE
@@ -29,7 +30,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
         }
 
         def processMethod(entity: MethodEntity, producerContext: ProducerContext): ProducerContext = {
-            val methodEntity = getMethod(entity.getQualifiedSignature)
+//            val methodEntity = getMethod(entity.getQualifiedSignature)
+            val methodEntity = entity
             val ProducerContext(deleteMap, visited, result) = producerContext
             val extendedMethods = methodEntity.getExtendedMethods.asScala.filter(isAccessible)
             if (extendedMethods.exists(visited.contains)) ProducerContext(deleteMap, visited + methodEntity, result)
@@ -45,7 +47,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
                 case Some((front, rest)) if processedType.contains(front) =>
                     process(rest, processedType, producerContext)
                 case Some((front, rest)) =>
-                    val frontEntity = getType(front.getQualifiedName)
+//                    val frontEntity = getType(front.getQualifiedName)
+                    val frontEntity = front
                     val methods = (if (multiple) frontEntity.getMultipleProducers else frontEntity.getProducers).asScala.filter(isAccessible)
                     val newProducerContext = (producerContext /: methods) {
                         case (c, m) => processMethod(m, c)
@@ -67,12 +70,12 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
                     case BasicType(t) =>
                         val typeEntity = getType(t)
                         producers(typeEntity, multiple = false)
-                            .map(m => getMethod(m.getQualifiedSignature))
+//                            .map(m => getMethod(m.getQualifiedSignature))
                             .filter(!_.isDeprecated)
                     case ArrayType(BasicType(t)) =>
                         val typeEntity = getType(t)
                         producers(typeEntity, multiple = true)
-                            .map(m => getMethod(m.getQualifiedSignature))
+//                            .map(m => getMethod(m.getQualifiedSignature))
                             .filter(!_.isDeprecated)
                     case _ =>
                         ???
@@ -84,7 +87,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
 
     @tailrec
     private def getMethodProtoRec(method: MethodEntity): String = {
-        val entity = getMethod(method.getQualifiedSignature)
+//        val entity = getMethod(method.getQualifiedSignature)
+        val entity = method
         entity.getExtendedMethods.asScala.headOption match {
             case Some(extended) => getMethodProtoRec(extended)
             case None => entity.getQualifiedSignature

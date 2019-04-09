@@ -19,10 +19,14 @@
     </extensions>
 
     <actions>
-
         <action id="com.github.woooking.cosyn.idea.CosynAction" class="com.github.woooking.cosyn.idea.CosynAction" text="Cosyn" description="Cosyn">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
     </actions>
+    <project-components>
+        <component>
+            <implementation-class>com.github.woooking.cosyn.idea.IdeaQAClient</implementation-class>
+        </component>
+    </project-components>
 
 </idea-plugin>
