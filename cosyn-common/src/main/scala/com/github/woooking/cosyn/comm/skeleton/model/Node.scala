@@ -125,6 +125,10 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
     override def toString: String = s"${receiver.map(r => s"$r.").getOrElse("")}$simpleName(${args.mkString(", ")})"
 
     def getQualifiedSignature = s"$receiverType.$simpleName(${args.map(_.ty).mkString(", ")})"
+
+    def findArg(arg: MethodCallArgs): Int = {
+        args.indexOf(arg)
+    }
 }
 
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {

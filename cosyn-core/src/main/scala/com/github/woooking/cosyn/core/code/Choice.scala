@@ -1,12 +1,12 @@
 package com.github.woooking.cosyn.core.code
 
 import com.github.woooking.cosyn.core.code.hole_resolver.QAHelper
-import com.github.woooking.cosyn.core.knowledge_graph.JavadocUtil
 import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity, TypeEntity}
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, _}
 import com.github.woooking.cosyn.comm.skeleton.visitors.FillHoleVisitor
 import com.github.woooking.cosyn.comm.util.CodeUtil
+import com.github.woooking.cosyn.core.nlp.JavadocUtil
 
 sealed trait ChoiceResult
 

@@ -5,6 +5,7 @@ import akka.actor.typed.{ActorSystem, Behavior}
 import com.github.woooking.cosyn.comm.skeleton.model.Type
 import com.github.woooking.cosyn.core.code._
 import com.github.woooking.cosyn.core.qa._
+import com.github.woooking.cosyn.idea.IdeaQAClient.{NewTask, UserAnswer}
 import com.intellij.notification.{Notification, NotificationType, Notifications}
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.project.Project
@@ -14,10 +15,6 @@ import com.intellij.psi.{JavaPsiFacade, PsiMethod}
 import javax.swing.{BoxLayout, JLabel, JPanel, JTextField}
 
 class IdeaQAClient(project: Project) extends ProjectComponent {
-
-    final case class NewTask(context: Context, psiMethod: PsiMethod) extends QAClientMessage
-
-    final case class UserAnswer(answer: String) extends QAClientMessage
 
     val client: ActorSystem[QAClientMessage] = ActorSystem(idle, "idea-client")
     val server: ActorSystem[QAServerMessage] = ActorSystem(QAServer.running(0, Map()), "qa-server")
@@ -104,4 +101,11 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         val context = Context(task, vars, null, extended, null)
         client ! NewTask(context, psiMethod)
     }
+}
+
+object IdeaQAClient {
+    final case class NewTask(context: Context, psiMethod: PsiMethod) extends QAClientMessage
+
+    final case class UserAnswer(answer: String) extends QAClientMessage
+
 }

@@ -5,7 +5,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import com.github.woooking.cosyn.comm.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.core.code.{Context, Question}
-import com.github.woooking.cosyn.core.knowledge_graph.{NLMatcher, NLP}
+import com.github.woooking.cosyn.core.nlp.{NLMatcher, NLP}
 
 object QASession {
 

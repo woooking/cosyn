@@ -4,6 +4,7 @@ import com.github.javaparser.ast.expr.Expression
 import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.javaparser.ast.{`type` => jptype}
 import com.github.javaparser.resolution.types._
+import com.google.common.base.CaseFormat
 import org.slf4s.Logging
 
 import scala.annotation.tailrec
@@ -97,6 +98,14 @@ object CodeUtil extends Logging {
         }
     }
 
+    def lowerCamelCaseToPhrase(element: String): Array[String] = {
+        CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, element).split("_")
+    }
+
+    def upperCamelCaseToPhrase(element: String): Array[String] = {
+        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, element).split("_")
+    }
+
     /**
       * 获取一个类型的核心基本类型
       * 例：
@@ -140,4 +149,5 @@ object CodeUtil extends Logging {
     def typeOf(expr: Expression): Option[String] = {
         Try(CodeUtil.resolvedTypeToType(expr.calculateResolvedType()).toString).toOption
     }
+
 }

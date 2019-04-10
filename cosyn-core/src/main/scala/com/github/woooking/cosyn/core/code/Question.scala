@@ -1,13 +1,10 @@
 package com.github.woooking.cosyn.core.code
 
 import com.github.woooking.cosyn.comm.skeleton.model.CodeBuilder._
-import com.github.woooking.cosyn.comm.skeleton.model.Type.PrimitiveOrString
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, Type, _}
-import com.github.woooking.cosyn.comm.skeleton.visitors.{EndArrayInitVisitor, ReplaceVisitor}
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion, Result}
-import com.github.woooking.cosyn.core.code.hole_resolver.QAHelper
 
 sealed trait Question {
     def description: String
@@ -134,6 +131,28 @@ case class PrimitiveQuestion(hint: Option[String], ty: String) extends Question 
         } catch {
             case _: NumberFormatException =>
                 ErrorInput("Error Format!")
+        }
+    }
+}
+
+case class RecommendQuestion(wrapped: Question, recommendations: Seq[RecommendChoice]) extends Question {
+    override def description: String = {
+        val choiceString = recommendations.zipWithIndex.map(p => s"#${p._2 + 1}. ${p._1}").mkString("\n")
+        s"${wrapped.description}\n$choiceString"
+    }
+
+    override def processInput(context: Context, hole: HoleExpr, input: String): Result = {
+        val regex = """#(\d+)""".r
+        regex.findFirstMatchIn(input) match {
+            case None =>
+                wrapped.processInput(context, hole, input)
+            case Some(m) =>
+                recommendations(m.group(1).toInt - 1).action(context, hole) match {
+                    case NewQA(qa) => NewQuestion(qa)
+                    case Resolved(newContext) => Filled(newContext)
+                    case UnImplemented =>
+                        ErrorInput("Not Implemented! Please try other choices.")
+                }
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.core.code.rules
 
+import com.github.woooking.cosyn.core.nlp.JavadocUtil
 import com.github.woooking.cosyn.kg.entity.MethodEntity
-import com.github.woooking.cosyn.core.knowledge_graph.JavadocUtil
 
 object CreateMethodJudger extends PositiveJudger[MethodEntity] {
     // 方法的简单名以create或new开头，之后是一个大写字母或结尾

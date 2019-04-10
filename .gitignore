@@ -2,4 +2,5 @@
 target/
 build/
 out/
+.gradle/
 application.conf

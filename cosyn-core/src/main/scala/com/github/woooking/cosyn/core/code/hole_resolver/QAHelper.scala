@@ -49,9 +49,9 @@ object QAHelper {
                     ChoiceQuestion(q, vars.toSeq.map(VariableChoice.apply) ++ enumChoice ++ producers.map(MethodChoice.apply))
                 } else {
                     val cases: Map[MethodCategory, Set[MethodEntity]] = producers.groupBy {
-                        case m if profile("CreateMethodJudger") {CreateMethodJudger.judge(m)} => MethodCategory.Create
-                        case m if profile("LoadMethodJudger") {LoadMethodJudger.judge(m)} => MethodCategory.Load
-                        case m if profile("GetMethodJudger") {GetMethodJudger.judge(m)} => MethodCategory.Get
+                        case m if CreateMethodJudger.judge(m) => MethodCategory.Create
+                        case m if LoadMethodJudger.judge(m) => MethodCategory.Load
+                        case m if GetMethodJudger.judge(m) => MethodCategory.Get
                         case _ =>
                             OtherType
                     }

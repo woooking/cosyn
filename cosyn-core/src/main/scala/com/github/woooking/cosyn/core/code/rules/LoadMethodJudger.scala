@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.core.code.rules
 import com.github.woooking.cosyn.comm.skeleton.model.BasicType
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
-import com.github.woooking.cosyn.core.knowledge_graph.JavadocUtil
+import com.github.woooking.cosyn.core.nlp.JavadocUtil
 import com.github.woooking.cosyn.kg.entity.MethodEntity
 
 object LoadMethodJudger extends PositiveJudger[MethodEntity] {

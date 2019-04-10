@@ -1,6 +1,5 @@
 package com.github.woooking.cosyn.core.code.hole_resolver
 
-import com.github.woooking.cosyn.comm.skeleton.Pattern
 import com.github.woooking.cosyn.comm.skeleton.model.{BasicType, HoleExpr, MethodCallExpr}
 import com.github.woooking.cosyn.comm.util.CodeUtil
 import com.github.woooking.cosyn.core.Components
