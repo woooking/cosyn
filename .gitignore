@@ -4,3 +4,4 @@ build/
 out/
 .gradle/
 application.conf
+cosyn-idea/lib
