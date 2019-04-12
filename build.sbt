@@ -3,9 +3,12 @@ name := "cosyn"
 version := "1.0"
 
 val commonSettings = Seq(
+    resolvers += Resolver.mavenLocal,
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     scalaVersion := "2.12.7",
     scalacOptions ++= Seq(
-        "-J-Xss8M",
+        "-J-Xss128M",
+        "-target:jvm-1.8",
         "-deprecation", // Emit warning and location for usages of deprecated APIs.
         "-encoding", "utf-8", // Specify character encoding used by source files.
         "-explaintypes", // Explain type errors in more detail.
@@ -55,7 +58,14 @@ val commonSettings = Seq(
     libraryDependencies ++= Seq(
         "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     ),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+    assemblyMergeStrategy in assembly := {
+        case "module-info.class" => MergeStrategy.discard
+        case x =>
+            val oldStrategy = (assemblyMergeStrategy in assembly).value
+            oldStrategy(x)
+        //            MergeStrategy.first
+    }
 )
 
 lazy val root = (project in file(".")).aggregate(common, core, pattern, knowledgeGraph, cmd)
@@ -65,5 +75,3 @@ lazy val knowledgeGraph = project.in(file("cosyn-knowledge-graph")).settings(com
 lazy val pattern = project.in(file("cosyn-pattern")).settings(commonSettings: _*).dependsOn(knowledgeGraph, common)
 lazy val core = project.in(file("cosyn-core")).settings(commonSettings: _*).dependsOn(knowledgeGraph, common)
 lazy val cmd = project.in(file("cosyn-cmd")).settings(commonSettings: _*).dependsOn(knowledgeGraph, common, core)
-
-

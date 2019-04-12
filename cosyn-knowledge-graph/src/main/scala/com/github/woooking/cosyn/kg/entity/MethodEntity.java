@@ -4,6 +4,8 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedParameterDeclaration;
+import com.google.common.collect.ImmutableMap;
 import org.neo4j.ogm.annotation.*;
 
 import java.util.*;
@@ -54,10 +56,10 @@ public class MethodEntity {
         this.declareType = declareType;
         this.javadoc = javadoc;
         this.returnType = resolved.getClassName();
-        var paramNames = new ArrayList<String>();
-        var paramNum = resolved.getNumberOfParams();
+        List<String> paramNames = new ArrayList<>();
+        int paramNum = resolved.getNumberOfParams();
         for (int i = 0; i < paramNum; ++i) {
-            var param = resolved.getParam(i);
+            ResolvedParameterDeclaration param = resolved.getParam(i);
             paramNames.add(param.getName());
         }
         this.paramNames = String.join(",", paramNames);
@@ -75,10 +77,10 @@ public class MethodEntity {
         this.declareType = declareType;
         this.javadoc = javadoc;
         this.returnType = resolved.getReturnType().describe();
-        var paramNames = new ArrayList<String>();
-        var paramNum = resolved.getNumberOfParams();
+        List<String> paramNames = new ArrayList<>();
+        int paramNum = resolved.getNumberOfParams();
         for (int i = 0; i < paramNum; ++i) {
-            var param = resolved.getParam(i);
+            ResolvedParameterDeclaration param = resolved.getParam(i);
             paramNames.add(param.getName());
         }
         this.paramNames = String.join(",", paramNames);
@@ -87,7 +89,7 @@ public class MethodEntity {
 
     public void lazySetupParamJavadocs() {
         this.paramJavadocs = javadoc == null ?
-            Map.of() :
+            ImmutableMap.of() :
             javadoc.getParams().stream().collect(Collectors.toMap(MethodParamJavadocEntity::getName, MethodParamJavadocEntity::getDescription));
     }
 

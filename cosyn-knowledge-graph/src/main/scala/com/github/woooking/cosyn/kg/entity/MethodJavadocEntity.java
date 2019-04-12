@@ -9,10 +9,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @NodeEntity
@@ -30,11 +27,11 @@ public class MethodJavadocEntity {
     }
 
     public MethodJavadocEntity(Javadoc javadoc) {
-        var groupedTags = javadoc.getBlockTags().stream().collect(Collectors.groupingBy(JavadocBlockTag::getType));
-        this.params = groupedTags.getOrDefault(Type.PARAM, List.of()).stream()
+        Map<Type, List<JavadocBlockTag>> groupedTags = javadoc.getBlockTags().stream().collect(Collectors.groupingBy(JavadocBlockTag::getType));
+        this.params = groupedTags.getOrDefault(Type.PARAM, new ArrayList<>()).stream()
             .map(blockTag -> new MethodParamJavadocEntity(blockTag.getName().get(), blockTag.getContent().toText()))
             .collect(Collectors.toSet());
-        this.returnDescription = groupedTags.getOrDefault(Type.RETURN, List.of())
+        this.returnDescription = groupedTags.getOrDefault(Type.RETURN, new ArrayList<>())
             .stream()
             .findFirst()
             .map(JavadocBlockTag::getContent)

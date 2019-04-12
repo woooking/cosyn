@@ -1,64 +1,69 @@
 package com.github.woooking.cosyn.core.qa
 
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, Behavior}
 import com.github.woooking.cosyn.comm.skeleton.model.HoleExpr
 import com.github.woooking.cosyn.core.code.Question.{ErrorInput, Filled, NewQuestion}
 import com.github.woooking.cosyn.core.code.{Context, Question}
 import com.github.woooking.cosyn.core.nlp.{NLMatcher, NLP}
 
+trait QASession {
+    def start(context: Context): (QASession, StartResponse) = ???
+
+    def processAnswer(input: String): (QASession, ProcessAnswerResponse) = ???
+
+    def processUndo: (QASession, ProcessUndoResponse) = ???
+}
+
 object QASession {
 
-    val initializing: Behavior[QASessionMessage] = Behaviors.receiveMessagePartial { case Start(ref, ctx) =>
-        val matcher = new NLMatcher(ctx.query, 5)
-        val patterns = matcher.find()
-        patterns.foreach { case (p, s) =>
-            println(s"----- $s -----")
-            println(p.stmts.generateCode(""))
-            println(s"----------")
-        }
-        val pattern = patterns.head._1
-        val newCtx = ctx.copy(pattern = pattern, nlp = NLP.parse(ctx.query))
-        generate(ref, QuestionData(newCtx, Nil))
-    }
-
-    def generate(ref: ActorRef[StartResponse with ProcessAnswerResponse], data: QuestionData): Behavior[QASessionMessage] = data match {
-        case QuestionData(ctx, history) => Behaviors.setup { _ =>
+    private def setup(data: QuestionData): (QASession, StartResponse with ProcessAnswerResponse) = data match {
+        case QuestionData(ctx, history) =>
             QuestionGenerator.generate(ctx) match {
                 case Some((hole, q)) =>
-                    ref ! QuestionFromSession(ctx, q)
-                    waiting(WaitingData(ctx, hole, q, history))
+                    (Waiting(WaitingData(ctx, hole, q, history)), QuestionFromSession(ctx, q))
                 case None =>
-                    ref ! Finished(ctx)
-                    Behaviors.stopped
+                    (Stopped, Finished(ctx))
             }
+    }
+
+    case object Stopped extends QASession
+
+    case class Initializing() extends QASession {
+        override def start(context: Context): (QASession, StartResponse) = {
+            val matcher = new NLMatcher(context.query, 5)
+            val patterns = matcher.find()
+            patterns.foreach { case (p, s) =>
+                println(s"----- $s -----")
+                println(p.stmts.generateCode(""))
+                println(s"----------")
+            }
+            val pattern = patterns.head._1
+            val newCtx = context.copy(pattern = pattern, nlp = NLP.parse(context.query))
+            setup(QuestionData(newCtx, Nil))
         }
     }
 
-    def waiting(data: WaitingData): Behavior[QASessionMessage] = data match {
-        case WaitingData(ctx, hole, question, history) =>
-            Behaviors.receiveMessagePartial {
-                case ProcessAnswer(ref, input) =>
-                    question.processInput(ctx, hole, input) match {
-                        case Filled(newCtx) =>
-                            generate(ref, QuestionData(newCtx, (ctx, hole, question) :: history))
-                        case NewQuestion(q) =>
-                            ref ! QuestionFromSession(ctx, q)
-                            waiting(WaitingData(ctx, hole, q, (ctx, hole, question) :: history))
-                        case ErrorInput(message) =>
-                            ref ! ErrorAnswer(ctx, question, message)
-                            Behaviors.same
-                    }
-                case ProcessUndo(ref) =>
-                    history match {
-                        case (lastCtx, lastHole, lastQuestion) :: rest =>
-                            ref ! QuestionFromSession(lastCtx, lastQuestion)
-                            waiting(WaitingData(lastCtx, lastHole, lastQuestion, rest))
-                        case Nil =>
-                            ref ! CannotUndo
-                            Behaviors.same
-                    }
+    case class Waiting(data: WaitingData) extends QASession {
+        private val WaitingData(ctx, hole, question, history) = data
+
+        override def processAnswer(input: String): (QASession, ProcessAnswerResponse) = {
+            question.processInput(ctx, hole, input) match {
+                case Filled(newCtx) =>
+                    setup(QuestionData(newCtx, (ctx, hole, question) :: history))
+                case NewQuestion(q) =>
+                    (Waiting(WaitingData(ctx, hole, q, (ctx, hole, question) :: history)), QuestionFromSession(ctx, q))
+                case ErrorInput(message) =>
+                    (this, ErrorAnswer(ctx, question, message))
             }
+        }
+
+        override def processUndo: (QASession, ProcessUndoResponse) = {
+            history match {
+                case (lastCtx, lastHole, lastQuestion) :: rest =>
+                    (Waiting(WaitingData(lastCtx, lastHole, lastQuestion, rest)), QuestionFromSession(lastCtx, lastQuestion))
+                case Nil =>
+                    (this, CannotUndo)
+            }
+        }
     }
 
     case class QuestionData(context: Context,

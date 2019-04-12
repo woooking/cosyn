@@ -98,7 +98,7 @@ sealed trait Expression extends Node
 sealed trait NameOrHole extends Expression
 
 sealed case class HoleExpr (id: Int) extends NameOrHole {
-    override def toString: String = "<HOLE>"
+    override def toString: String = "HOLE"
 }
 
 sealed case class AssignExpr(name: NameExpr, target: Expression) extends Expression {

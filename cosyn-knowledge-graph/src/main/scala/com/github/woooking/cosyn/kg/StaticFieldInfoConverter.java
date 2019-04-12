@@ -10,7 +10,7 @@ import java.io.IOException;
 public class StaticFieldInfoConverter implements AttributeConverter<StaticFieldInfo, String> {
     @Override
     public String toGraphProperty(StaticFieldInfo value) {
-        var mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -21,7 +21,7 @@ public class StaticFieldInfoConverter implements AttributeConverter<StaticFieldI
 
     @Override
     public StaticFieldInfo toEntityAttribute(String value) {
-        var mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.readValue(value, StaticFieldInfo.class);
         } catch (IOException e) {

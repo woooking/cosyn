@@ -38,7 +38,8 @@ case class NlpContext(semanticGraph: SemanticGraph, coreLabels: List[CoreLabel])
             case "boolean" =>
                 Nil
             case "byte" | "short" | "int" | "long" =>
-                coreLabels.map(label => label -> label.get(classOf[CoreAnnotations.NumericCompositeValueAnnotation]))
+                type NumAnno = (CoreLabel, Number)
+                coreLabels.map[NumAnno, List[NumAnno]](label => label -> label.get(classOf[CoreAnnotations.NumericCompositeValueAnnotation]))
                     .filter(_._2 != null)
                     .map(l => {
                         val word = semanticGraph.getNodeByIndex(l._1.index())
@@ -47,7 +48,7 @@ case class NlpContext(semanticGraph: SemanticGraph, coreLabels: List[CoreLabel])
                             .map(_.originalText())
                             .map(word => math.max(NLP.phraseWordSim(paramPhrase, word), NLP.phraseWordSim(javadocPhrase, word)))
                             .max
-                        l._2.toString -> score
+                        (l._2.longValue() - 1).toString -> score
                     })
                     .filter(_._2 > 0.5)
             case "float" | "double" =>

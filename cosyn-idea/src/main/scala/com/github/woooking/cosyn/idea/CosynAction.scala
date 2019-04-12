@@ -15,7 +15,7 @@ class CosynAction extends AnAction("Cosyn") {
                     val visitor = new PsiVisitor(caret)
                     psiFile.accept(visitor)
                     val client = e.getProject.getComponent(classOf[IdeaQAClient])
-                    client.start(visitor.psiMethod, task, visitor.vars, visitor.extended)
+                    client.start(visitor.psiMethod, e.getDataContext, task, visitor.vars, visitor.extended)
                 case _ =>
             }
         }

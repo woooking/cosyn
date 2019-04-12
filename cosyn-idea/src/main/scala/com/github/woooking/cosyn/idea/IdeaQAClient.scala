@@ -1,111 +1,123 @@
 package com.github.woooking.cosyn.idea
 
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorSystem, Behavior}
 import com.github.woooking.cosyn.comm.skeleton.model.Type
 import com.github.woooking.cosyn.core.code._
 import com.github.woooking.cosyn.core.qa._
-import com.github.woooking.cosyn.idea.IdeaQAClient.{NewTask, UserAnswer}
+import com.github.woooking.cosyn.idea.ui.InputDialog
 import com.intellij.notification.{Notification, NotificationType, Notifications}
+import com.intellij.openapi.actionSystem._
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ProjectComponent
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.popup.util.BaseListPopupStep
-import com.intellij.openapi.ui.popup.{JBPopupFactory, JBPopupListener, LightweightWindowEvent}
-import com.intellij.psi.{JavaPsiFacade, PsiMethod}
-import javax.swing.{BoxLayout, JLabel, JPanel, JTextField}
+import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.ui.popup.JBPopupFactory.ActionSelectionAid
+import com.intellij.openapi.util.Computable
+import com.intellij.psi.{JavaPsiFacade, PsiElement, PsiMethod}
+import javax.swing._
+
+import scala.collection.JavaConverters._
 
 class IdeaQAClient(project: Project) extends ProjectComponent {
+    private var server = QAServer.create
 
-    val client: ActorSystem[QAClientMessage] = ActorSystem(idle, "idea-client")
-    val server: ActorSystem[QAServerMessage] = ActorSystem(QAServer.running(0, Map()), "qa-server")
+    private val logger = Logger.getInstance(this.getClass)
 
-    def idle: Behavior[QAClientMessage] = Behaviors.receivePartial {
-        case (context, NewTask(ctx, psiMethod)) =>
-            server ! StartSession(context.self, ctx)
-            initWaiting(psiMethod)
-    }
-
-    def initWaiting(psiMethod: PsiMethod): Behavior[QAClientMessage] = Behaviors.receivePartial {
-        case (_, StartSessionResponseWithQuestion(id, ctx, question)) =>
-            waiting(id, psiMethod, ctx, question)
-        case (_, Finished(ctx)) =>
-            // TODO: end
-            println(ctx.pattern.stmts)
-            Behaviors.stopped
-    }
-
-    def running(id: Long, psiMethod: PsiMethod, answer: String): Behavior[QAClientMessage] = Behaviors.setup { context =>
-        server ! Answer(context.self, id, answer)
-        Behaviors.receiveMessagePartial {
-            case QuestionFromSession(ctx, question) =>
-                waiting(id, psiMethod, ctx, question)
-            case Finished(ctx) =>
-                val code = s"{${ctx.pattern.stmts.generateCode("")}}"
-                val factory = JavaPsiFacade.getInstance(project).getElementFactory
-                val block = factory.createCodeBlockFromText(code, null)
-                psiMethod.getBody.replace(block)
-                idle
-            case ErrorAnswer(ctx, question, message) =>
-                Notifications.Bus.notify(new Notification("Cosyn", "Invalid Input", message, NotificationType.WARNING))
-                waiting(id, psiMethod, ctx, question)
-            case ErrorOccured(message) =>
-                Notifications.Bus.notify(new Notification("Cosyn", "Error Occurred", message, NotificationType.ERROR))
-                idle
+    def newTask(context: Context, psiMethod: PsiMethod, dataContext: DataContext): Unit = {
+        logger.info(s"[New Task] ${context.query}")
+        val (s, r) = server.startSession(context)
+        server = s
+        r match {
+            case StartSessionResponseWithQuestion(sessionId, newContext, question) =>
+                waiting(sessionId, psiMethod, dataContext, newContext, question)
+            case Finished(newContext) =>
+                println(newContext.pattern.stmts)
+            case ErrorOccurred(message) =>
+                logger.error(message)
         }
     }
 
-    def waiting(id: Long, psiMethod: PsiMethod, ctx: Context, question: Question): Behavior[QAClientMessage] = Behaviors.setup { _ =>
+    def waiting(id: Long, psiMethod: PsiMethod, dataContext: DataContext, ctx: Context, question: Question): Unit = {
         val code = s"{${ctx.pattern.stmts.generateCode("")}}"
         val factory = JavaPsiFacade.getInstance(project).getElementFactory
         val block = factory.createCodeBlockFromText(code, null)
-        psiMethod.getBody.replace(block)
+        WriteCommandAction.runWriteCommandAction(psiMethod.getProject, new Computable[PsiElement]() {
+            override def compute(): PsiElement = psiMethod.getBody.replace(block)
+        })
         question match {
             case ChoiceQuestion(q, choices) =>
-                val listPopupStep = new BaseListPopupStep[String](q, choices.map(_.toString): _*)
-                val popup = JBPopupFactory.getInstance().createListPopup(listPopupStep)
-                popup.addListSelectionListener(e => client ! UserAnswer(s"#${e.getFirstIndex + 1}"))
+                val actions = choices.zipWithIndex.map { case (c, i) => new AnAction(c.toString) {
+                    override def actionPerformed(e: AnActionEvent): Unit = {
+                        running(id, psiMethod, dataContext, s"#${i + 1}")
+                    }
+                }
+                }
+                val actionGroup = new DefaultActionGroup(actions.asJava)
+                val popup = JBPopupFactory.getInstance().createActionGroupPopup(q, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                 popup.showInFocusCenter()
             case q @ ArrayInitQuestion(_, _) =>
                 val popup = JBPopupFactory.getInstance().createConfirmation(
                     q.description,
                     "Yes",
                     "No",
-                    () => client ! UserAnswer("Y"),
-                    () => client ! UserAnswer("N"),
+                    () => running(id, psiMethod, dataContext, "Y"),
+                    () => running(id, psiMethod, dataContext, "N"),
                     1
                 )
                 popup.showInFocusCenter()
-            case q @ (_: EnumConstantQuestion | _: StaticFieldAccessQuestion | _: PrimitiveQuestion) =>
-                val panel = new JPanel
-                val title = new JLabel(q.description)
-                val input = new JTextField()
-                panel.add(title)
-                panel.add(input)
-                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS))
-                val popup = JBPopupFactory.getInstance().createComponentPopupBuilder(panel, null)
-                popup.addListener(new JBPopupListener {
-                    override def onClosed(event: LightweightWindowEvent): Unit = {
-                        client ! UserAnswer(input.getText)
+            case RecommendQuestion(wrapped, recommendations) =>
+                val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.toString) {
+                    override def actionPerformed(e: AnActionEvent): Unit = {
+                        running(id, psiMethod, dataContext, s"#${i + 1}")
                     }
-                })
-        }
-        Behaviors.receiveMessagePartial {
-            case UserAnswer(answer) =>
-                running(id, psiMethod, answer)
+                }
+                }
+
+                val inputAction = new AnAction() {
+                    override def actionPerformed(e: AnActionEvent): Unit = {
+                        val dialog = new InputDialog(e.getProject, wrapped.description)
+                        val result = dialog.showAndGet()
+                        if (result) {
+                            running(id, psiMethod, dataContext, dialog.getResult)
+                        }
+                    }
+                }
+                val actionGroup = new DefaultActionGroup((recommendActions :+ inputAction).asJava)
+                val popup = JBPopupFactory.getInstance().createActionGroupPopup(wrapped.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
+                popup.showInFocusCenter()
             case _ =>
-                Behavior.same
+                val dialog = new InputDialog(psiMethod.getProject, question.description)
+                val result = dialog.showAndGet()
+                if (result) {
+                    running(id, psiMethod, dataContext, dialog.getResult)
+                }
         }
     }
 
-    def start(psiMethod: PsiMethod, task: String, vars: Set[(String, Type)], extended: Seq[String]): Unit = {
-        val context = Context(task, vars, null, extended, null)
-        client ! NewTask(context, psiMethod)
+    def running(id: Long, psiMethod: PsiMethod, dataContext: DataContext, answer: String): Unit = {
+        logger.info(s"[User Input] $answer")
+        val (s, r) = server.answer(id, answer)
+        server = s
+        r match {
+            case QuestionFromSession(ctx, question) =>
+                waiting(id, psiMethod, dataContext, ctx, question)
+            case Finished(ctx) =>
+                val code = s"{${ctx.pattern.stmts.generateCode("")}}"
+                val factory = JavaPsiFacade.getInstance(project).getElementFactory
+                val block = factory.createCodeBlockFromText(code, null)
+                WriteCommandAction.runWriteCommandAction(psiMethod.getProject, new Computable[PsiElement]() {
+                    override def compute(): PsiElement = psiMethod.getBody.replace(block)
+                })
+            case ErrorAnswer(ctx, question, message) =>
+                Notifications.Bus.notify(new Notification("Cosyn", "Invalid Input", message, NotificationType.WARNING))
+                waiting(id, psiMethod, dataContext, ctx, question)
+        }
     }
-}
 
-object IdeaQAClient {
-    final case class NewTask(context: Context, psiMethod: PsiMethod) extends QAClientMessage
 
-    final case class UserAnswer(answer: String) extends QAClientMessage
-
+    def start(psiMethod: PsiMethod, dataContext: DataContext, task: String, vars: Set[(String, Type)], extended: Seq[String]): Unit = {
+        val context = Context(task, vars, null, extended, null)
+        newTask(context, psiMethod, dataContext)
+    }
 }

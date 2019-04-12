@@ -58,7 +58,7 @@ public class TypeEntity {
     }
 
     public static TypeEntity fake(String qualifiedName) {
-        var typeEntity = new TypeEntity();
+        TypeEntity typeEntity = new TypeEntity();
         typeEntity.qualifiedName = qualifiedName;
         return typeEntity;
     }

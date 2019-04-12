@@ -3,8 +3,10 @@ package com.github.woooking.cosyn.kg
 import com.github.woooking.cosyn.comm.config.Neo4jConfig
 import com.github.woooking.cosyn.kg.entity._
 import org.neo4j.ogm.config.Configuration
-import org.neo4j.ogm.session.{Session, SessionFactory}
+import org.neo4j.ogm.session.{LoadStrategy, Neo4jSession, Session, SessionFactory}
 import com.github.woooking.cosyn.comm.util.TimeUtil.profile
+import org.neo4j.ogm.driver.Driver
+import org.neo4j.ogm.exception.core.ConfigurationException
 
 import scala.collection.JavaConverters._
 
