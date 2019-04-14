@@ -38,7 +38,7 @@ case class ChoiceQuestion(question: String, choices: Seq[Choice]) extends Questi
             case Some(m) =>
                 choices(m.group(1).toInt - 1).action(context, hole) match {
                     case NewQA(qa) => NewQuestion(qa)
-                    case Resolved(newContext) => Filled(newContext)
+                    case Resolved(newContext, _) => Filled(newContext)
                     case UnImplemented =>
                         ErrorInput("Not Implemented! Please try other choices.")
                 }
@@ -149,7 +149,7 @@ case class RecommendQuestion(wrapped: Question, recommendations: Seq[RecommendCh
             case Some(m) =>
                 recommendations(m.group(1).toInt - 1).action(context, hole) match {
                     case NewQA(qa) => NewQuestion(qa)
-                    case Resolved(newContext) => Filled(newContext)
+                    case Resolved(newContext, _) => Filled(newContext)
                     case UnImplemented =>
                         ErrorInput("Not Implemented! Please try other choices.")
                 }
