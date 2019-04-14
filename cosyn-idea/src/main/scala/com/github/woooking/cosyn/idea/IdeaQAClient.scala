@@ -10,12 +10,10 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.JBPopupFactory.ActionSelectionAid
 import com.intellij.openapi.util.Computable
 import com.intellij.psi.{JavaPsiFacade, PsiElement, PsiMethod}
-import javax.swing._
 
 import scala.collection.JavaConverters._
 
@@ -74,7 +72,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                 }
                 }
 
-                val inputAction = new AnAction() {
+                val inputAction = new AnAction(wrapped.description) {
                     override def actionPerformed(e: AnActionEvent): Unit = {
                         val dialog = new InputDialog(e.getProject, wrapped.description)
                         val result = dialog.showAndGet()
@@ -83,7 +81,8 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                         }
                     }
                 }
-                val actionGroup = new DefaultActionGroup((recommendActions :+ inputAction).asJava)
+                val actionGroup = ActionManager.getInstance.getAction("defaultActionGroup").asInstanceOf[DefaultActionGroup]
+                actionGroup.addAll(recommendActions :+ inputAction: _*)
                 val popup = JBPopupFactory.getInstance().createActionGroupPopup(wrapped.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                 popup.showInFocusCenter()
             case _ =>
@@ -101,8 +100,10 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         server = s
         r match {
             case QuestionFromSession(ctx, question) =>
+                logger.info(s"[Server Response] Question from session: ${question.description}")
                 waiting(id, psiMethod, dataContext, ctx, question)
             case Finished(ctx) =>
+                logger.info(s"[Server Response] Finished")
                 val code = s"{${ctx.pattern.stmts.generateCode("")}}"
                 val factory = JavaPsiFacade.getInstance(project).getElementFactory
                 val block = factory.createCodeBlockFromText(code, null)
@@ -110,11 +111,11 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                     override def compute(): PsiElement = psiMethod.getBody.replace(block)
                 })
             case ErrorAnswer(ctx, question, message) =>
+                logger.info(s"[Server Response] Error")
                 Notifications.Bus.notify(new Notification("Cosyn", "Invalid Input", message, NotificationType.WARNING))
                 waiting(id, psiMethod, dataContext, ctx, question)
         }
     }
-
 
     def start(psiMethod: PsiMethod, dataContext: DataContext, task: String, vars: Set[(String, Type)], extended: Seq[String]): Unit = {
         val context = Context(task, vars, null, extended, null)
