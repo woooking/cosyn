@@ -27,7 +27,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         val (s, r) = server.startSession(context)
         server = s
         r match {
-            case StartSessionResponseWithQuestion(sessionId, newContext, question) =>
+            case StartSessionResponseWithQuestion(sessionId, newContext, _, question) =>
                 waiting(sessionId, psiMethod, dataContext, newContext, question)
             case Finished(newContext) =>
                 println(newContext.pattern.stmts)
@@ -45,12 +45,19 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         })
         question match {
             case ChoiceQuestion(q, choices) =>
-                val actions = choices.zipWithIndex.map { case (c, i) => new AnAction(c.toString) {
-                    override def actionPerformed(e: AnActionEvent): Unit = {
-                        running(id, psiMethod, dataContext, s"#${i + 1}")
+                val actions = choices
+                    .map {
+                        case c: RecommendChoice => c.filled.toString
+                        case c => c.toString
                     }
-                }
-                }
+                    .zipWithIndex
+                    .map {
+                        case (c, i) => new AnAction(c) {
+                            override def actionPerformed(e: AnActionEvent): Unit = {
+                                running(id, psiMethod, dataContext, s"#${i + 1}")
+                            }
+                        }
+                    }
                 val actionGroup = new DefaultActionGroup(actions.asJava)
                 val popup = JBPopupFactory.getInstance().createActionGroupPopup(q, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                 popup.showInFocusCenter()
@@ -65,7 +72,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                 )
                 popup.showInFocusCenter()
             case RecommendQuestion(wrapped, recommendations) =>
-                val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.toString) {
+                val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.filled.toString) {
                     override def actionPerformed(e: AnActionEvent): Unit = {
                         running(id, psiMethod, dataContext, s"#${i + 1}")
                     }
@@ -99,7 +106,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         val (s, r) = server.answer(id, answer)
         server = s
         r match {
-            case QuestionFromSession(ctx, question) =>
+            case QuestionFromSession(ctx, _, question) =>
                 logger.info(s"[Server Response] Question from session: ${question.description}")
                 waiting(id, psiMethod, dataContext, ctx, question)
             case Finished(ctx) =>
@@ -110,7 +117,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                 WriteCommandAction.runWriteCommandAction(psiMethod.getProject, new Computable[PsiElement]() {
                     override def compute(): PsiElement = psiMethod.getBody.replace(block)
                 })
-            case ErrorAnswer(ctx, question, message) =>
+            case ErrorAnswer(ctx, _, question, message) =>
                 logger.info(s"[Server Response] Error")
                 Notifications.Bus.notify(new Notification("Cosyn", "Invalid Input", message, NotificationType.WARNING))
                 waiting(id, psiMethod, dataContext, ctx, question)
