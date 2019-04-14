@@ -1,5 +1,6 @@
 package com.github.woooking.cosyn.core.qa {
 
+    import com.github.woooking.cosyn.comm.skeleton.model.HoleExpr
     import com.github.woooking.cosyn.core.code.{Context, Question}
 
     // QA Client 接受消息
@@ -8,7 +9,7 @@ package com.github.woooking.cosyn.core.qa {
 
     sealed trait StartSessionResponse extends QAClientMessage
 
-    final case class StartSessionResponseWithQuestion(sessionId: Long, context: Context, question: Question) extends StartSessionResponse
+    final case class StartSessionResponseWithQuestion(sessionId: Long, context: Context, hole: HoleExpr, question: Question) extends StartSessionResponse
 
     sealed trait AnswerResponse extends QAClientMessage
 
@@ -28,10 +29,10 @@ package com.github.woooking.cosyn.core.qa {
 
     //
 
-    final case class QuestionFromSession(context: Context, question: Question) extends StartResponse
+    final case class QuestionFromSession(context: Context, hole: HoleExpr, question: Question) extends StartResponse
         with ProcessAnswerResponse with ProcessUndoResponse
 
-    final case class ErrorAnswer(context: Context, question: Question, message: String) extends ProcessAnswerResponse
+    final case class ErrorAnswer(context: Context, hole: HoleExpr, question: Question, message: String) extends ProcessAnswerResponse
 
     final case class Finished(context: Context) extends StartResponse with StartSessionResponse with ProcessAnswerResponse
 

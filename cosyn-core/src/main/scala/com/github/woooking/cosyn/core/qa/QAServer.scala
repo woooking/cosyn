@@ -18,8 +18,8 @@ object QAServer {
             val session = QASession.Initializing()
             val (s, r) = session.start(context)
             val response = r match {
-                case QuestionFromSession(newContext, question) =>
-                    StartSessionResponseWithQuestion(next, newContext, question)
+                case QuestionFromSession(newContext, hole, question) =>
+                    StartSessionResponseWithQuestion(next, newContext, hole, question)
                 case m: Finished  =>
                     // TODO: 回收资源
                     m

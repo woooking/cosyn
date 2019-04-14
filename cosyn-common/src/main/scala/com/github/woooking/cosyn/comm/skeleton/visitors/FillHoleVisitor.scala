@@ -1,9 +1,8 @@
 package com.github.woooking.cosyn.comm.skeleton.visitors
 
-import com.github.woooking.cosyn.comm.skeleton.model.Type
-import com.github.woooking.cosyn.comm.skeleton.model._
+import com.github.woooking.cosyn.comm.skeleton.model.{Type, _}
 import org.slf4s.Logging
-import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy, the}
+import shapeless.{:+:, ::, CNil, Coproduct, Generic, HList, HNil, Inl, Inr, Lazy}
 
 trait FillHoleVisitor[T] {
     def fill(node: T, hole: HoleExpr, expr: Expression): Option[T]
@@ -21,6 +20,13 @@ object FillHoleVisitor extends Logging {
 
     def fillHole(scope: ForEachStmt, hole: HoleExpr, expr: Expression): ForEachStmt = {
         instance[ForEachStmt].fill(scope, hole, expr) match {
+            case Some(value) => value
+            case None => scope
+        }
+    }
+
+    def fillHole(scope: Expression, hole: HoleExpr, expr: Expression): Expression = {
+        instance[Expression].fill(scope, hole, expr) match {
             case Some(value) => value
             case None => scope
         }

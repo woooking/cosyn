@@ -12,7 +12,7 @@ sealed trait ChoiceResult
 
 case class NewQA(qa: Question) extends ChoiceResult
 
-case class Resolved(newContext: Context) extends ChoiceResult
+case class Resolved(newContext: Context, filled: Expression) extends ChoiceResult
 
 case object UnImplemented extends ChoiceResult
 
@@ -20,17 +20,17 @@ sealed trait Choice {
     def action(context: Context, hole: HoleExpr): ChoiceResult
 }
 
-case class RecommendChoice(newContext: Context, score: Double) extends Choice {
+case class RecommendChoice(newContext: Context, filled: Expression, score: Double) extends Choice {
     override def toString: String = s"${newContext.pattern.stmts.generateCode("")} ($score)"
 
-    override def action(context: Context, hole: HoleExpr): ChoiceResult = Resolved(newContext)
+    override def action(context: Context, hole: HoleExpr): ChoiceResult = Resolved(newContext, filled)
 }
 
 case class VariableChoice(name: String) extends Choice {
     override def toString: String = name
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)))
+        Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)), name)
     }
 }
 
@@ -38,8 +38,9 @@ case class CreateArrayChoice(ty: ArrayType) extends Choice {
     override def toString: String = s"Create an array of ${ty.componentType}"
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val newPattern = context.pattern.fillHole(hole, create(ty.componentType, context.pattern.holeFactory.newHole() :: Nil))
-        Resolved(context.copy(pattern = newPattern))
+        val expr = create(ty.componentType, context.pattern.holeFactory.newHole() :: Nil)
+        val newPattern = context.pattern.fillHole(hole, expr)
+        Resolved(context.copy(pattern = newPattern), expr)
     }
 }
 
@@ -69,15 +70,17 @@ case class MethodChoice(method: MethodEntity) extends Choice {
             val pattern = context.pattern
             val receiverType = method.getDeclareType.getQualifiedName
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
-            val newPattern = pattern.fillHole(hole, call(CodeUtil.qualifiedClassName2Simple(receiverType), BasicType(receiverType), method.getSimpleName, args: _*))
-            Resolved(context.copy(pattern = newPattern))
+            val expr = call(CodeUtil.qualifiedClassName2Simple(receiverType), BasicType(receiverType), method.getSimpleName, args: _*)
+            val newPattern = pattern.fillHole(hole, expr)
+            Resolved(context.copy(pattern = newPattern), expr)
         case _ =>
             val pattern = context.pattern
             val receiverType = method.getDeclareType.getQualifiedName
             val receiver = pattern.holeFactory.newHole()
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
-            val newPattern = pattern.fillHole(hole, call(receiver, BasicType(receiverType), method.getSimpleName, args: _*))
-            Resolved(context.copy(pattern = newPattern))
+            val expr = call(receiver, BasicType(receiverType), method.getSimpleName, args: _*)
+            val newPattern = pattern.fillHole(hole, expr)
+            Resolved(context.copy(pattern = newPattern), expr)
     }
 }
 
@@ -85,8 +88,9 @@ case class EnumChoice(enumEntity: EnumEntity) extends Choice {
     override def toString: String = "Choose one"
 
     override def action(context: Context, hole: HoleExpr): ChoiceResult = {
-        val newPattern = context.pattern.fillHole(hole, enum(BasicType(enumEntity.getQualifiedName), context.pattern.holeFactory.newHole()))
-        Resolved(context.copy(pattern = newPattern))
+        val expr = enum(BasicType(enumEntity.getQualifiedName), context.pattern.holeFactory.newHole())
+        val newPattern = context.pattern.fillHole(hole, expr)
+        Resolved(context.copy(pattern = newPattern), expr)
     }
 }
 
@@ -118,7 +122,7 @@ case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String], 
         if (path.size == 1) {
             recommendVar match {
                 case Some(name) =>
-                    Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)))
+                    Resolved(context.copy(pattern = context.pattern.fillHole(hole, name)), name)
                 case None =>
                     NewQA(QAHelper.choiceQAForType(context, targetType, recommend))
             }
@@ -134,7 +138,7 @@ case class IterableChoice(path: List[TypeEntity], recommendVar: Option[String], 
                 case None =>
                     v(targetType, innerName, init)
             }
-            Resolved(context.copy(pattern = pattern.replaceStmtInBlock(blockStmt, stmt, varDecl, innerForEach)))
+            Resolved(context.copy(pattern = pattern.replaceStmtInBlock(blockStmt, stmt, varDecl, innerForEach)), varDecl)
         }
     }
 }

@@ -6,6 +6,8 @@ import com.github.woooking.cosyn.comm.util.TimeUtil.profile
 import com.github.woooking.cosyn.core.code._
 import com.github.woooking.cosyn.core.config.Config
 import com.github.woooking.cosyn.core.qa.QuestionGenerator
+import CodeBuilder.string2name
+import com.github.woooking.cosyn.comm.skeleton.visitors.FillHoleVisitor
 
 object Recommendation {
     val resolver: HoleResolver = Config.holeResolver
@@ -28,74 +30,76 @@ object Recommendation {
             1.0
     }
 
-    private def next(context: Context, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
+    private def next(context: Context, filled: Expression, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
         val newPattern = context.pattern
         newPattern.holes diff originHoles diff ignoredHoles.toList match {
-            case Nil => choice(context, score, originHoles) :: Nil
-            case head :: _ => recommend(context, head, depth + 1, score, originHoles, ignoredHoles)
+            case Nil => choice(context, filled, score, originHoles) :: Nil
+            case head :: _ => recommend(context, Some(filled), head, depth + 1, score, originHoles, ignoredHoles)
         }
     }
 
-    private def choice(context: Context, score: Double, originHoles: List[HoleExpr]): RecommendChoice = {
+    private def choice(context: Context, filled: Expression, score: Double, originHoles: List[HoleExpr]): RecommendChoice = {
         val pattern = context.pattern
         val finalScore = (score /: (pattern.holes diff originHoles).map(penaltyOfHole(pattern, _))) (_ - _)
-        RecommendChoice(context, finalScore)
+        RecommendChoice(context, filled, finalScore)
     }
 
-    private def recommend(context: Context, qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = qa match {
-        case q @ PrimitiveQuestion(_, _) if context.pattern.parentOf(hole).isInstanceOf[MethodCallArgs] =>
-            val pattern = context.pattern
-            val methodArg = pattern.parentOf(hole).asInstanceOf[MethodCallArgs]
-            val method = pattern.parentOf(methodArg).asInstanceOf[MethodCallExpr]
-            context.nlp.recommendPrimitive(method, methodArg, q.ty).map(answer => {
-                q.processInput(context, hole, answer._1) match {
-                    case Question.ErrorInput(_) =>
-                        ???
-                    case Question.NewQuestion(_) =>
-                        ???
+    private def recommend(context: Context, filled: Option[Expression], qa: Question, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
+        def fillExpr(expr: Expression) = filled match {
+            case None => expr
+            case Some(value) => FillHoleVisitor.fillHole(value, hole, expr)
+        }
+
+        qa match {
+            case q @ PrimitiveQuestion(_, _) if context.pattern.parentOf(hole).isInstanceOf[MethodCallArgs] =>
+                val pattern = context.pattern
+                val methodArg = pattern.parentOf(hole).asInstanceOf[MethodCallArgs]
+                val method = pattern.parentOf(methodArg).asInstanceOf[MethodCallExpr]
+                context.nlp.recommendPrimitive(method, methodArg, q.ty).flatMap(answer => {
+                    q.processInput(context, hole, answer._1) match {
+                        case Question.ErrorInput(_) =>
+                            ???
+                        case Question.NewQuestion(_) =>
+                            ???
+                        case Question.Filled(newContext) =>
+                            next(newContext, fillExpr(answer._1), depth, score + answer._2, originHoles, ignoredHoles)
+                    }
+                })
+            case EnumConstantQuestion(ty) =>
+                context.nlp.recommendEnum(ty).flatMap(c => qa.processInput(context, hole, c._1) match {
+                    case Question.ErrorInput(_) => ???
+                    case Question.NewQuestion(_) => ???
                     case Question.Filled(newContext) =>
-                        next(newContext, depth, score + answer._2, originHoles, ignoredHoles)
+                        next(newContext, fillExpr(c._1), depth, score - 1.0 + c._2, originHoles, ignoredHoles)
+                })
+            case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) | ArrayInitQuestion(_, _) =>
+                val pattern = context.pattern
+                pattern.holes diff originHoles diff ignoredHoles.toList match {
+                    case Nil => filled.map(choice(context, _, score, originHoles)).toList
+                    case head :: _ => recommend(context, filled, head, depth, score, originHoles, ignoredHoles + hole)
                 }
-            })
-            pattern.holes diff originHoles diff ignoredHoles.toList match {
-                case Nil =>
-                    choice(context, score, originHoles) :: Nil
-                case head :: _ => recommend(context, head, depth, score, originHoles, ignoredHoles + hole)
-            }
-        case EnumConstantQuestion(ty) =>
-            context.nlp.recommendEnum(ty).flatMap(c => qa.processInput(context, hole, c._1) match {
-                case Question.ErrorInput(_) => ???
-                case Question.NewQuestion(_) => ???
-                case Question.Filled(newContext) =>
-                    next(newContext, depth, score - 1.0 + c._2, originHoles, ignoredHoles)
-            })
-        case PrimitiveQuestion(_, _) | EnumConstantQuestion(_) | StaticFieldAccessQuestion(_, _) | ArrayInitQuestion(_, _) =>
-            val pattern = context.pattern
-            pattern.holes diff originHoles diff ignoredHoles.toList match {
-                case Nil => choice(context, score, originHoles) :: Nil
-                case head :: _ => recommend(context, head, depth, score, originHoles, ignoredHoles + hole)
-            }
-        case ChoiceQuestion(_, choices) =>
-            choices.toList.flatMap(c => c.action(context, hole) match {
-                case NewQA(newQA) =>
-                    recommend(context, newQA, hole, depth, score, originHoles, ignoredHoles)
-                case Resolved(newContext) =>
-                    next(newContext, depth, score + scoreOfChoice(c), originHoles, ignoredHoles)
-                case UnImplemented => Nil
-            })
+            case ChoiceQuestion(_, choices) =>
+                choices.toList.flatMap(c => c.action(context, hole) match {
+                    case NewQA(newQA) =>
+                        recommend(context, filled, newQA, hole, depth, score, originHoles, ignoredHoles)
+                    case Resolved(newContext, newFilled) =>
+                        next(newContext, fillExpr(newFilled), depth, score + scoreOfChoice(c), originHoles, ignoredHoles)
+                    case UnImplemented => Nil
+                })
+        }
     }
 
-    private def recommend(context: Context, hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
+    private def recommend(context: Context, filled: Option[Expression], hole: HoleExpr, depth: Int, score: Double, originHoles: List[HoleExpr], ignoredHoles: Set[HoleExpr]): List[RecommendChoice] = {
         if (depth == Config.maxSearchStep) {
-            choice(context, score, originHoles) :: Nil
+            choice(context, filled.get, score, originHoles) :: Nil
         } else QuestionGenerator.generateForHole(context, hole) match {
-            case Some(q) => recommend(context, q, hole, depth, score, originHoles, ignoredHoles)
+            case Some(q) => recommend(context, filled, q, hole, depth, score, originHoles, ignoredHoles)
             case None => Nil
         }
     }
 
     def recommend(context: Context, hole: HoleExpr): List[RecommendChoice] = profile("recommend") {
-        recommend(context, hole, 0, 0.0, context.pattern.holes, Set.empty[HoleExpr]).distinct
+        recommend(context, None, hole, 0, 0.0, context.pattern.holes, Set.empty[HoleExpr]).distinct
     }
 
     def recommendPrimitive(q: PrimitiveQuestion, context: Context, hole: HoleExpr): List[RecommendChoice] = profile("recommend-primitive") {
@@ -104,7 +108,7 @@ object Recommendation {
                 context.nlp.recommendPrimitive(method, arg, q.ty)
                     .map(a => {
                         val newContext = q.processInput(context, hole, a._1).asInstanceOf[Question.Filled].context
-                        RecommendChoice(newContext, a._2)
+                        RecommendChoice(newContext, a._1, a._2)
                     })
             case _ =>
                 Nil
@@ -115,7 +119,7 @@ object Recommendation {
         context.nlp.recommendEnum(q.ty)
             .map(a => {
                 val newContext = q.processInput(context, hole, a._1).asInstanceOf[Question.Filled].context
-                RecommendChoice(newContext, a._2)
+                RecommendChoice(newContext, a._1, a._2)
             })
     }
 

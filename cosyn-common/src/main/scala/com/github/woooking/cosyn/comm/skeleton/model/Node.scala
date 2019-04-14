@@ -1,7 +1,6 @@
 package com.github.woooking.cosyn.comm.skeleton.model
 
 import com.github.woooking.cosyn.comm.util.{CodeUtil, StringUtil}
-import com.github.woooking.cosyn.comm.util.CodeUtil.qualifiedClassName2Simple
 
 sealed trait Node
 
@@ -114,7 +113,7 @@ sealed case class BinaryExpr(ope: String, left: Expression, right: Expression) e
 }
 
 sealed case class EnumConstantExpr(enumType: BasicType, name: Expression) extends Expression {
-    override def toString: String = s"${qualifiedClassName2Simple(enumType.ty)}.$name"
+    override def toString: String = s"${enumType.ty}.$name"
 }
 
 sealed case class MethodCallArgs(ty: Type, value: Expression) extends Expression {
@@ -132,9 +131,9 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
 }
 
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
-    override def toString: String = s"new ${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.mkString(", ")})"
+    override def toString: String = s"new ${receiverType.ty}(${args.mkString(", ")})"
 
-    def getQualifiedSignature = s"${receiverType.ty}.${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.map(_.ty).mkString(", ")})"
+    def getQualifiedSignature = s"${receiverType.ty}.${receiverType.ty}(${args.map(_.ty).mkString(", ")})"
 }
 
 sealed case class UnaryExpr(expr: Expression, ope: String, prefix: Boolean) extends Expression {
@@ -152,7 +151,7 @@ sealed case class SimpleNameExpr(name: String) extends NameExpr {
 }
 
 sealed case class StaticFieldAccessExpr(receiverType: BasicType, targetType: Type, name: NameOrHole) extends Expression {
-    override def toString: String = s"${qualifiedClassName2Simple(receiverType.ty)}.$name"
+    override def toString: String = s"${receiverType.ty}.$name"
 }
 
 sealed case class FieldAccessExpr(receiverType: BasicType, receiver: Expression, name: NameOrHole) extends Expression {
@@ -161,8 +160,8 @@ sealed case class FieldAccessExpr(receiverType: BasicType, receiver: Expression,
 
 sealed case class VariableDeclaration(ty: Type, name: NameExpr, init: Option[Expression]) extends Expression {
     override def toString: String = init match {
-        case None => s"${CodeUtil.qualifiedClassName2Simple(ty.toString)} $name"
-        case Some(i) => s"${CodeUtil.qualifiedClassName2Simple(ty.toString)} $name = $i"
+        case None => s"${ty.toString} $name"
+        case Some(i) => s"${ty.toString} $name = $i"
     }
 }
 

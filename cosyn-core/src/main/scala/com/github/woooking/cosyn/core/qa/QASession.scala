@@ -19,7 +19,7 @@ object QASession {
         case QuestionData(ctx, history) =>
             QuestionGenerator.generate(ctx) match {
                 case Some((hole, q)) =>
-                    (Waiting(WaitingData(ctx, hole, q, history)), QuestionFromSession(ctx, q))
+                    (Waiting(WaitingData(ctx, hole, q, history)), QuestionFromSession(ctx, hole, q))
                 case None =>
                     (Stopped, Finished(ctx))
             }
@@ -50,16 +50,16 @@ object QASession {
                 case Filled(newCtx) =>
                     setup(QuestionData(newCtx, (ctx, hole, question) :: history))
                 case NewQuestion(q) =>
-                    (Waiting(WaitingData(ctx, hole, q, (ctx, hole, question) :: history)), QuestionFromSession(ctx, q))
+                    (Waiting(WaitingData(ctx, hole, q, (ctx, hole, question) :: history)), QuestionFromSession(ctx, hole, q))
                 case ErrorInput(message) =>
-                    (this, ErrorAnswer(ctx, question, message))
+                    (this, ErrorAnswer(ctx, hole, question, message))
             }
         }
 
         override def processUndo: (QASession, ProcessUndoResponse) = {
             history match {
                 case (lastCtx, lastHole, lastQuestion) :: rest =>
-                    (Waiting(WaitingData(lastCtx, lastHole, lastQuestion, rest)), QuestionFromSession(lastCtx, lastQuestion))
+                    (Waiting(WaitingData(lastCtx, lastHole, lastQuestion, rest)), QuestionFromSession(lastCtx, lastHole, lastQuestion))
                 case Nil =>
                     (this, CannotUndo)
             }
