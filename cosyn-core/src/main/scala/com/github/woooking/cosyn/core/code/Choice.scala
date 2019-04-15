@@ -70,7 +70,7 @@ case class MethodChoice(method: MethodEntity) extends Choice {
             val pattern = context.pattern
             val receiverType = method.getDeclareType.getQualifiedName
             val args = CodeUtil.methodParams(method.getSignature).map(ty => arg(ty, pattern.holeFactory.newHole()))
-            val expr = call(CodeUtil.qualifiedClassName2Simple(receiverType), BasicType(receiverType), method.getSimpleName, args: _*)
+            val expr = call(receiverType, BasicType(receiverType), method.getSimpleName, args: _*)
             val newPattern = pattern.fillHole(hole, expr)
             Resolved(context.copy(pattern = newPattern), expr)
         case _ =>

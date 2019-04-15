@@ -63,7 +63,7 @@ sealed case class ForStmt(inits: Seq[Expression], condition: Option[Expression],
 
 sealed case class ForEachStmt(ty: Type, variable: String, iterable: Expression, block: BlockStmt) extends Statement {
     override def generateCode(indent: String): String =
-        s"""${indent}for (${CodeUtil.qualifiedClassName2Simple(ty.toString)} $variable : $iterable) {
+        s"""${indent}for ($ty $variable : $iterable) {
            |${block.generateCode(s"    $indent")}
            |$indent}""".stripMargin
 
@@ -133,7 +133,7 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
     override def toString: String = s"new ${receiverType.ty}(${args.mkString(", ")})"
 
-    def getQualifiedSignature = s"${receiverType.ty}.${receiverType.ty}(${args.map(_.ty).mkString(", ")})"
+    def getQualifiedSignature = s"${receiverType.ty}(${args.map(_.ty).mkString(", ")})"
 }
 
 sealed case class UnaryExpr(expr: Expression, ope: String, prefix: Boolean) extends Expression {
