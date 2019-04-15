@@ -104,7 +104,13 @@ object Recommendation {
 
     def recommendPrimitive(q: PrimitiveQuestion, context: Context, hole: HoleExpr): List[RecommendChoice] = profile("recommend-primitive") {
         (context, hole) match {
-            case Arg(method, arg) =>
+            case MethodCallArg(method, arg) =>
+                context.nlp.recommendPrimitive(method, arg, q.ty)
+                    .map(a => {
+                        val newContext = q.processInput(context, hole, a._1).asInstanceOf[Question.Filled].context
+                        RecommendChoice(newContext, a._1, a._2)
+                    })
+            case ObjectCreationArg(method, arg) =>
                 context.nlp.recommendPrimitive(method, arg, q.ty)
                     .map(a => {
                         val newContext = q.processInput(context, hole, a._1).asInstanceOf[Question.Filled].context
@@ -124,17 +130,32 @@ object Recommendation {
     }
 
 
-    object Arg {
+    object MethodCallArg {
         def unapply(ctx: (Context, HoleExpr)): Option[(MethodCallExpr, MethodCallArgs)] = {
             val context = ctx._1
             val hole = ctx._2
-            if (context.pattern.parentOf(hole).isInstanceOf[MethodCallArgs]) {
-                val pattern = context.pattern
-                val methodArg = pattern.parentOf(hole).asInstanceOf[MethodCallArgs]
-                val method = pattern.parentOf(methodArg).asInstanceOf[MethodCallExpr]
-                Some((method, methodArg))
-            } else {
-                None
+            val pattern = context.pattern
+            pattern.parentOf(hole) match {
+                case methodArg: MethodCallArgs if pattern.parentOf(methodArg).isInstanceOf[MethodCallExpr] =>
+                    val method = pattern.parentOf(methodArg).asInstanceOf[MethodCallExpr]
+                    Some((method, methodArg))
+                case _ =>
+                    None
+            }
+        }
+    }
+
+    object ObjectCreationArg {
+        def unapply(ctx: (Context, HoleExpr)): Option[(ObjectCreationExpr, MethodCallArgs)] = {
+            val context = ctx._1
+            val hole = ctx._2
+            val pattern = context.pattern
+            pattern.parentOf(hole) match {
+                case methodArg: MethodCallArgs if pattern.parentOf(methodArg).isInstanceOf[ObjectCreationExpr] =>
+                    val method = pattern.parentOf(methodArg).asInstanceOf[ObjectCreationExpr]
+                    Some((method, methodArg))
+                case _ =>
+                    None
             }
         }
     }

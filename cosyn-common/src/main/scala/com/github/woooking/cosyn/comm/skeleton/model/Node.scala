@@ -133,7 +133,11 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
 sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
     override def toString: String = s"new ${receiverType.ty}(${args.mkString(", ")})"
 
-    def getQualifiedSignature = s"${receiverType.ty}(${args.map(_.ty).mkString(", ")})"
+    def getQualifiedSignature = s"${receiverType.ty}.${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.map(_.ty).mkString(", ")})"
+
+    def findArg(arg: MethodCallArgs): Int = {
+        args.indexOf(arg)
+    }
 }
 
 sealed case class UnaryExpr(expr: Expression, ope: String, prefix: Boolean) extends Expression {

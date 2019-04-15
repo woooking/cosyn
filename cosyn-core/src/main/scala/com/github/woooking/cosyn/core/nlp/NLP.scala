@@ -53,7 +53,8 @@ object NLP {
     }
 
     def phraseWordSim(p: Seq[String], w: String): Double = {
-        p.map(word => wordSim(word, w)).max
+        if (p.isEmpty) 0.0
+        else p.map(word => wordSim(word, w)).max
     }
 
     def wordSim(word1: String, word2: String): Double = (word1.toLowerCase, word2.toLowerCase) match {
