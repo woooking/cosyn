@@ -59,7 +59,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
             }
         }
 
-        process(Queue(entity), Set(), ProducerContext.init)
+        if (entity == null) Set()
+        else process(Queue(entity), Set(), ProducerContext.init)
     }
 
     def producers(ty: Type): Set[MethodEntity] = profile("producers") {

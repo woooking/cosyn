@@ -68,7 +68,7 @@ object CodeUtil extends Logging {
       * @return 参数类型列表
       */
     def methodParams(signature: String): Seq[Type] = {
-        val pattern = """.*\(([a-zA-Z., ]*)\)""".r
+        val pattern = """.*\(([a-zA-Z.,\[\] ]*)\)""".r
         pattern.findFirstMatchIn(signature) match {
             case Some(m) =>
                 val g = m.group(1)
