@@ -1,7 +1,7 @@
 
 <configuration>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<file>/home/woooking/log/cosyn-idea.log</file>
+		<file>/Users/woooking/log</file>
 		<encoder>
 			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
 		</encoder>

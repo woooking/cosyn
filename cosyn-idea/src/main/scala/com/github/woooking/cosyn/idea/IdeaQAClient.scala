@@ -13,7 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.JBPopupFactory.ActionSelectionAid
 import com.intellij.openapi.util.Computable
-import com.intellij.psi.{JavaPsiFacade, PsiElement, PsiMethod}
+import com.intellij.psi.{JavaPsiFacade, PsiDocumentManager, PsiElement, PsiMethod}
 
 import scala.collection.JavaConverters._
 
@@ -43,62 +43,69 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
         WriteCommandAction.runWriteCommandAction(psiMethod.getProject, new Computable[PsiElement]() {
             override def compute(): PsiElement = psiMethod.getBody.replace(block)
         })
-        question match {
-            case ChoiceQuestion(q, choices) =>
-                val actions = choices
-                    .map {
-                        case c: RecommendChoice => c.filled.toString
-                        case c => c.toString
+        PsiDocumentManager.getInstance(psiMethod.getProject).performLaterWhenAllCommitted(() => {
+            question match {
+                case ChoiceQuestion(q, choices) =>
+                    val actions = choices
+                        .map {
+                            case c: RecommendChoice => c.filled.toString
+                            case c => c.toString
+                        }
+                        .zipWithIndex
+                        .map {
+                            case (c, i) => new AnAction(c) {
+                                override def actionPerformed(e: AnActionEvent): Unit = {
+                                    running(id, psiMethod, dataContext, s"#${i + 1}")
+                                }
+                            }
+                        }
+                    val actionGroup = new DefaultActionGroup(actions.asJava)
+                    val popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup(q, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
+                    popup.showInFocusCenter()
+                case q @ ArrayInitQuestion(_, _) =>
+                    val popup = JBPopupFactory.getInstance().createConfirmation(
+                        q.description,
+                        "Yes",
+                        "No",
+                        () => running(id, psiMethod, dataContext, "Y"),
+                        () => running(id, psiMethod, dataContext, "N"),
+                        1
+                    )
+                    popup.showInFocusCenter()
+                case RecommendQuestion(wrapped, recommendations) =>
+                    val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.filled.toString) {
+                        override def actionPerformed(e: AnActionEvent): Unit = {
+                            running(id, psiMethod, dataContext, s"#${i + 1}")
+                        }
                     }
-                    .zipWithIndex
-                    .map {
-                        case (c, i) => new AnAction(c) {
-                            override def actionPerformed(e: AnActionEvent): Unit = {
-                                running(id, psiMethod, dataContext, s"#${i + 1}")
+                    }
+
+                    val inputAction = new AnAction(wrapped.description) {
+                        override def actionPerformed(e: AnActionEvent): Unit = {
+                            val dialog = new InputDialog(e.getProject, wrapped.description)
+                            val result = dialog.showAndGet()
+                            if (result) {
+                                running(id, psiMethod, dataContext, dialog.getResult)
                             }
                         }
                     }
-                val actionGroup = new DefaultActionGroup(actions.asJava)
-                val popup = JBPopupFactory.getInstance().createActionGroupPopup(q, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
-                popup.showInFocusCenter()
-            case q @ ArrayInitQuestion(_, _) =>
-                val popup = JBPopupFactory.getInstance().createConfirmation(
-                    q.description,
-                    "Yes",
-                    "No",
-                    () => running(id, psiMethod, dataContext, "Y"),
-                    () => running(id, psiMethod, dataContext, "N"),
-                    1
-                )
-                popup.showInFocusCenter()
-            case RecommendQuestion(wrapped, recommendations) =>
-                val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.filled.toString) {
-                    override def actionPerformed(e: AnActionEvent): Unit = {
-                        running(id, psiMethod, dataContext, s"#${i + 1}")
+                    val actionGroup = ActionManager.getInstance.getAction("defaultActionGroup").asInstanceOf[DefaultActionGroup]
+                    actionGroup.removeAll()
+                    actionGroup.addAll(recommendActions :+ inputAction: _*)
+                    val popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup(wrapped.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
+                    popup.showInFocusCenter()
+                case _ =>
+                    val dialog = new InputDialog(psiMethod.getProject, question.description)
+                    val result = dialog.showAndGet()
+                    if (result) {
+                        running(id, psiMethod, dataContext, dialog.getResult)
                     }
-                }
-                }
+            }
 
-                val inputAction = new AnAction(wrapped.description) {
-                    override def actionPerformed(e: AnActionEvent): Unit = {
-                        val dialog = new InputDialog(e.getProject, wrapped.description)
-                        val result = dialog.showAndGet()
-                        if (result) {
-                            running(id, psiMethod, dataContext, dialog.getResult)
-                        }
-                    }
-                }
-                val actionGroup = ActionManager.getInstance.getAction("defaultActionGroup").asInstanceOf[DefaultActionGroup]
-                actionGroup.addAll(recommendActions :+ inputAction: _*)
-                val popup = JBPopupFactory.getInstance().createActionGroupPopup(wrapped.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
-                popup.showInFocusCenter()
-            case _ =>
-                val dialog = new InputDialog(psiMethod.getProject, question.description)
-                val result = dialog.showAndGet()
-                if (result) {
-                    running(id, psiMethod, dataContext, dialog.getResult)
-                }
-        }
+        })
+
     }
 
     def running(id: Long, psiMethod: PsiMethod, dataContext: DataContext, answer: String): Unit = {
