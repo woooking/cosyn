@@ -64,14 +64,19 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                         .createActionGroupPopup(q, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                     popup.showInFocusCenter()
                 case q @ ArrayInitQuestion(_, _) =>
-                    val popup = JBPopupFactory.getInstance().createConfirmation(
-                        q.description,
-                        "Yes",
-                        "No",
-                        () => running(id, psiMethod, dataContext, "Y"),
-                        () => running(id, psiMethod, dataContext, "N"),
-                        1
-                    )
+                    val yesAction = new AnAction("Y") {
+                        override def actionPerformed(e: AnActionEvent): Unit = {
+                            running(id, psiMethod, dataContext, "Y")
+                        }
+                    }
+                    val noAction = new AnAction("N") {
+                        override def actionPerformed(e: AnActionEvent): Unit = {
+                            running(id, psiMethod, dataContext, "N")
+                        }
+                    }
+                    val actionGroup = new DefaultActionGroup(yesAction, noAction)
+                    val popup = JBPopupFactory.getInstance()
+                        .createActionGroupPopup(q.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                     popup.showInFocusCenter()
                 case RecommendQuestion(wrapped, recommendations) =>
                     val recommendActions = recommendations.zipWithIndex.map { case (r, i) => new AnAction(r.filled.toString) {
@@ -90,9 +95,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
                             }
                         }
                     }
-                    val actionGroup = ActionManager.getInstance.getAction("defaultActionGroup").asInstanceOf[DefaultActionGroup]
-                    actionGroup.removeAll()
-                    actionGroup.addAll(recommendActions :+ inputAction: _*)
+                    val actionGroup = new DefaultActionGroup(recommendActions :+ inputAction: _*)
                     val popup = JBPopupFactory.getInstance()
                         .createActionGroupPopup(wrapped.description, actionGroup, dataContext, ActionSelectionAid.SPEEDSEARCH, true, () => {}, 10)
                     popup.showInFocusCenter()
