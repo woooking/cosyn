@@ -34,8 +34,7 @@ sealed case class IfStmt(condition: Expression, thenStmt: BlockStmt, elseStmt: O
                |$indent}""".stripMargin
     }
 
-
-    override def toString: String =elseStmt match {
+    override def toString: String = elseStmt match {
         case Some(value) =>
             s"""if ($condition) {
                |${thenStmt.generateCode("    ")}
@@ -96,7 +95,7 @@ sealed trait Expression extends Node
 
 sealed trait NameOrHole extends Expression
 
-sealed case class HoleExpr (id: Int) extends NameOrHole {
+sealed case class HoleExpr(id: Int) extends NameOrHole {
     override def toString: String = "HOLE"
 }
 
@@ -120,7 +119,7 @@ sealed case class MethodCallArgs(ty: Type, value: Expression) extends Expression
     override def toString: String = value.toString
 }
 
-sealed case class MethodCallExpr private (receiver: Option[Expression], receiverType: BasicType, simpleName: String, args: Seq[MethodCallArgs]) extends Expression {
+sealed case class MethodCallExpr private(receiver: Option[Expression], receiverType: BasicType, simpleName: String, args: Seq[MethodCallArgs]) extends Expression {
     override def toString: String = s"${receiver.map(r => s"$r.").getOrElse("")}$simpleName(${args.mkString(", ")})"
 
     def getQualifiedSignature = s"$receiverType.$simpleName(${args.map(_.ty).mkString(", ")})"
@@ -130,7 +129,7 @@ sealed case class MethodCallExpr private (receiver: Option[Expression], receiver
     }
 }
 
-sealed case class ObjectCreationExpr private (receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
+sealed case class ObjectCreationExpr private(receiverType: BasicType, args: Seq[MethodCallArgs]) extends Expression {
     override def toString: String = s"new ${receiverType.ty}(${args.mkString(", ")})"
 
     def getQualifiedSignature = s"${receiverType.ty}.${CodeUtil.qualifiedClassName2Simple(receiverType.ty)}(${args.map(_.ty).mkString(", ")})"
@@ -187,19 +186,19 @@ sealed case class IntLiteral(value: Int) extends LiteralExpr {
     override def toString: String = value.toString
 }
 
-sealed case class LongLiteral(value: Long) extends LiteralExpr{
+sealed case class LongLiteral(value: Long) extends LiteralExpr {
     override def toString: String = value.toString
 }
 
-sealed case class FloatLiteral(value: Float) extends LiteralExpr{
+sealed case class FloatLiteral(value: Float) extends LiteralExpr {
     override def toString: String = value.toString
 }
 
-sealed case class DoubleLiteral(value: Double) extends LiteralExpr{
+sealed case class DoubleLiteral(value: Double) extends LiteralExpr {
     override def toString: String = value.toString
 }
 
-sealed case class CharLiteral(value: Char) extends LiteralExpr{
+sealed case class CharLiteral(value: Char) extends LiteralExpr {
     override def toString: String = value.toString
 }
 

@@ -27,7 +27,7 @@ object QASession {
 
     case object Stopped extends QASession
 
-    case class Initializing() extends QASession {
+    case class Initializing(selection: Int) extends QASession {
         override def start(context: Context): (QASession, StartResponse) = {
             val matcher = new NLMatcher(context.query, 5)
             val patterns = matcher.find()
@@ -36,7 +36,7 @@ object QASession {
                 println(p.stmts.generateCode(""))
                 println(s"----------")
             }
-            val pattern = patterns.head._1
+            val pattern = patterns(selection)._1
             val newCtx = context.copy(pattern = pattern, nlp = NLP.parse(context.query))
             setup(QuestionData(newCtx, Nil))
         }

@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.core.qa
 import com.github.woooking.cosyn.core.code.Context
 
 trait QAServer {
-    def startSession(context: Context): (QAServer, StartSessionResponse) = ???
+    def startSession(context: Context, selection: Int): (QAServer, StartSessionResponse) = ???
 
     def answer(sessionId: Long, answer: String): (QAServer, AnswerResponse) = ???
 
@@ -14,8 +14,8 @@ object QAServer {
     def create: QAServer = Running(0, Map())
 
     private case class Running(next: Long, mapping: Map[Long, QASession]) extends QAServer {
-        override def startSession(context: Context): (QAServer, StartSessionResponse) = {
-            val session = QASession.Initializing()
+        override def startSession(context: Context, selection: Int): (QAServer, StartSessionResponse) = {
+            val session = QASession.Initializing(selection)
             val (s, r) = session.start(context)
             val response = r match {
                 case QuestionFromSession(newContext, hole, question) =>

@@ -7,8 +7,9 @@ import com.github.woooking.cosyn.pattern.api.{PatternMiner, Setting}
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGEdge, DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.javaimpl.{DFG2Pattern, JavaDFGGenerator}
 import de.parsemis.miner.environment.Settings
+import org.slf4s.Logging
 
-object PatternMiningRunner {
+object PatternMiningRunner extends Logging {
     def main(args: Array[String]): Unit = {
         implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4)
         val clientCodeRoot = CosynConfig.global.clientCodeDir
@@ -26,6 +27,7 @@ object PatternMiningRunner {
             filterSubGraph = true
         )
         val result = cosyn.process()
+        result.foreach(p => log.info(p.stmts.generateCode("")))
         PatternSaver.savePatterns(result)
         KnowledgeGraph.close()
     }

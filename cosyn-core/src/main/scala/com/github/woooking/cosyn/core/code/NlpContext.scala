@@ -15,7 +15,10 @@ case class NlpContext(semanticGraph: SemanticGraph, coreLabels: List[CoreLabel])
 
     def enumSim(constant: String): Double = {
         val textSim = coreLabels.map(_.originalText()).map(NLP.wordSim(_, constant)).max
-        val nerSim = coreLabels.map(_.ner()).map(NLP.wordSim(_, constant)).max
+        val nerSim = coreLabels.map(_.ner()).filter(_ != "O").map(NLP.wordSim(_, constant)) match {
+            case Nil => 0
+            case l => l.max
+        }
         math.max(textSim, nerSim)
     }
 
@@ -72,8 +75,8 @@ case class NlpContext(semanticGraph: SemanticGraph, coreLabels: List[CoreLabel])
             case "boolean" =>
                 Nil
             case "byte" | "short" | "int" | "long" =>
-                type NumAnno = (CoreLabel, Number)
-                coreLabels.map[NumAnno, List[NumAnno]](label => label -> label.get(classOf[CoreAnnotations.NumericCompositeValueAnnotation]))
+                type NumAnno = (CoreLabel, String, Number)
+                coreLabels.map[NumAnno, List[NumAnno]](label => (label, label.get(classOf[CoreAnnotations.NumericTypeAnnotation]), label.get(classOf[CoreAnnotations.NumericCompositeValueAnnotation])))
                     .filter(_._2 != null)
                     .map(l => {
                         val word = semanticGraph.getNodeByIndex(l._1.index())
@@ -82,7 +85,7 @@ case class NlpContext(semanticGraph: SemanticGraph, coreLabels: List[CoreLabel])
                             .map(_.originalText())
                             .map(word => math.max(NLP.phraseWordSim(paramPhrase, word), NLP.phraseWordSim(javadocPhrase, word)))
                             .max
-                        (l._2.longValue() - 1).toString -> score
+                        (if (l._2 == "ORDINAL") l._3.longValue() - 1 else l._3.longValue()).toString -> score
                     })
                     .filter(_._2 > 0.5)
             case "float" | "double" =>

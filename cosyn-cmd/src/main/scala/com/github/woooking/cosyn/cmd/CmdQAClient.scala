@@ -15,7 +15,7 @@ object CmdQAClient extends Logging {
     final case class NewTask(context: Context) extends QAClientMessage
 
     def newTask(server: QAServer, context: Context): Unit = {
-        val (s, r) = server.startSession(context)
+        val (s, r) = server.startSession(context, 0)
         r match {
             case StartSessionResponseWithQuestion(sessionId, newContext, hole, question) =>
                 waiting(s, sessionId, newContext, hole, question)
@@ -27,7 +27,7 @@ object CmdQAClient extends Logging {
     }
 
     def running(server: QAServer, id: Long, answer: String): Unit = {
-        val (s, r) = server.answer(id, answer)
+        val (s, r) = TimeUtil.profile("response") { server.answer(id, answer) }
         r match {
             case QuestionFromSession(ctx, hole, question) =>
                 waiting(s, id, ctx, hole, question)

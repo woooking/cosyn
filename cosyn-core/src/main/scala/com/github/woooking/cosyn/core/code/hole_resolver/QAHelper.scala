@@ -11,8 +11,6 @@ import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity}
 
 object QAHelper {
 
-    private sealed trait MethodType
-
     sealed abstract class MethodCategory(val questionGenerator: String => String)
 
     object MethodCategory {
