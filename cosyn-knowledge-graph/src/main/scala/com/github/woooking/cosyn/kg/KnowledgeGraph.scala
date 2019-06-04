@@ -21,13 +21,20 @@ object KnowledgeGraph {
     val session: Session = sessionFactory.openSession()
 
     val (types, enums, methods) = profile("load-all") {
-        val types = session.loadAll(classOf[TypeEntity]).asScala.map(e => e.getQualifiedName -> e).toSeq
-        val enums = session.loadAll(classOf[EnumEntity]).asScala.map(e => e.getQualifiedName -> e).toSeq
-        val methods = session.loadAll(classOf[MethodEntity]).asScala.map(e => e.getQualifiedSignature -> e).toSeq
-        session.loadAll(classOf[MethodJavadocEntity])
-        session.loadAll(classOf[MethodParamJavadocEntity])
-        session.loadAll(classOf[PatternEntity])
-        (Map(types: _*), Map(enums: _*), Map(methods: _*))
+        try {
+
+            val types = session.loadAll(classOf[TypeEntity]).asScala.map(e => e.getQualifiedName -> e).toSeq
+            val enums = session.loadAll(classOf[EnumEntity]).asScala.map(e => e.getQualifiedName -> e).toSeq
+            val methods = session.loadAll(classOf[MethodEntity]).asScala.map(e => e.getQualifiedSignature -> e).toSeq
+            session.loadAll(classOf[MethodJavadocEntity])
+            session.loadAll(classOf[MethodParamJavadocEntity])
+            session.loadAll(classOf[PatternEntity])
+            (Map(types: _*), Map(enums: _*), Map(methods: _*))
+        } catch {
+            case e =>
+                e.printStackTrace()
+                ???
+        }
     }
 
     def close(): Unit = sessionFactory.close()
