@@ -2,7 +2,7 @@ name := "cosyn-common"
 
 val circeVersion = "0.11.1"
 
-libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.12.0"
+libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.14.3"
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.6.0"
 libraryDependencies += "com.google.guava" % "guava" % "27.0-jre"
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.5.0"
