@@ -19,7 +19,7 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
         val methodEntity = entity
         // TODO: 考虑继承和protected
         methodEntity.getAccessSpecifier == Modifier.Keyword.PUBLIC ||
-            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.PACKAGE_PRIVATE
+            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.DEFAULT
     }
 
     private def producers(entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
