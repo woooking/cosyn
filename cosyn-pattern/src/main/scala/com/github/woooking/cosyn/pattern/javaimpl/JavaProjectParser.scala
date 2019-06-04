@@ -54,6 +54,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
 
     private def parse(file: java.io.File): Option[CompilationUnit] = {
         try {
+            println(file.getAbsolutePath)
             Some(JavaParser.parse(file))
         } catch {
             case e: Throwable =>
