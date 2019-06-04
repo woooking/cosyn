@@ -1,12 +1,14 @@
 package com.github.woooking.cosyn.kg.entity;
 
-import com.github.javaparser.ast.Modifier;
-import com.github.javaparser.ast.Modifier.Keyword;
+import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedParameterDeclaration;
 import com.google.common.collect.ImmutableMap;
-import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.Transient;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,7 +22,7 @@ public class MethodEntity {
     private boolean isStatic;
     private boolean isConstructor;
     private boolean isDeprecated;
-    private Modifier.Keyword accessSpecifier;
+    private AccessSpecifier accessSpecifier;
     private String paramNames;
     private String returnType;
 
@@ -133,7 +135,7 @@ public class MethodEntity {
         return returnType;
     }
 
-    public Keyword getAccessSpecifier() {
+    public AccessSpecifier getAccessSpecifier() {
         return accessSpecifier;
     }
 

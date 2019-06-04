@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.kg.repository.impl
 
-import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.{AccessSpecifier, Modifier}
 import com.github.woooking.cosyn.comm.skeleton.model.{ArrayType, BasicType, Type}
 import com.github.woooking.cosyn.comm.util.TimeUtil.profile
 import com.github.woooking.cosyn.kg.entity.{MethodEntity, TypeEntity}
@@ -18,8 +18,8 @@ class MethodEntityRepositoryImpl extends MethodEntityRepository {
 //        val methodEntity = getMethod(entity.getQualifiedSignature)
         val methodEntity = entity
         // TODO: 考虑继承和protected
-        methodEntity.getAccessSpecifier == Modifier.Keyword.PUBLIC ||
-            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == Modifier.Keyword.DEFAULT
+        methodEntity.getAccessSpecifier == AccessSpecifier.PUBLIC ||
+            methodEntity.getDeclareType.isInterface && methodEntity.getAccessSpecifier == AccessSpecifier.PACKAGE_PRIVATE
     }
 
     private def producers(entity: TypeEntity, multiple: Boolean): Set[MethodEntity] = {
