@@ -97,8 +97,9 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     override def visit(n: ArrayCreationExpr, block: CFGStatements): Option[IRExpression] = {
         val levels = n.getLevels.asScala.flatMap(_.getDimension.asScala.flatMap(_.accept(this, block)).toList)
         val initializers = n.getInitializer.asScala.toList.flatMap(_.getValues.asScala.flatMap(_.accept(this, block).toList))
-        val ty = CodeUtil.resolvedTypeToType(n.calculateResolvedType()).toString
-        block.addStatement(IRMethodInvocation(cfg, ty, "<init>[]", Some(IRTypeObject(n.getElementType.asString(), n)), levels ++ initializers, Set(n))).target
+        for (
+            ty <- typeOf(n)
+        ) yield block.addStatement(IRMethodInvocation(cfg, ty, "<init>[]", Some(IRTypeObject(n.getElementType.asString(), n)), levels ++ initializers, Set(n))).target
     }
 
     override def visit(n: ArrayInitializerExpr, block: CFGStatements): Option[IRExpression] = {

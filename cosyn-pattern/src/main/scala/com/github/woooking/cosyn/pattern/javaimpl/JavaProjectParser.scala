@@ -57,7 +57,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             Some(JavaParser.parse(file))
         } catch {
             case e: Throwable =>
-                log.error(s"Parse ${file.getAbsolutePath} error", e)
+                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
                 None
         }
     }
