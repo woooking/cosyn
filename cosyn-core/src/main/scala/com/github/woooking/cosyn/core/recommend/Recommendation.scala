@@ -10,8 +10,6 @@ import CodeBuilder.string2name
 import com.github.woooking.cosyn.comm.skeleton.visitors.FillHoleVisitor
 
 object Recommendation {
-    val resolver: HoleResolver = Config.holeResolver
-
     private def scoreOfChoice: Choice => Double = {
         case _: RecommendChoice => ???
         case _: VariableChoice => 0.0

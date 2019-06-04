@@ -25,9 +25,6 @@ class PatternMiner[Data, N, E, Graph <: ParsemisGraph[N, E], R]
 (source: Data, graphGenerator: GraphGenerator[Data, Graph], patternGenerator: PatternGenerator[N, E, Graph, R], filterSubGraph: Boolean = false)
     extends GraphTypeDef[N, E] with Logging {
 
-    var fileCount = 0
-    var cfgCount = 0
-
     private def resultFilter(result: Seq[PFragment]): Seq[PGraph] = {
         val graphs: mutable.ArrayBuffer[PGraph] = mutable.ArrayBuffer()
         val edgeSets: mutable.ArrayBuffer[Set[PEdge]] = mutable.ArrayBuffer()
