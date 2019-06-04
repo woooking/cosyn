@@ -7,6 +7,7 @@ val commonSettings = Seq(
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     javaOptions += "-Xmx16G",
     scalaVersion := "2.12.7",
+    fork in run := true,
     scalacOptions ++= Seq(
         "-J-Xss128M",
         "-target:jvm-1.8",
