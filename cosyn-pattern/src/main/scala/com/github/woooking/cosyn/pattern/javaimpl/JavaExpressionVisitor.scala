@@ -225,7 +225,12 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     }
 
     override def visit(n: IntegerLiteralExpr, block: CFGStatements): Option[IRExpression] = {
-        IRInteger(n.asInt(), n)
+        try {
+            IRInteger(n.asInt(), n)
+        } catch {
+            case _: NumberFormatException =>
+                IRLong(2147483648L, n)
+        }
     }
 
     override def visit(n: LambdaExpr, block: CFGStatements): Option[IRExpression] = {
