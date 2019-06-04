@@ -27,8 +27,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
         CosynConfig.global.srcCodeDirs.map(_.path).map(new JavaParserTypeSolver(_)): _*
     )))
-
-    JavaParser.setStaticConfiguration(parserConfiguration)
+    private val javaParser = new JavaParser(parserConfiguration)
 
     type CUResult = ParseResult[CompilationUnit]
     type CUs = Seq[CompilationUnit]
@@ -52,15 +51,15 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
         scala.util.Try(p.getType.resolve().describe()).toOption
     }
 
-    private def parse(file: java.io.File): Option[CompilationUnit] = {
-        try {
-            Some(JavaParser.parse(file))
-        } catch {
-            case e: Throwable =>
-                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
-                None
-        }
-    }
+//    private def parse(file: java.io.File): Option[CompilationUnit] = {
+//        try {
+//            javaParser.parse(file)
+//        } catch {
+//            case e: Throwable =>
+//                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
+//                None
+//        }
+//    }
 
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => File(path).listRecursively
@@ -68,7 +67,9 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
 //            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
             .filter(_.contentAsString.contains("import org.apache.poi"))
             .map(_.toJava)
-            .flatMap(parse)
+            .map(javaParser.parse)
+            .filter(_.isSuccessful)
+            .map(_.getResult.get())
             .toSeq
 
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
