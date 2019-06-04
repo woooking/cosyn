@@ -16,12 +16,13 @@ import com.github.woooking.cosyn.pattern.api.Pipe.Filter
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.SimpleDFG
 import com.github.woooking.cosyn.pattern.javaimpl.ir.IRArg
+import org.slf4s.Logging
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
-class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
+class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     private val parserConfiguration = new ParserConfiguration
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
         CosynConfig.global.srcCodeDirs.map(_.path).map(new JavaParserTypeSolver(_)): _*
@@ -49,6 +50,16 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] {
 
     private def resolveParameterType(p: Parameter): Option[String] = {
         scala.util.Try(p.getType.resolve().describe()).toOption
+    }
+
+    private def parse(file: java.io.File): Option[CompilationUnit] = {
+        try {
+            Some(JavaParser.parse(file))
+        } catch {
+            case e: Throwable =>
+                log.error(s"Parse ${file.getAbsolutePath} error", e)
+                None
+        }
     }
 
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
