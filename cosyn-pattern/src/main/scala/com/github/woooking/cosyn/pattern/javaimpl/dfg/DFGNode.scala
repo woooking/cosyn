@@ -79,6 +79,8 @@ object DFGNode extends Logging {
         case _: IRThis => Set(DFGTypeNode("this"))
         case _: IRArray => Set(DFGTypeNode("array"))
         case _: IRSuper => Set(DFGTypeNode("super"))
+        case IRLambda => Set(DFGTypeNode("function"))
+        case IRMethodReference => Set(DFGTypeNode("function"))
         case _ =>
             log.error(s"${expression.getClass} missing")
             ???
