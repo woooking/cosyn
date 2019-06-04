@@ -54,7 +54,6 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
 
     private def parse(file: java.io.File): Option[CompilationUnit] = {
         try {
-            println(file.getAbsolutePath)
             Some(JavaParser.parse(file))
         } catch {
             case e: Throwable =>
@@ -66,6 +65,8 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => File(path).listRecursively
             .filter(_.extension.contains(".java"))
+//            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
+            .filter(_.contentAsString.contains("import org.apache.poi"))
             .map(_.toJava)
             .flatMap(parse)
             .toSeq
