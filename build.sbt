@@ -4,7 +4,8 @@ version := "1.0"
 
 val commonSettings = Seq(
     resolvers += Resolver.mavenLocal,
-    javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xmx16G"),
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+    javaOptions += "-Xmx16G",
     scalaVersion := "2.12.7",
     scalacOptions ++= Seq(
         "-J-Xss128M",
