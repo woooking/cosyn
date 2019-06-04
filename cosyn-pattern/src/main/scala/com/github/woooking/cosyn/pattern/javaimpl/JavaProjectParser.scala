@@ -67,9 +67,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
         (path: Path) => File(path).listRecursively
             .filter(_.extension.contains(".java"))
             .map(_.toJava)
-            .flatMap(file => scala.util.Try {
-                JavaParser.parse(file)
-            }.toOption.toSeq)
+            .flatMap(parse)
             .toSeq
 
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
