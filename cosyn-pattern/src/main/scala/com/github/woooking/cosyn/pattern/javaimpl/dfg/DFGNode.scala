@@ -77,7 +77,8 @@ object DFGNode extends Logging {
         case e: IREnum => typeEntityRepository.getAllParentTypes(e.ty).map(DFGTypeNode)
         case _: IRTypeObject => Set(DFGTypeNode("java.lang.Class"))
         case _: IRThis => Set(DFGTypeNode("this"))
-        case e: IRArray => Set(DFGTypeNode("array"))
+        case _: IRArray => Set(DFGTypeNode("array"))
+        case _: IRSuper => Set(DFGTypeNode("super"))
         case _ =>
             log.error(s"${expression.getClass} missing")
             ???
