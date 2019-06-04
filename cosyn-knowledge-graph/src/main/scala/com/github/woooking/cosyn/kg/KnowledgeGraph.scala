@@ -31,7 +31,7 @@ object KnowledgeGraph {
             session.loadAll(classOf[PatternEntity])
             (Map(types: _*), Map(enums: _*), Map(methods: _*))
         } catch {
-            case e =>
+            case e: Throwable =>
                 e.printStackTrace()
                 ???
         }
