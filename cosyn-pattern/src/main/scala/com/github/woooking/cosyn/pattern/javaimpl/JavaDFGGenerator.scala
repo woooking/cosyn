@@ -11,8 +11,9 @@ import com.github.woooking.cosyn.pattern.util.GraphUtil
 case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
     override def generate(data: File): Seq[SimpleDFG] = {
         val projectParser = new JavaProjectParser()
-            .register(CuImportFilter("import org.apache.poi"))
-            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(short)")))
+//            .register(CuImportFilter("import org.apache.poi"))
+            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, CosynConfig.global.methodFullQualifiedSignature)))
+//            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(short)")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CreationHelper.createHyperlink(org.apache.poi.common.usermodel.HyperlinkType)")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.hssf.usermodel.DVConstraint.createExplicitListConstraint(java.lang.String[])")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.Font.setFontName(java.lang.String)")))

@@ -20,6 +20,7 @@ import org.slf4s.Logging
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.parallel._
 import scala.reflect.runtime.universe._
 
 class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
@@ -51,26 +52,34 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
         scala.util.Try(p.getType.resolve().describe()).toOption
     }
 
-//    private def parse(file: java.io.File): Option[CompilationUnit] = {
-//        try {
-//            javaParser.parse(file)
-//        } catch {
-//            case e: Throwable =>
-//                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
-//                None
-//        }
-//    }
+    //    private def parse(file: java.io.File): Option[CompilationUnit] = {
+    //        try {
+    //            javaParser.parse(file)
+    //        } catch {
+    //            case e: Throwable =>
+    //                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
+    //                None
+    //        }
+    //    }
 
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
-        (path: Path) => File(path).listRecursively
-            .filter(_.extension.contains(".java"))
-//            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
-            .filter(_.contentAsString.contains("import org.apache.poi"))
-            .map(_.toJava)
-            .map(javaParser.parse)
-            .filter(_.isSuccessful)
-            .map(_.getResult.get())
-            .toSeq
+        (path: Path) => {
+            val files =
+                File(path).listRecursively
+                    .toSeq
+                    .par
+                    .filter(_.extension.contains(".java"))
+                    //            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
+                    .filter(_.contentAsString.contains(s"import ${CosynConfig.global.classFullQualifiedName}"))
+
+            log.info(s"文件数量: ${files.size}")
+
+            files.map(_.toJava)
+                .map(javaParser.parse)
+                .filter(_.isSuccessful)
+                .map(_.getResult.get())
+                .seq
+        }
 
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
         (cus: CUs) => cus

@@ -7,6 +7,8 @@ import pureconfig.generic.auto._
 case class CosynConfig(
                           clientCodeDir: File,
                           srcCodeDirs: List[File],
+                          classFullQualifiedName: String,
+                          methodFullQualifiedSignature: String,
                           printParseErrors: Boolean = false,
                           debug: Boolean = false,
                       )
