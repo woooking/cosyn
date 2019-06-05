@@ -72,7 +72,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             val files =
                 File(path).listRecursively
                     .toSeq
-                    .par
+                    //                    .par
                     .filter(_.extension.contains(".java"))
                     //            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
                     .filter(_.contentAsString.contains(s"import ${CosynConfig.global.classFullQualifiedName}"))
@@ -82,35 +82,37 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             files.map(_.toJava)
                 .map(parse)
                 .flatMap(_.toSeq)
-                .seq
+            //                .seq
         }
 
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
-        (cus: CUs) => cus
-            .flatMap(cu => cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala)
-            .flatMap(method => {
-                try {
-                    val cfg = new CFG(s"${method.getSignature.asString()}", method)
-                    val body = method match {
-                        case decl: ConstructorDeclaration => decl.getBody
-                        case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
-                        case _: MethodDeclaration => new BlockStmt
+        (cus: CUs) => {
+            val cfgs = cus.flatMap(cu => cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala)
+                .flatMap(method => {
+                    try {
+                        val cfg = new CFG(s"${method.getSignature.asString()}", method)
+                        val body = method match {
+                            case decl: ConstructorDeclaration => decl.getBody
+                            case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
+                            case _: MethodDeclaration => new BlockStmt
+                        }
+                        method.getParameters.forEach(p =>
+                            for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
+                        )
+                        val statementVisitor = new JavaStatementVisitor(cfg)
+                        val pair = body.accept(statementVisitor.visitor, statementVisitor.outerCfg.Context(cfg.entry))
+                        pair.block.seal()
+                        pair.block.setNext(cfg.exit)
+                        Seq(cfg)
+                    } catch {
+                        case e: Throwable =>
+                            log.error("Cfg generate error", e)
+                            Seq()
                     }
-                    method.getParameters.forEach(p =>
-                        for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
-                    )
-                    val statementVisitor = new JavaStatementVisitor(cfg)
-                    val pair = body.accept(statementVisitor.visitor, statementVisitor.outerCfg.Context(cfg.entry))
-                    pair.block.seal()
-                    pair.block.setNext(cfg.exit)
-                    Seq(cfg)
-                } catch {
-                    case e: Throwable =>
-                        log.error("Cfg generate error", e)
-                        Seq()
-                }
-
-            })
+                })
+            log.info(s"控制流图数: ${cfgs.size}")
+            cfgs
+        }
 
     private def cfg2dfg: Pipe[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
 
