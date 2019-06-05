@@ -11,7 +11,7 @@ import org.slf4s.Logging
 
 object PatternMiningRunner extends Logging {
     def main(args: Array[String]): Unit = {
-        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = 4)
+        implicit val setting: Settings[DFGNode, DFGEdge] = Setting.create(DFGNode.parser, DFGEdge.parser, minFreq = CosynConfig.global.minFreq)
         val clientCodeRoot = CosynConfig.global.clientCodeDir
         val graphGenerator = JavaDFGGenerator()
 //        val cosyn = new Cosyn[File, DFGNode, DFGEdge, SimpleDFG, String](

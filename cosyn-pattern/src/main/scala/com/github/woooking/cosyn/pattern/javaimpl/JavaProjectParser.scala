@@ -28,7 +28,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
         CosynConfig.global.srcCodeDirs.map(_.path).map(new JavaParserTypeSolver(_)): _*
     )))
-    private val javaParser = new JavaParser(parserConfiguration)
+    private val javaParser = ThreadLocal.withInitial[JavaParser](() => new JavaParser(parserConfiguration))
 
     type CUResult = ParseResult[CompilationUnit]
     type CUs = Seq[CompilationUnit]
@@ -54,7 +54,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
 
     private def parse(file: java.io.File): Option[CompilationUnit] = {
         try {
-            val result = javaParser.parse(file)
+            val result = javaParser.get().parse(file)
             if (result.isSuccessful) Some(result.getResult.get())
             else {
                 result.getProblems.forEach(_.getCause.ifPresent(log.error(s"Parse ${file.getAbsolutePath} error", _)))

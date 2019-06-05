@@ -4,6 +4,7 @@ import com.github.javaparser.ast.stmt._
 import com.github.javaparser.ast.visitor.GenericVisitorWithDefaults
 import com.github.javaparser.ast.{Node, NodeList}
 import com.github.woooking.cosyn.comm.util.CodeUtil
+import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFG
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFGSwitch.{DefaultLabel, ExpressionLabel}
 import com.github.woooking.cosyn.pattern.javaimpl.ir.statements.{IRAssert, IRMethodInvocation, IRReturn, IRThrow}
@@ -30,13 +31,13 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
 
         override def visit(n: BreakStmt, context: outerCfg.Context): outerCfg.Context = {
             // TODO: change control flow
-            log.warn("BreakStmt needs to be enhanced")
+            if (CosynConfig.global.printParseErrors) log.warn ("BreakStmt needs to be enhanced")
             context
         }
 
         override def visit(n: ContinueStmt, context: outerCfg.Context): outerCfg.Context = {
             // TODO: change control flow
-            log.warn("ContinueStmt needs to be enhanced")
+            if (CosynConfig.global.printParseErrors) log.warn ("ContinueStmt needs to be enhanced")
             context
         }
 
@@ -66,7 +67,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
 
         override def visit(n: ExplicitConstructorInvocationStmt, context: outerCfg.Context): outerCfg.Context = {
             // TODO: explicit constructor
-            log.warn("ExplicitConstructorInvocationStmt not supported")
+            if (CosynConfig.global.printParseErrors) log.warn ("ExplicitConstructorInvocationStmt not supported")
             context
         }
 
@@ -159,7 +160,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
 
         override def visit(n: LabeledStmt, context: outerCfg.Context): outerCfg.Context = {
             // TODO: label
-            log.warn("Label of LabelStmt not supported")
+            if (CosynConfig.global.printParseErrors) log.warn ("Label of LabelStmt not supported")
             n.getStatement.accept(this, context)
         }
 
@@ -207,7 +208,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
         override def visit(n: TryStmt, context: outerCfg.Context): outerCfg.Context = {
             n.getResources.asScala.foreach(_.accept(exprVisitor, context.block))
             var newContext = n.getTryBlock.accept(this, context)
-            log.warn("Catch clause not supported")
+            if (CosynConfig.global.printParseErrors) log.warn ("Catch clause not supported")
             //  TODO: catch clause
             //  newContext = (newContext /: cs) ((c, n) => visitCatchClause(cfg)(c, n))
             newContext = (newContext /: n.getFinallyBlock.asScala) ((c, n) => n.accept(this, c))
@@ -216,7 +217,7 @@ class JavaStatementVisitor(val outerCfg: CFG) extends Logging {
 
         override def visit(n: LocalClassDeclarationStmt, context: outerCfg.Context): outerCfg.Context = {
             // TODO: Local class decl
-            log.warn("LocalClassDeclarationStmt not supported")
+            if (CosynConfig.global.printParseErrors) log.warn ("LocalClassDeclarationStmt not supported")
             context
         }
 
