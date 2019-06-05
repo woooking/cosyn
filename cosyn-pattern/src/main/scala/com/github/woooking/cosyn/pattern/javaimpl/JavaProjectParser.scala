@@ -52,15 +52,20 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
         scala.util.Try(p.getType.resolve().describe()).toOption
     }
 
-    //    private def parse(file: java.io.File): Option[CompilationUnit] = {
-    //        try {
-    //            javaParser.parse(file)
-    //        } catch {
-    //            case e: Throwable =>
-    //                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
-    //                None
-    //        }
-    //    }
+    private def parse(file: java.io.File): Option[CompilationUnit] = {
+        try {
+            val result = javaParser.parse(file)
+            if (result.isSuccessful) Some(result.getResult.get())
+            else {
+                result.getProblems.forEach(_.getCause.ifPresent(log.error(s"Parse ${file.getAbsolutePath} error", _)))
+                None
+            }
+        } catch {
+            case e: Throwable =>
+                log.error(s"Parse ${file.getAbsolutePath} error, ${e.getMessage}")
+                None
+        }
+    }
 
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => {
@@ -75,9 +80,8 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             log.info(s"文件数量: ${files.size}")
 
             files.map(_.toJava)
-                .map(javaParser.parse)
-                .filter(_.isSuccessful)
-                .map(_.getResult.get())
+                .map(parse)
+                .flatMap(_.toSeq)
                 .seq
         }
 
