@@ -10,6 +10,7 @@ case class CosynConfig(
                           classFullQualifiedName: String,
                           methodFullQualifiedSignature: String,
                           printParseErrors: Boolean = false,
+                          printUnsupportedWarnings: Boolean = false,
                           debug: Boolean = false,
                       )
 

@@ -79,7 +79,7 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     }
 
     private def unimplemented(msg: String, n: Node): Unit = {
-        log.warn(s"$msg not supported ${posInfo(n)}")
+        if (CosynConfig.global.printUnsupportedWarnings) log.warn(s"$msg not supported ${posInfo(n)}")
     }
 
     override def defaultAction(n: Node, arg: CFGStatements): Option[IRExpression] = ???
@@ -234,8 +234,8 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     }
 
     override def visit(n: LambdaExpr, block: CFGStatements): Option[IRExpression] = {
-        log.warn("LambdaExpr not supported")
-        IRLambda // TODO: lambda expr
+        unimplemented("LambdaExpr", n)
+        None // TODO: lambda expr
     }
 
     override def visit(n: LongLiteralExpr, block: CFGStatements): Option[IRExpression] = {
@@ -260,8 +260,8 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
     }
 
     override def visit(n: MethodReferenceExpr, block: CFGStatements): Option[IRExpression] = {
-        log.warn("MethodReferenceExpr not supported")
-        IRMethodReference // TODO: MethodReferenceExpr
+        unimplemented("MethodReferenceExpr", n)
+        None // TODO: MethodReferenceExpr
     }
 
     override def visit(n: NameExpr, block: CFGStatements): Option[IRExpression] = {
@@ -309,7 +309,7 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
                     case nameExpr: NameExpr => nameExpr.getName.asString()
                     case fieldAccessExpr: FieldAccessExpr if fieldAccessExpr.getScope.isThisExpr => fieldAccessExpr.getName.asString()
                     case x =>
-                        log.warn(s"Assign Expr of $x not implemented.")
+                        unimplemented(s"Assign Expr of $x", x)
                         ""
                 }
                 //                val name = n.getExpression.asNameExpr().getName.asString()
