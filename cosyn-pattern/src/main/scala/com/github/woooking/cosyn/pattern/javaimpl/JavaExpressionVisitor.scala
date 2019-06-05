@@ -319,18 +319,21 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
                 else
                     BinaryExpr.Operator.MINUS
 
-                val ty = CodeUtil.resolvedTypeToType(n.getExpression.calculateResolvedType()).toString
-                val target = block.addStatement(new IRBinaryOperation(cfg, ty, ope, source, IRInteger(1, n), Set(n))).target
-                cfg.writeVar(name, block, target)
-                if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.PREFIX_DECREMENT)
-                    target
-                else
-                    source
+                for (
+                    ty <- typeOf(n.getExpression)
+                ) yield {
+                    val target = block.addStatement(new IRBinaryOperation(cfg, ty, ope, source, IRInteger(1, n), Set(n))).target
+                    cfg.writeVar(name, block, target)
+                    if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.PREFIX_DECREMENT)
+                        target
+                    else
+                        source
+                }
             case ope =>
                 for (
-                    source <- n.getExpression.accept(this, block)
+                    source <- n.getExpression.accept(this, block);
+                    ty <- typeOf(n.getExpression)
                 ) yield {
-                    val ty = CodeUtil.resolvedTypeToType(n.getExpression.calculateResolvedType()).toString
                     block.addStatement(new IRUnaryOperation(cfg, ty, ope, source, Set(n))).target
                 }
         }

@@ -75,21 +75,28 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
         (cus: CUs) => cus
             .flatMap(cu => cu.findAll(classOf[ConstructorDeclaration]).asScala ++ cu.findAll(classOf[MethodDeclaration]).asScala)
-            .map(method => {
-                val cfg = new CFG(s"${method.getSignature.asString()}", method)
-                val body = method match {
-                    case decl: ConstructorDeclaration => decl.getBody
-                    case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
-                    case _: MethodDeclaration => new BlockStmt
+            .flatMap(method => {
+                try {
+                    val cfg = new CFG(s"${method.getSignature.asString()}", method)
+                    val body = method match {
+                        case decl: ConstructorDeclaration => decl.getBody
+                        case decl: MethodDeclaration if decl.getBody.isPresent => decl.getBody.get()
+                        case _: MethodDeclaration => new BlockStmt
+                    }
+                    method.getParameters.forEach(p =>
+                        for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
+                    )
+                    val statementVisitor = new JavaStatementVisitor(cfg)
+                    val pair = body.accept(statementVisitor.visitor, statementVisitor.outerCfg.Context(cfg.entry))
+                    pair.block.seal()
+                    pair.block.setNext(cfg.exit)
+                    Seq(cfg)
+                } catch {
+                    case e: Throwable =>
+                        log.error("Cfg generate error", e)
+                        Seq()
                 }
-                method.getParameters.forEach(p =>
-                    for (ty <- resolveParameterType(p)) cfg.writeVar(p.getName.getIdentifier, cfg.entry, IRArg(p.getName.getIdentifier, ty))
-                )
-                val statementVisitor = new JavaStatementVisitor(cfg)
-                val pair = body.accept(statementVisitor.visitor, statementVisitor.outerCfg.Context(cfg.entry))
-                pair.block.seal()
-                pair.block.setNext(cfg.exit)
-                cfg
+
             })
 
     private def cfg2dfg: Pipe[CFGs, DFGs] = (cfgs: CFGs) => cfgs.map(SimpleDFG.apply)
