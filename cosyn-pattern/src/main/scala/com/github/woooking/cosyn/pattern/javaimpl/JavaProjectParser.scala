@@ -72,7 +72,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             val files =
                 File(path).listRecursively
                     .toSeq
-                    //                    .par
+                    .par
                     .filter(_.extension.contains(".java"))
                     //            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
                     .filter(_.contentAsString.contains(s"import ${CosynConfig.global.classFullQualifiedName}"))
@@ -82,7 +82,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             files.map(_.toJava)
                 .map(parse)
                 .flatMap(_.toSeq)
-            //                .seq
+                .seq
         }
 
     private def cuResult2cfg: Pipe[CUs, Seq[CFG]] =
