@@ -70,12 +70,11 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
     private def sourceFilesGenerator: Pipe[Path, Seq[CompilationUnit]] =
         (path: Path) => {
             val files =
-                File(path).listRecursively
+                (File(path).listRecursively
                     .toSeq
                     .par
-                    .filter(_.extension.contains(".java"))
+                    .filter(_.extension.contains(".java")) /: CosynConfig.global.fileContents) ((fs, content) => fs.filter(_.contentAsString.contains(content)))
                     //            .filter(!_.path.iterator().asScala.map(_.toString).contains("test"))
-                    .filter(_.contentAsString.contains(s"import ${CosynConfig.global.classFullQualifiedName}"))
 
             log.info(s"文件数量: ${files.size}")
 
