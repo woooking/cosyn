@@ -10,6 +10,7 @@ case class KnowledgeGraphConfig(
                                    password: String,
                                    srcCodeDirs: List[String],
                                    jdkSrcCodeDir: String,
+                                   debug: Boolean = false,
                                    entityPackage: String = "com.github.woooking.cosyn.kg.entity"
                                )
 

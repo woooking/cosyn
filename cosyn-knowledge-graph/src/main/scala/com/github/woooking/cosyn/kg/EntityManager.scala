@@ -27,71 +27,65 @@ object EntityManager extends Logging {
         javadocEntity
     }
 
-    def createTypeEntity(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = {
-        val (typeEntity, _) = resolved match {
-            case r: JavaParserClassDeclaration =>
-                (TypeEntity.fromDeclaration(r), r.getWrappedNode)
-            case r: JavaParserInterfaceDeclaration =>
-                (TypeEntity.fromDeclaration(r), r.getWrappedNode)
-            case r: JavaParserEnumDeclaration =>
-                (EnumEntity.fromDeclaration(r), r.getWrappedNode)
-        }
-
-        typeMapping(typeEntity.getQualifiedName) = typeEntity
-        resolved.getDeclaredMethods.asScala.foreach(m => {
-            try {
-                val astNode = m.asInstanceOf[JavaParserMethodDeclaration].getWrappedNode
-                val isDeprecated = astNode.getAnnotationByClass(classOf[Deprecated]).isPresent
-                val javadoc = astNode.getJavadoc.asScala.map(createJavadocEntity)
-                val methodEntity = new MethodEntity(m, isDeprecated, typeEntity, javadoc.orNull)
-                methodMapping(methodEntity.getQualifiedSignature) = methodEntity
-            } catch {
-                case _: UnsolvedSymbolException =>
-                case _: UnsupportedOperationException =>
+    def createTypeEntity(resolved: ResolvedReferenceTypeDeclaration): Option[TypeEntity] = {
+        try {
+            val (typeEntity, _) = resolved match {
+                case r: JavaParserClassDeclaration =>
+                    (TypeEntity.fromDeclaration(r), r.getWrappedNode)
+                case r: JavaParserInterfaceDeclaration =>
+                    (TypeEntity.fromDeclaration(r), r.getWrappedNode)
+                case r: JavaParserEnumDeclaration =>
+                    (EnumEntity.fromDeclaration(r), r.getWrappedNode)
             }
-        })
 
-        resolved.getConstructors.asScala.foreach(m => {
-            try {
-                val methodEntity = m match {
-                    case d: JavaParserConstructorDeclaration[_] =>
-                        val astNode = d.getWrappedNode
-                        val javadoc = astNode.getJavadoc.asScala.map(createJavadocEntity)
-                        val isDeprecated = d.getWrappedNode.getAnnotationByClass(classOf[Deprecated]).isPresent
-                        new MethodEntity(m, isDeprecated, typeEntity, javadoc.orNull)
-                    case _: DefaultConstructorDeclaration[_] =>
-                        new MethodEntity(m, false, typeEntity, null)
+            typeMapping(typeEntity.getQualifiedName) = typeEntity
+            resolved.getDeclaredMethods.asScala.foreach(m => {
+                try {
+                    val astNode = m.asInstanceOf[JavaParserMethodDeclaration].getWrappedNode
+                    val isDeprecated = astNode.getAnnotationByClass(classOf[Deprecated]).isPresent
+                    val javadoc = astNode.getJavadoc.asScala.map(createJavadocEntity)
+                    val methodEntity = new MethodEntity(m, isDeprecated, typeEntity, javadoc.orNull)
+                    methodMapping(methodEntity.getQualifiedSignature) = methodEntity
+                } catch {
+                    case _: UnsolvedSymbolException =>
+                    case _: UnsupportedOperationException =>
                 }
-                methodMapping(methodEntity.getQualifiedSignature) = methodEntity
-            } catch {
-                case _: UnsolvedSymbolException =>
-                case _: UnsupportedOperationException =>
-            }
-        })
+            })
 
-        //        decl.getMethods.asScala.foreach(m => {
-        //            try {
-        //                val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
-        //                methodMapping(methodEntity.getQualifiedSignature) = methodEntity
-        //            } catch {
-        //                case _: UnsolvedSymbolException =>
-        //                case _: UnsupportedOperationException =>
-        //            }
-        //        })
-        //        decl.getConstructors.asScala.foreach(m => {
-        //            try {
-        //                val methodEntity = new MethodEntity(m.resolve(), typeEntity, m.getJavadocComment.orElse(null))
-        //                methodMapping(methodEntity.getQualifiedSignature) = methodEntity
-        //            } catch {
-        //                case _: UnsolvedSymbolException =>
-        //                case _: UnsupportedOperationException =>
-        //            }
-        //        })
-        typeEntity
+            resolved.getConstructors.asScala.foreach(m => {
+                try {
+                    val methodEntity = m match {
+                        case d: JavaParserConstructorDeclaration[_] =>
+                            val astNode = d.getWrappedNode
+                            val javadoc = astNode.getJavadoc.asScala.map(createJavadocEntity)
+                            val isDeprecated = d.getWrappedNode.getAnnotationByClass(classOf[Deprecated]).isPresent
+                            new MethodEntity(m, isDeprecated, typeEntity, javadoc.orNull)
+                        case _: DefaultConstructorDeclaration[_] =>
+                            new MethodEntity(m, false, typeEntity, null)
+                    }
+                    methodMapping(methodEntity.getQualifiedSignature) = methodEntity
+                } catch {
+                    case _: UnsolvedSymbolException =>
+                    case _: UnsupportedOperationException =>
+                }
+            })
+
+            Some(typeEntity)
+        } catch {
+            case e: Throwable =>
+                if (KnowledgeGraphConfig.global.debug) {
+                    log.error("Error", e)
+                }
+                None
+        }
     }
 
-    def getTypeEntityOrCreate(qualifiedName: String): TypeEntity = {
-        typeMapping.getOrElseUpdate(qualifiedName, createTypeEntity(jdkSolver.solveType(qualifiedName)))
+    def getTypeEntityOrCreate(qualifiedName: String): Option[TypeEntity] = {
+        val result = createTypeEntity(jdkSolver.solveType(qualifiedName))
+        result.foreach(
+            typeMapping.getOrElseUpdate(qualifiedName, _)
+        )
+        result
     }
 
     def getMethodEntity(qualifiedSignature: String): MethodEntity = {

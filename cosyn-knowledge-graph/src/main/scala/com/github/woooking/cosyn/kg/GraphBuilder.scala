@@ -36,7 +36,7 @@ object GraphBuilder extends Logging {
         .map(_.getGenericParameterByName("T").get())
         .filter(_.isReferenceType)
         .map(_.asReferenceType().getQualifiedName)
-        .map(EntityManager.getTypeEntityOrCreate).orNull
+        .flatMap(EntityManager.getTypeEntityOrCreate).orNull
 
     def buildTypeMapping(typeDeclarations: Seq[TypeDeclaration[_]]): Unit = {
         typeDeclarations.par.map(_.resolve()).foreach(EntityManager.createTypeEntity)
@@ -47,10 +47,11 @@ object GraphBuilder extends Logging {
             .par
             .foreach(decl => {
                 val qualifiedName = decl.resolve().getQualifiedName
-                val typeEntity = EntityManager.getTypeEntityOrCreate(qualifiedName)
-                val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
-                typeEntity.addExtendedTypes(parentTypes.map(type2entity).toSet.asJava)
-                typeEntity.setIterableType(getIterableType(decl.resolve()))
+                EntityManager.getTypeEntityOrCreate(qualifiedName).foreach(typeEntity => {
+                    val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
+                    typeEntity.addExtendedTypes(parentTypes.flatMap(type2entity).toSet.asJava)
+                    typeEntity.setIterableType(getIterableType(decl.resolve()))
+                })
             })
     }
 
@@ -95,11 +96,11 @@ object GraphBuilder extends Logging {
                                 returnType.asPrimitive().describe()
                             case returnType if resolvedMethod.getReturnType.isReferenceType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name).orNull)
                             case returnType if resolvedMethod.getReturnType.isArray =>
                                 val name = getComponentTypeRecursively(returnType)
                                 if (name.isReferenceType) {
-                                    methodEntity.setReturnsMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
+                                    methodEntity.setReturnsMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName).orNull)
                                 }
                         }
                     }
@@ -118,7 +119,7 @@ object GraphBuilder extends Logging {
                         resolvedMethod.declaringType() match {
                             case returnType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name).orNull)
                         }
                     }
                 } catch {
