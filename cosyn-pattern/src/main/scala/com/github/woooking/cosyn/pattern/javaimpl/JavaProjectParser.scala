@@ -79,7 +79,7 @@ class JavaProjectParser extends Pipe[Path, Seq[SimpleDFG]] with Logging {
             log.info(s"文件数量: ${files.size}")
 
             if (CosynConfig.global.printFileNames) {
-                files.map(_.pathAsString).foreach(log.info)
+                files.map(_.pathAsString).foreach(p => log.info(p))
             }
 
             files.map(_.toJava)
