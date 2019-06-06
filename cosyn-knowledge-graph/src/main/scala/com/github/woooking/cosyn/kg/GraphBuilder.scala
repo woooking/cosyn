@@ -47,12 +47,12 @@ object GraphBuilder extends Logging {
         .flatMap(EntityManager.getTypeEntityOrCreate).orNull
 
     def buildTypeMapping(typeDeclarations: Seq[TypeDeclaration[_]]): Unit = {
-        typeDeclarations.par.map(_.resolve()).foreach(EntityManager.createTypeEntity)
+        typeDeclarations.map(_.resolve()).foreach(EntityManager.createTypeEntity)
     }
 
     def buildExtendRelation(classDecls: Seq[ClassOrInterfaceDeclaration]): Unit = {
         classDecls
-            .par
+//            .par
             .foreach(decl => {
                 val qualifiedName = decl.resolve().getQualifiedName
                 EntityManager.getTypeEntityOrCreate(qualifiedName).foreach(typeEntity => {
@@ -65,7 +65,7 @@ object GraphBuilder extends Logging {
 
     def buildMethodExtendRelation(cus: Seq[CompilationUnit]): Unit = {
         cus.flatMap(_.findAll(classOf[MethodDeclaration]).asScala)
-            .par
+//            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve().asInstanceOf[JavaParserMethodDeclaration]
@@ -91,7 +91,7 @@ object GraphBuilder extends Logging {
 
     def buildProduceRelation(cus: Seq[CompilationUnit]): Unit = {
         cus.flatMap(_.findAll(classOf[MethodDeclaration]).asScala)
-            .par
+//            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve()
@@ -118,7 +118,7 @@ object GraphBuilder extends Logging {
                 }
             })
         cus.flatMap(_.findAll(classOf[ConstructorDeclaration]).asScala)
-            .par
+//            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve()
