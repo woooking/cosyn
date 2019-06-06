@@ -3,6 +3,7 @@ package com.github.woooking.cosyn.core.nlp
 import java.util.Properties
 
 import com.github.woooking.cosyn.core.code.NlpContext
+import com.github.woooking.cosyn.core.config.CoreConfig
 import edu.stanford.nlp.pipeline.{CoreDocument, StanfordCoreNLPClient}
 
 import scala.collection.JavaConverters._
@@ -11,7 +12,7 @@ object NLP {
     val props = new Properties()
     props.setProperty("annotators", "tokenize, ssplit, pos, lemma, depparse, ner")
     props.setProperty("ner.buildEntityMentions", "false")
-    val nlp = new StanfordCoreNLPClient(props, "http://162.105.88.236", 9000)
+    val nlp = new StanfordCoreNLPClient(props, CoreConfig.global.nlpServerUri, CoreConfig.global.nlpServerPort)
 
     type SpecialPreFilter = (String, String) => String
 

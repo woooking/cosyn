@@ -63,6 +63,7 @@ val commonSettings = Seq(
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
     assemblyMergeStrategy in assembly := {
         case "module-info.class" => MergeStrategy.discard
+        case "application.conf" => MergeStrategy.concat
         case x =>
             val oldStrategy = (assemblyMergeStrategy in assembly).value
             oldStrategy(x)

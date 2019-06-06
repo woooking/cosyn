@@ -3,7 +3,7 @@ package com.github.woooking.cosyn.pattern.javaimpl
 import better.files.File
 import com.github.woooking.cosyn.pattern.CosynConfig
 import com.github.woooking.cosyn.pattern.api.GraphGenerator
-import com.github.woooking.cosyn.pattern.api.filter.{CuImportFilter, DFGNodeFilter, DFGPrintFilter}
+import com.github.woooking.cosyn.pattern.api.filter.{CuImportFilter, DFGNodeFilter, DFGPrintFilter, DFGSizeFilter}
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.DFGNode.NodeType
 import com.github.woooking.cosyn.pattern.javaimpl.dfg.{DFGNode, SimpleDFG}
 import com.github.woooking.cosyn.pattern.util.GraphUtil
@@ -12,6 +12,7 @@ case class JavaDFGGenerator() extends GraphGenerator[File, SimpleDFG] {
     override def generate(data: File): Seq[SimpleDFG] = {
         val projectParser = new JavaProjectParser()
 //            .register(CuImportFilter("import org.apache.poi"))
+            .register(DFGSizeFilter(60))
             .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, CosynConfig.global.methodFullQualifiedSignature)))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(short)")))
 //            .register(DFGNodeFilter(DFGNode(NodeType.MethodInvocation, "org.apache.poi.ss.usermodel.CreationHelper.createHyperlink(org.apache.poi.common.usermodel.HyperlinkType)")))
