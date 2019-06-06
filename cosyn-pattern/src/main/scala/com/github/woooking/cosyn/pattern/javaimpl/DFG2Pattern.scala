@@ -1,6 +1,6 @@
 package com.github.woooking.cosyn.pattern.javaimpl
 
-import com.github.javaparser.ast.{ArrayCreationLevel, Node}
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.{MethodDeclaration, VariableDeclarator}
 import com.github.javaparser.ast.expr._
 import com.github.javaparser.ast.stmt._
@@ -318,6 +318,28 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                         Try {
                             val qualifiedSignature = methodEntityRepository.getMethodProto(n.resolve().getQualifiedSignature)
                             GenExprResult(call(scopeCode, CodeUtil.methodReceiverType(qualifiedSignature).get, n.getName.asString(), args: _*), ctx2, added2)
+                        } match {
+                            case Success(value) if nodes.contains(node) =>
+                                value
+                            case _ =>
+                                GenExprResult(holeFactory.newHole(), ctx2, added2)
+                        }
+                }
+            case n: MethodCallExpr =>
+                Try {
+                    val resolved = n.resolve()
+                    val paramTypes = (0 until resolved.getNumberOfParams).map(resolved.getParam).map(_.describeType())
+                    processParams((paramTypes zip n.getArguments.asScala).toList, names, Nil, Nil)
+                } match {
+                    case Failure(_: UnsolvedSymbolException) =>
+                        GenExprResult(holeFactory.newHole(), names, Nil)
+                    case Failure(exception) =>
+                        exception.printStackTrace()
+                        ???
+                    case Success((args, ctx2, added2)) =>
+                        Try {
+                            val qualifiedSignature = methodEntityRepository.getMethodProto(n.resolve().getQualifiedSignature)
+                            GenExprResult(call(CodeUtil.methodReceiverType(qualifiedSignature).get, n.getName.asString(), args: _*), ctx2, added2)
                         } match {
                             case Success(value) if nodes.contains(node) =>
                                 value
