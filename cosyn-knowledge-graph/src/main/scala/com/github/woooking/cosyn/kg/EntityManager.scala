@@ -81,11 +81,15 @@ object EntityManager extends Logging {
     }
 
     def getTypeEntityOrCreate(qualifiedName: String): Option[TypeEntity] = {
-        val result = createTypeEntity(jdkSolver.solveType(qualifiedName))
-        result.foreach(
-            typeMapping.getOrElseUpdate(qualifiedName, _)
-        )
-        result
+        val entity = typeMapping.get(qualifiedName)
+        if (entity != null) entity
+        else {
+            val result = createTypeEntity(jdkSolver.solveType(qualifiedName))
+            result.foreach(
+                typeMapping.putIfAbsent(qualifiedName, _)
+            )
+            result
+        }
     }
 
     def getMethodEntity(qualifiedSignature: String): MethodEntity = {
