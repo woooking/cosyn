@@ -27,16 +27,8 @@ object GraphBuilder extends Logging {
     }
 
     private def type2entity(decl: ClassOrInterfaceType) = {
-        try {
-            val qualifiedName = decl.resolve().getQualifiedName
-            EntityManager.getTypeEntityOrCreate(qualifiedName)
-        } catch {
-            case e: Throwable =>
-                if (KnowledgeGraphConfig.global.debug) {
-                    log.error("Error", e)
-                }
-                None
-        }
+        val qualifiedName = decl.resolve().getQualifiedName
+        EntityManager.getTypeEntityOrCreate(qualifiedName)
     }
 
     private def getIterableType(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = resolved.getAllAncestors.asScala
@@ -44,7 +36,7 @@ object GraphBuilder extends Logging {
         .map(_.getGenericParameterByName("T").get())
         .filter(_.isReferenceType)
         .map(_.asReferenceType().getQualifiedName)
-        .flatMap(EntityManager.getTypeEntityOrCreate).orNull
+        .map(EntityManager.getTypeEntityOrCreate).orNull
 
     def buildTypeMapping(typeDeclarations: Seq[TypeDeclaration[_]]): Unit = {
         typeDeclarations.map(_.resolve()).foreach(EntityManager.createTypeEntity)
@@ -52,14 +44,12 @@ object GraphBuilder extends Logging {
 
     def buildExtendRelation(classDecls: Seq[ClassOrInterfaceDeclaration]): Unit = {
         classDecls
-//            .par
             .foreach(decl => {
                 val qualifiedName = decl.resolve().getQualifiedName
-                EntityManager.getTypeEntityOrCreate(qualifiedName).foreach(typeEntity => {
-                    val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
-                    typeEntity.addExtendedTypes(parentTypes.flatMap(type2entity).toSet.asJava)
-                    typeEntity.setIterableType(getIterableType(decl.resolve()))
-                })
+                val typeEntity = EntityManager.getTypeEntityOrCreate(qualifiedName)
+                val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
+                typeEntity.addExtendedTypes(parentTypes.map(type2entity).toSet.asJava)
+                typeEntity.setIterableType(getIterableType(decl.resolve()))
             })
     }
 
@@ -104,11 +94,11 @@ object GraphBuilder extends Logging {
                                 returnType.asPrimitive().describe()
                             case returnType if resolvedMethod.getReturnType.isReferenceType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name).orNull)
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
                             case returnType if resolvedMethod.getReturnType.isArray =>
                                 val name = getComponentTypeRecursively(returnType)
                                 if (name.isReferenceType) {
-                                    methodEntity.setReturnsMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName).orNull)
+                                    methodEntity.setReturnsMultiple(EntityManager.getTypeEntityOrCreate(name.asReferenceType().getQualifiedName))
                                 }
                         }
                     }
@@ -127,7 +117,7 @@ object GraphBuilder extends Logging {
                         resolvedMethod.declaringType() match {
                             case returnType =>
                                 val name = returnType.asReferenceType().getQualifiedName
-                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name).orNull)
+                                methodEntity.setReturns(EntityManager.getTypeEntityOrCreate(name))
                         }
                     }
                 } catch {
