@@ -1,7 +1,8 @@
 package com.github.woooking.cosyn.kg
 
 import better.files.File
-import pureconfig.ConfigReader
+import pureconfig._
+import pureconfig.generic.auto._
 
 case class KnowledgeGraphConfig(
                                    uri: String,
