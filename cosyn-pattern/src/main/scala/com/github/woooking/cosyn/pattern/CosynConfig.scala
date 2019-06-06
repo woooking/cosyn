@@ -10,6 +10,7 @@ case class CosynConfig(
                           fileContents: List[String],
                           methodFullQualifiedSignature: String,
                           minFreq: Int = 4,
+                          printFileNames: Boolean = false,
                           printParseErrors: Boolean = false,
                           printUnsupportedWarnings: Boolean = false,
                           debug: Boolean = false,
