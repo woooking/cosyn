@@ -247,8 +247,12 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
             case n: EnclosedExpr => generateCodeExpr(n.getInner, nodes, names)
             case n: FieldAccessExpr if n.getScope.isNameExpr && n.getScope.asNameExpr().getName.asString().matches("^[A-Z].*") => // TODO: enum or static field access
                 val constant: NameOrHole = if (nodes.contains(n.getName)) n.getName.asString() else holeFactory.newHole()
-                val ty = CodeUtil.resolvedTypeToType(n.getScope.asNameExpr().calculateResolvedType()).asInstanceOf[BasicType]
-                rs0(enum(ty, constant), names)
+                try {
+                    val ty = CodeUtil.resolvedTypeToType(n.getScope.asNameExpr().calculateResolvedType()).asInstanceOf[BasicType]
+                    rs0(enum(ty, constant), names)
+                } catch {
+                    case _: Throwable => GenExprResult(holeFactory.newHole(), names, Nil)
+                }
             case n: FieldAccessExpr =>
                 val constant: NameOrHole = if (nodes.contains(n.getName)) n.getName.asString() else holeFactory.newHole()
                 val GenExprResult(receiver, ctx, added) = generateCodeExpr(n.getScope, nodes, names)
