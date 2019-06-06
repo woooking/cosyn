@@ -258,7 +258,7 @@ class DFG2Pattern extends PatternGenerator[DFGNode, DFGEdge, SimpleDFG, Pattern]
                 } match {
                     case Success(value) if nodes.contains(node) =>
                         value
-                    case Failure(_) =>
+                    case _ =>
                         GenExprResult(holeFactory.newHole(), ctx, added)
                 }
             //            case n: InstanceOfExpr =>
