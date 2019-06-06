@@ -27,8 +27,16 @@ object GraphBuilder extends Logging {
     }
 
     private def type2entity(decl: ClassOrInterfaceType) = {
-        val qualifiedName = decl.resolve().getQualifiedName
-        EntityManager.getTypeEntityOrCreate(qualifiedName)
+        try {
+            val qualifiedName = decl.resolve().getQualifiedName
+            EntityManager.getTypeEntityOrCreate(qualifiedName)
+        } catch {
+            case e: Throwable =>
+                if (KnowledgeGraphConfig.global.debug) {
+                    log.error("Error", e)
+                }
+                None
+        }
     }
 
     private def getIterableType(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = resolved.getAllAncestors.asScala
