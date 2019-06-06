@@ -1,3 +1,8 @@
 uri = "bolt://127.0.0.1"
 username = "neo4j"
 password = "neo4j"
+src-code-dirs = [
+  "/home/woooking/data/poi-3.14/src/java",
+  "/home/woooking/data/poi-3.14/src/ooxml/java"
+]
+jdk-src-code-dir = "/home/woooking/data/jdk-11/src"
