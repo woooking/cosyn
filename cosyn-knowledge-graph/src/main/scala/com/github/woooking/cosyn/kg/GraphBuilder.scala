@@ -6,6 +6,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body._
 import com.github.javaparser.ast.expr.ObjectCreationExpr
+import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
 import com.github.javaparser.resolution.types.ResolvedType
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{JavaParserAnonymousClassDeclaration, JavaParserMethodDeclaration}
@@ -27,8 +28,13 @@ object GraphBuilder extends Logging {
     }
 
     private def type2entity(decl: ClassOrInterfaceType) = {
-        val qualifiedName = decl.resolve().getQualifiedName
-        EntityManager.getTypeEntityOrCreate(qualifiedName)
+        try {
+            val qualifiedName = decl.resolve().getQualifiedName
+            Some(EntityManager.getTypeEntityOrCreate(qualifiedName))
+        } catch {
+            case _: UnsolvedSymbolException =>
+                None
+        }
     }
 
     private def getIterableType(resolved: ResolvedReferenceTypeDeclaration): TypeEntity = resolved.getAllAncestors.asScala
@@ -48,7 +54,7 @@ object GraphBuilder extends Logging {
                 val qualifiedName = decl.resolve().getQualifiedName
                 val typeEntity = EntityManager.getTypeEntityOrCreate(qualifiedName)
                 val parentTypes = decl.getExtendedTypes.asScala ++ decl.getImplementedTypes.asScala
-                typeEntity.addExtendedTypes(parentTypes.map(type2entity).toSet.asJava)
+                typeEntity.addExtendedTypes(parentTypes.flatMap(type2entity).toSet.asJava)
                 typeEntity.setIterableType(getIterableType(decl.resolve()))
             })
     }
