@@ -19,7 +19,7 @@ object EntityManager extends Logging {
     private val typeMapping = mutable.Map[String, TypeEntity]()
     private val javadocs = mutable.ArrayBuffer[MethodJavadocEntity]()
 
-    private val jdkSolver = new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path)
+    private val jdkSolver = new JavaParserTypeSolver(KnowledgeGraphConfig.global.jdkSrcCodeDir)
 
     private def createJavadocEntity(javadoc: Javadoc): MethodJavadocEntity = {
         val javadocEntity = new MethodJavadocEntity(javadoc)
