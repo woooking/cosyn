@@ -1,6 +1,7 @@
 package com.github.woooking.cosyn.kg
 
-import better.files.File.home
+import java.nio.file.Path
+
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body._
@@ -38,11 +39,12 @@ object GraphBuilder extends Logging {
         .map(EntityManager.getTypeEntityOrCreate).orNull
 
     def buildTypeMapping(typeDeclarations: Seq[TypeDeclaration[_]]): Unit = {
-        typeDeclarations.map(_.resolve()).foreach(EntityManager.createTypeEntity)
+        typeDeclarations.par.map(_.resolve()).foreach(EntityManager.createTypeEntity)
     }
 
     def buildExtendRelation(classDecls: Seq[ClassOrInterfaceDeclaration]): Unit = {
         classDecls
+            .par
             .foreach(decl => {
                 val qualifiedName = decl.resolve().getQualifiedName
                 val typeEntity = EntityManager.getTypeEntityOrCreate(qualifiedName)
@@ -54,6 +56,7 @@ object GraphBuilder extends Logging {
 
     def buildMethodExtendRelation(cus: Seq[CompilationUnit]): Unit = {
         cus.flatMap(_.findAll(classOf[MethodDeclaration]).asScala)
+            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve().asInstanceOf[JavaParserMethodDeclaration]
@@ -79,6 +82,7 @@ object GraphBuilder extends Logging {
 
     def buildProduceRelation(cus: Seq[CompilationUnit]): Unit = {
         cus.flatMap(_.findAll(classOf[MethodDeclaration]).asScala)
+            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve()
@@ -105,6 +109,7 @@ object GraphBuilder extends Logging {
                 }
             })
         cus.flatMap(_.findAll(classOf[ConstructorDeclaration]).asScala)
+            .par
             .foreach(decl => {
                 try {
                     val resolvedMethod = decl.resolve()
@@ -125,11 +130,14 @@ object GraphBuilder extends Logging {
 
     def main(args: Array[String]): Unit = {
         val strategy = new SymbolSolverCollectionStrategy()
-        val projectPoi = strategy.collect(home / "lab" / "poi-4.0.0" / "src" / "java" path)
 
         log.info("Start parsing codes")
-        val cus = projectPoi.getSourceRoots.asScala
+        val cus = KnowledgeGraphConfig.global.srcCodeDirs
+            .map(Path.of(_))
+            .map(strategy.collect)
+            .flatMap(_.getSourceRoots.asScala)
             .flatMap(_.tryToParseParallelized().asScala)
+            .filter(_.isSuccessful)
             .map(_.getResult.get())
 
         val classOrInterfaceDeclarations = cus.flatMap(_.findAll(classOf[ClassOrInterfaceDeclaration]).asScala)

@@ -1,6 +1,5 @@
 package com.github.woooking.cosyn.kg
 
-import better.files.File.home
 import com.github.javaparser.javadoc.Javadoc
 import com.github.javaparser.resolution.UnsolvedSymbolException
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration
@@ -10,16 +9,17 @@ import com.github.woooking.cosyn.kg.entity.{EnumEntity, MethodEntity, MethodJava
 import org.neo4j.ogm.session.Session
 import org.slf4s.Logging
 
-import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
-import scala.collection.mutable
+import scala.collection.concurrent
+import scala.collection.parallel.mutable.ParSet
+import scala.compat.java8.OptionConverters._
 
 object EntityManager extends Logging {
-    private val methodMapping = mutable.Map[String, MethodEntity]()
-    private val typeMapping = mutable.Map[String, TypeEntity]()
-    private val javadocs = mutable.ArrayBuffer[MethodJavadocEntity]()
+    private val methodMapping = concurrent.TrieMap[String, MethodEntity]()
+    private val typeMapping = concurrent.TrieMap[String, TypeEntity]()
+    private val javadocs = ParSet[MethodJavadocEntity]()
 
-    private val jdkSolver = new JavaParserTypeSolver(home / "lab" / "jdk-11" / "src" path)
+    private val jdkSolver = new JavaParserTypeSolver(KnowledgeGraphConfig.global.jdkSrcCodeDir)
 
     private def createJavadocEntity(javadoc: Javadoc): MethodJavadocEntity = {
         val javadocEntity = new MethodJavadocEntity(javadoc)
