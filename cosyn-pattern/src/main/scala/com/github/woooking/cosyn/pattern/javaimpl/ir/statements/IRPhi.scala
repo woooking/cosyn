@@ -1,7 +1,7 @@
 package com.github.woooking.cosyn.pattern.javaimpl.ir.statements
 
 import com.github.woooking.cosyn.pattern.javaimpl.cfg.CFGBlock
-import com.github.woooking.cosyn.pattern.javaimpl.ir.{IRTemp, IRExpression}
+import com.github.woooking.cosyn.pattern.javaimpl.ir.IRExpression
 
 import scala.collection.mutable
 

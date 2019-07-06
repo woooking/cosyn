@@ -64,6 +64,7 @@ val commonSettings = Seq(
     assemblyMergeStrategy in assembly := {
         case "module-info.class" => MergeStrategy.discard
         case "application.conf" => MergeStrategy.concat
+        case "application.conf.template" => MergeStrategy.discard
         case x =>
             val oldStrategy = (assemblyMergeStrategy in assembly).value
             oldStrategy(x)

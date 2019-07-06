@@ -24,7 +24,7 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
 
     def newTask(context: Context, psiMethod: PsiMethod, dataContext: DataContext): Unit = {
         logger.info(s"[New Task] ${context.query}")
-        val (s, r) = server.startSession(context)
+        val (s, r) = server.startSession(context, 0)
         server = s
         r match {
             case StartSessionResponseWithQuestion(sessionId, newContext, _, question) =>
@@ -108,7 +108,6 @@ class IdeaQAClient(project: Project) extends ProjectComponent {
             }
 
         })
-
     }
 
     def running(id: Long, psiMethod: PsiMethod, dataContext: DataContext, answer: String): Unit = {

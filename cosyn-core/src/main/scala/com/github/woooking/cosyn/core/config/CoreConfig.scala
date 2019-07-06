@@ -12,14 +12,16 @@ case class CoreConfig(
 object CoreConfig {
     implicit val fileReader: ConfigReader[File] = ConfigReader[String].map(s => File(s))
 
-    val global: CoreConfig = pureconfig.loadConfig[CoreConfig] match {
-        case Left(failures) =>
-            failures.toList
-                .map(_.description)
-                .foreach(println)
-            ???
-        case Right(value) => value
-    }
+//    val global: CoreConfig = pureconfig.loadConfig[CoreConfig] match {
+//        case Left(failures) =>
+//            failures.toList
+//                .map(_.description)
+//                .foreach(println)
+//            ???
+//        case Right(value) => value
+//    }
+
+    val global: CoreConfig = CoreConfig("http://162.105.88.99", 9000)
 }
 
 

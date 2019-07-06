@@ -312,7 +312,6 @@ class JavaExpressionVisitor(val cfg: CFG) extends GenericVisitorWithDefaults[Opt
                         unimplemented(s"Assign Expr of $x", x)
                         ""
                 }
-                //                val name = n.getExpression.asNameExpr().getName.asString()
                 val source = cfg.readVar(typeOf(n.getExpression).getOrElse("<Unknown>"), name, block)
                 val ope = if (n.getOperator == UnaryExpr.Operator.PREFIX_INCREMENT || n.getOperator == UnaryExpr.Operator.POSTFIX_INCREMENT)
                     BinaryExpr.Operator.PLUS
